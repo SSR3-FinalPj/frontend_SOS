@@ -7,5 +7,14 @@ export default defineConfig({
     alias: {
       '@': '/src'
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080', // 백엔드 주소
+        changeOrigin: true,              // Origin 헤더 변경
+        secure: false,                   // HTTPS 인증서 무시 
+      }
+    }
   }
 })
