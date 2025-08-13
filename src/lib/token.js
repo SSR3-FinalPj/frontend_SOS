@@ -1,20 +1,23 @@
-const ACCESS_KEY = 'accessToken';
-const REFRESH_KEY = 'refreshToken';
+let accessTokenInMemory = null;
 
-export function saveTokens(tokens) {
-  if (tokens?.accessToken) localStorage.setItem(ACCESS_KEY, tokens.accessToken);
-  if (tokens?.refreshToken) localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
+const REFRESH_KEY = 'refreshToken'; // 바디 전략이라 어쩔 수 없이 저장 (XSS 대비: CSP/정화 필수)
+
+export function setAccessToken(token) {
+  accessTokenInMemory = token || null;
 }
-
-export function clearTokens() {
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(REFRESH_KEY);
-}
-
 export function getAccessToken() {
-  return localStorage.getItem(ACCESS_KEY) || '';
+  return accessTokenInMemory;
+}
+export function clearAccessToken() {
+  accessTokenInMemory = null;
 }
 
+export function saveRefreshToken(refreshToken) {
+  if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+}
 export function getRefreshToken() {
-  return localStorage.getItem(REFRESH_KEY) || '';
+  return localStorage.getItem(REFRESH_KEY) || null;
+}
+export function clearRefreshToken() {
+  localStorage.removeItem(REFRESH_KEY);
 }

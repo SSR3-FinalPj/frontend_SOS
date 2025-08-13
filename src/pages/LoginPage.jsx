@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { usePageStore } from '../stores/page_store.js';
 import LoginCard from '../components/login/LoginCard.jsx';
+import { User, Lock } from 'lucide-react';
 
 // 🔹 토큰 유틸 + API 호출 가져오기
-import { saveTokens } from '../lib/token.js';
+import { setAccessToken, saveRefreshToken } from '../lib/token.js';
 //import { BASE_API_URL } from '../lib/config.js'; // 없으면 그냥 BASE_API_URL = 'http://localhost:8080';
 
 const loginTranslations = {
@@ -12,8 +13,8 @@ const loginTranslations = {
     welcomeBack: "다시 오신 것을 환영합니다",
     subtitle: "계정에 로그인하여 AI 콘텐츠 관리를 시작하세요",
     // 🔽 추가
-    name: "이름",
-    namePlaceholder: "이름을 입력하세요",
+    name: "아이디",
+    namePlaceholder: "아이디를 입력하세요",
     password: "비밀번호",
     passwordPlaceholder: "비밀번호를 입력하세요",
     forgotPassword: "비밀번호를 잊으셨나요?",
@@ -64,7 +65,8 @@ export default function LoginPage() {
       const data = await res.json(); // { accessToken, refreshToken }
 
       if (data.accessToken) {
-        saveTokens(data); // localStorage에 저장
+        setAccessToken(data.accessToken);
+        if (data.refreshToken) saveRefreshToken(data.refreshToken);
         setMsg('✅ 로그인 성공');
         setCurrentPage('dashboard'); // 대시보드로 이동
       } else {
@@ -96,6 +98,8 @@ export default function LoginPage() {
           showPassword={showPassword}
           onTogglePassword={() => setShowPassword(!showPassword)}
           go_back_to_landing={go_back_to_landing}
+          nameIcon={User}
+          passwordIcon={Lock}
         />
       </div>
 
