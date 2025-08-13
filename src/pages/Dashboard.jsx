@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import 'react-day-picker/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BarChart3, 
@@ -51,6 +52,7 @@ import { EnhancedPlatformCard } from "../components/dashboard/enhanced-platform-
 import { ConnectionManagementCard } from "../components/dashboard/connection-management-card.jsx";
 import { DataExportCard } from "../components/dashboard/data-export-card.jsx";
 import { ContentListView } from "../components/dashboard/content-list-view.jsx";
+import { ContentLaunchPage } from "./ContentLaunchPage.jsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover.jsx";
 import {
   Pagination,
@@ -68,7 +70,6 @@ const dashboardTranslations = {
   ko: {
     brandName: "콘텐츠부스트",
     dashboard: "대시보드",
-    channelUpload: "채널 및 업로드",
     contentList: "콘텐츠 목록", 
     analytics: "분석",
     settings: "환경설정",
@@ -157,7 +158,6 @@ const dashboardTranslations = {
   en: {
     brandName: "ContentBoost",
     dashboard: "Dashboard",
-    channelUpload: "Channels & Upload",
     contentList: "Content List",
     analytics: "Analytics",
     settings: "Settings",
@@ -401,7 +401,7 @@ function AnalyticsFilterSidebar({
 }) {
   const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [dateRange, setDateRange] = useState({
+  const [date_range, set_date_range] = useState({
     from: undefined,
     to: undefined
   });
@@ -456,25 +456,25 @@ function AnalyticsFilterSidebar({
   };
 
   const handleApplyDateRange = () => {
-    if (dateRange.from && dateRange.to) {
-      const fromStr = formatDate(dateRange.from);
-      const toStr = formatDate(dateRange.to);
+    if (date_range.from && date_range.to) {
+      const fromStr = formatDate(date_range.from);
+      const toStr = formatDate(date_range.to);
       setTempPeriodLabel(`${fromStr} ${t.to} ${toStr}`);
-    } else if (dateRange.from) {
-      setTempPeriodLabel(formatDate(dateRange.from));
+    } else if (date_range.from) {
+      setTempPeriodLabel(formatDate(date_range.from));
     }
     setCalendarOpen(false);
   };
 
   const handleCalendarSelect = (range) => {
     if (range) {
-      setDateRange(range);
+      set_date_range(range);
     }
   };
 
   return (
-    <div className="w-64 min-h-screen flex flex-col relative z-10">
-      <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border-r border-white/30 dark:border-white/10 min-h-screen flex flex-col shadow-xl p-6">
+    <div className="w-64 h-full flex flex-col relative z-10 flex-shrink-0">
+      <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border-r border-white/30 dark:border-white/10 h-full flex flex-col shadow-xl p-6">
         {/* Header - 로고만 표시 */}
         <div className="pb-6 border-b border-gray-200/40 dark:border-white/10 mb-6">
           <div className="flex items-center gap-3">
@@ -580,7 +580,7 @@ function AnalyticsFilterSidebar({
                 </h4>
                 <CalendarComponent
                   mode="range"
-                  selected={dateRange}
+                  selected={date_range}
                   onSelect={handleCalendarSelect}
                   numberOfMonths={2}
                   className="rounded-lg"
@@ -588,12 +588,12 @@ function AnalyticsFilterSidebar({
                 />
                 
                 {/* 선택된 기간 표시 */}
-                {(dateRange.from || dateRange.to) && (
+                {(date_range.from || date_range.to) && (
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      {dateRange.from && formatDate(dateRange.from)}
-                      {dateRange.from && dateRange.to && ` ${t.to} `}
-                      {dateRange.to && formatDate(dateRange.to)}
+                      {date_range.from && formatDate(date_range.from)}
+                      {date_range.from && date_range.to && ` ${t.to} `}
+                      {date_range.to && formatDate(date_range.to)}
                     </p>
                   </div>
                 )}
@@ -609,7 +609,7 @@ function AnalyticsFilterSidebar({
                   </motion.button>
                   <motion.button
                     onClick={handleApplyDateRange}
-                    disabled={!dateRange.from}
+                    disabled={!date_range.from}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors text-sm"
@@ -739,7 +739,7 @@ function DetailedAnalyticsView({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
+    <div className="h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
       {/* Subtle gradient background overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-indigo-950/20" />
       
@@ -955,8 +955,8 @@ function Sidebar({ t, currentView, setCurrentView }) {
 
   const menuItems = [
     { id: 'dashboard', label: t.dashboard, icon: BarChart3 },
-    { id: 'channels', label: t.channelUpload, icon: Upload },
     { id: 'contentList', label: t.contentList, icon: Calendar },
+    { id: 'contentLaunch', label: 'AI 콘텐츠 론칭', icon: Zap },
     { id: 'analytics', label: t.analytics, icon: PieChart },
     { id: 'settings', label: t.settings, icon: Settings }
   ];
@@ -966,8 +966,8 @@ function Sidebar({ t, currentView, setCurrentView }) {
   };
 
   return (
-    <div className="w-64 min-h-screen flex flex-col relative z-10">
-      <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border-r border-white/30 dark:border-white/10 min-h-screen flex flex-col shadow-xl p-6">
+    <div className="w-64 h-full flex flex-col relative z-10 flex-shrink-0">
+      <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border-r border-white/30 dark:border-white/10 h-full flex flex-col shadow-xl p-6">
         {/* Logo */}
         <div className="flex items-center gap-3 pb-6 border-b border-gray-200/40 dark:border-white/10">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
@@ -1046,6 +1046,11 @@ function DashboardHeader({
         return {
           title: t.contentManagement,
           subtitle: t.contentSubtitle
+        };
+      case 'contentLaunch':
+        return {
+          title: 'AI 콘텐츠 론칭',
+          subtitle: 'AI가 생성한 미디어 콘텐츠를 검토하고 플랫폼에 론칭하세요'
         };
       default:
         return { 
@@ -1138,7 +1143,7 @@ function SettingsView({ t }) {
 }
 
 export default function Dashboard() {
-  const { language } = usePageStore();
+  const { language, isDarkMode } = usePageStore();
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [sortOrder, setSortOrder] = useState('latest');
@@ -1162,6 +1167,8 @@ export default function Dashboard() {
             setSortOrder={setSortOrder}
           />
         );
+      case 'contentLaunch':
+        return <ContentLaunchPage dark_mode={isDarkMode} />;
       default:
         return <MainDashboardView t={t} />;
     }
@@ -1173,7 +1180,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
+    <div className="h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
       {/* Subtle gradient background overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-indigo-950/20" />
       
