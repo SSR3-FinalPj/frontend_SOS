@@ -12,7 +12,9 @@ export default function LoginCard({
   setPassword,
   showPassword,
   onTogglePassword,
-  go_back_to_landing
+  go_back_to_landing,
+  nameIcon, // New prop for name input icon
+  passwordIcon // New prop for password input icon
 }) {
   return (
     <motion.div
@@ -127,6 +129,7 @@ export default function LoginCard({
               placeholder={t.namePlaceholder}
               value={name}
               onChange={setName}
+              Icon={nameIcon}
             />
           </motion.div>
 
@@ -150,6 +153,7 @@ export default function LoginCard({
               onChange={setPassword}
               showPasswordToggle={true}
               onTogglePassword={onTogglePassword}
+              Icon={passwordIcon}
             />
           </motion.div>
 

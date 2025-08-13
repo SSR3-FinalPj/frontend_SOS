@@ -8,7 +8,8 @@ export default function AppleInput({
   value,
   onChange,
   showPasswordToggle = false,
-  onTogglePassword
+  onTogglePassword,
+  Icon // New prop for the icon component
 }) {
   const handleChange = (e) => {
     if (typeof onChange !== 'function') return;
@@ -24,14 +25,16 @@ export default function AppleInput({
       whileFocus={{ scale: 1.01, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } }}
     >
       {/* 좌측 장식(아이콘 대체용) 필요 없으면 제거 가능 */}
-      <motion.div 
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10"
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      >
-        
-      </motion.div>
+      {Icon && (
+        <motion.div 
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Icon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+        </motion.div>
+      )}
 
       <motion.input
         type={type}
