@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { tryRefreshOnBoot } from './src/lib/auth_bootstrap.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePageStore } from './src/stores/page_store.js';
 import LandingInteractive from './src/components/LandingInteractive.jsx';
@@ -6,8 +7,18 @@ import LoginPage from './src/pages/LoginPage.jsx';
 import Dashboard from './src/pages/Dashboard.jsx';
 
 export default function App() {
-  const { currentPage, isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
+    const { currentPage, isDarkMode, setIsDarkMode, language, setLanguage, setCurrentPage } = usePageStore();
+    const [bootDone, setBootDone] = useState(false);
 
+  useEffect(() => {
+    (async () => {
+      const ok = await tryRefreshOnBoot();
+      if (currentPage !== 'login') {
+        setCurrentPage(ok ? 'dashboard' : 'landing');
+      }
+      setBootDone(true);
+    })();
+    }, []);
   // Initialize dark mode and language from localStorage
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
@@ -94,7 +105,7 @@ export default function App() {
 
   return (
     <AnimatePresence mode="wait">
-      {renderCurrentPage()}
+      {!bootDone ? <div /> : renderCurrentPage()}
     </AnimatePresence>
   );
 }
