@@ -22,16 +22,14 @@ function Tooltip({
   ...props
 }) {
   return (
-    
-      
-    
+    <TooltipPrimitive.Root {...props} />
   );
 }
 
 function TooltipTrigger({
   ...props
 }) {
-  return ;
+  return <TooltipPrimitive.Trigger {...props} />;
 }
 
 function TooltipContent({
@@ -41,7 +39,7 @@ function TooltipContent({
   ...props
 }) {
   return (
-    
+    <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
@@ -52,9 +50,8 @@ function TooltipContent({
         {...props}
       >
         {children}
-        
-      
-    
+      </TooltipPrimitive.Content>
+    </TooltipPrimitive.Portal>
   );
 }
 

@@ -8,13 +8,13 @@ import { cn } from "./utils";
 function Popover({
   ...props
 }) {
-  return ;
+  return <PopoverPrimitive.Root {...props} />;
 }
 
 function PopoverTrigger({
   ...props
 }) {
-  return ;
+  return <PopoverPrimitive.Trigger {...props} />;
 }
 
 function PopoverContent({
@@ -24,7 +24,7 @@ function PopoverContent({
   ...props
 }) {
   return (
-    
+    <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
@@ -35,14 +35,14 @@ function PopoverContent({
         )}
         {...props}
       />
-    
+    </PopoverPrimitive.Portal>
   );
 }
 
 function PopoverAnchor({
   ...props
 }) {
-  return ;
+  return <PopoverPrimitive.Anchor {...props} />;
 }
 
 export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor };

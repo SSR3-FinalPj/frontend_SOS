@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>연동 완료</title></head>
+  <body>
+    <script>
+      try { window.opener && window.opener.postMessage({ type:'google-oauth-complete', ok:true }, '*'); } catch(e){}
+      window.close();
+      setTimeout(function(){ location.replace('/'); }, 500);
+    </script>
+    연동이 완료되었습니다. 창이 자동으로 닫히지 않으면 닫아주세요.
+  </body>
+</html>
