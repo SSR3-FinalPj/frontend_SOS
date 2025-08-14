@@ -4,15 +4,14 @@ import LoginCard from '../components/login/LoginCard.jsx';
 import { User, Lock } from 'lucide-react';
 
 // 🔹 토큰 유틸 + API 호출 가져오기
-import { setAccessToken, saveRefreshToken } from '../lib/token.js';
-//import { BASE_API_URL } from '../lib/config.js'; // 없으면 그냥 BASE_API_URL = 'http://localhost:8080';
+import { setAccessToken, saveRefreshToken, setRememberMe, setSessionLoggedIn } from '../lib/token.js';
+// import { BASE_API_URL } from '../lib/config.js';
 
 const loginTranslations = {
   ko: {
     brandName: "콘텐츠부스트",
     welcomeBack: "다시 오신 것을 환영합니다",
     subtitle: "계정에 로그인하여 AI 콘텐츠 관리를 시작하세요",
-    // 🔽 추가
     name: "아이디",
     namePlaceholder: "아이디를 입력하세요",
     password: "비밀번호",
@@ -20,12 +19,10 @@ const loginTranslations = {
     forgotPassword: "비밀번호를 잊으셨나요?",
     loginButton: "로그인",
   },
-
   en: {
     brandName: "ContentBoost",
     welcomeBack: "Welcome Back",
     subtitle: "Sign in to your account to start AI content management",
-    // 🔽 추가
     name: "Name",
     namePlaceholder: "Enter your name",
     password: "Password",
@@ -37,12 +34,12 @@ const loginTranslations = {
 
 export default function LoginPage() {
   const { setCurrentPage, language } = usePageStore();
-  // 🔽 email → name
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [msg, setMsg] = useState('');
+  const [autoLogin, setAutoLogin] = useState(false); // ✅ 로그인 유지 체크
 
   const t = loginTranslations[language] || loginTranslations['ko'];
 
@@ -65,8 +62,17 @@ export default function LoginPage() {
       const data = await res.json(); // { accessToken, refreshToken }
 
       if (data.accessToken) {
+        // ✅ accessToken은 메모리
         setAccessToken(data.accessToken);
+
+        // ✅ refreshToken은 항상 저장(세션 중 자동 리프레시 필요)
         if (data.refreshToken) saveRefreshToken(data.refreshToken);
+
+        // ✅ rememberMe & session 플래그
+        setRememberMe(autoLogin);                              // 영구 옵션
+        localStorage.setItem('autoLoginEnabled', String(autoLogin)); // (호환용, 다른 코드에서 참조하면 유지)
+        setSessionLoggedIn(true);                              // 현재 세션 유지
+
         setMsg('✅ 로그인 성공');
         setCurrentPage('dashboard'); // 대시보드로 이동
       } else {
@@ -100,6 +106,8 @@ export default function LoginPage() {
           go_back_to_landing={go_back_to_landing}
           nameIcon={User}
           passwordIcon={Lock}
+          autoLogin={autoLogin}                    // ✅ 체크박스 상태 전달
+          onAutoLoginChange={setAutoLogin}         // ✅ 토글 핸들러 전달
         />
       </div>
 
