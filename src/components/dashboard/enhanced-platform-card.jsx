@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
-function EnhancedPlatformCard({ platform, index, t }) {
+function EnhancedPlatformCard({ platform, index }) {
   const Icon = platform.icon;
   
   return (
@@ -68,7 +68,7 @@ function EnhancedPlatformCard({ platform, index, t }) {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t.recent7DaysTrend}
+                최근 7일 트랜드
               </h4>
               <div className="flex items-center gap-3 text-xs">
                 <div className="flex items-center gap-1">
