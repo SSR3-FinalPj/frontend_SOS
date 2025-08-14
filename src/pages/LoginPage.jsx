@@ -4,51 +4,48 @@ import LoginCard from '../components/login/LoginCard.jsx';
 import { User, Lock } from 'lucide-react';
 
 // 🔹 토큰 유틸 + API 호출 가져오기
-import { setAccessToken, saveRefreshToken, setRememberMe, setSessionLoggedIn } from '../lib/token.js';
-// import { BASE_API_URL } from '../lib/config.js';
+import { loginApi } from '../lib/auth_bootstrap.js';
+import { setAutoLoginEnabled } from '../lib/token.js';
+//import { BASE_API_URL } from '../lib/config.js'; // 없으면 그냥 BASE_API_URL = 'http://localhost:8080';
 
-// 로그인 번역
 const loginTranslations = {
   ko: {
     brandName: "콘텐츠부스트",
     welcomeBack: "다시 오신 것을 환영합니다",
     subtitle: "계정에 로그인하여 AI 콘텐츠 관리를 시작하세요",
+    // 🔽 추가
     name: "아이디",
     namePlaceholder: "아이디를 입력하세요",
     password: "비밀번호",
     passwordPlaceholder: "비밀번호를 입력하세요",
     forgotPassword: "비밀번호를 잊으셨나요?",
     loginButton: "로그인",
-    loginSuccess: "✅ 로그인 성공",
-    loginFailed: "❌ 로그인 실패: 토큰이 없습니다.",
-    loginError: "❌ 로그인 오류: "
   },
+
   en: {
     brandName: "ContentBoost",
     welcomeBack: "Welcome Back",
     subtitle: "Sign in to your account to start AI content management",
+    // 🔽 추가
     name: "Name",
     namePlaceholder: "Enter your name",
     password: "Password",
     passwordPlaceholder: "Enter your password",
     forgotPassword: "Forgot your password?",
     loginButton: "Sign In",
-    loginSuccess: "✅ Login successful",
-    loginFailed: "❌ Login failed: No token received.",
-    loginError: "❌ Login error: "
   }
 };
 
 export default function LoginPage() {
   const { setCurrentPage, language } = usePageStore();
+  // 🔽 email → name
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [msg, setMsg] = useState('');
-  const [autoLogin, setAutoLogin] = useState(false); // ✅ 로그인 유지 체크
 
-  const t = loginTranslations[language] || loginTranslations.ko;
+  const t = loginTranslations[language] || loginTranslations['ko'];
 
   const handle_login = async (e) => {
     e.preventDefault();
@@ -56,37 +53,12 @@ export default function LoginPage() {
     setMsg('');
 
     try {
-      const res = await fetch(`/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: name,
-          password: password
-        })
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json(); // { accessToken, refreshToken }
-
-      if (data.accessToken) {
-        // ✅ accessToken은 메모리
-        setAccessToken(data.accessToken);
-
-        // ✅ refreshToken은 항상 저장(세션 중 자동 리프레시 필요)
-        if (data.refreshToken) saveRefreshToken(data.refreshToken);
-
-        // ✅ rememberMe & session 플래그
-        setRememberMe(autoLogin);                              // 영구 옵션
-        localStorage.setItem('autoLoginEnabled', String(autoLogin)); // (호환용, 다른 코드에서 참조하면 유지)
-        setSessionLoggedIn(true);                              // 현재 세션 유지
-
-        setMsg('✅ 로그인 성공');
-        setCurrentPage('dashboard'); // 대시보드로 이동
-      } else {
-        setMsg(t.loginFailed);
-      }
+      await loginApi(name, password);
+      setAutoLoginEnabled(true); // "로그인 유지"를 활성화합니다.
+      setMsg('✅ 로그인 성공');
+      setCurrentPage('dashboard'); // 대시보드로 이동
     } catch (err) {
-      setMsg(t.loginError + err.message);
+      setMsg('❌ 로그인 오류: ' + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +85,6 @@ export default function LoginPage() {
           go_back_to_landing={go_back_to_landing}
           nameIcon={User}
           passwordIcon={Lock}
-          autoLogin={autoLogin}                    // ✅ 체크박스 상태 전달
-          onAutoLoginChange={setAutoLogin}         // ✅ 토글 핸들러 전달
         />
       </div>
 
