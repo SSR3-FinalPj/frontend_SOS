@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { tryRefreshOnBoot } from './src/lib/auth_bootstrap.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePageStore } from './src/stores/page_store.js';
-import LandingInteractive from './src/components/LandingInteractive.jsx';
+import LandingPage from './src/pages/LandingPage.jsx';
 import LoginPage from './src/pages/LoginPage.jsx';
 import Dashboard from './src/pages/Dashboard.jsx';
 
@@ -63,7 +63,7 @@ export default function App() {
               layout: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
             }}
           >
-            <LandingInteractive />
+            <LandingPage />
           </motion.div>
         );
       case 'login':
