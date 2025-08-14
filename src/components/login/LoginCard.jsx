@@ -128,7 +128,7 @@ export default function LoginCard({
             </label>
             <AppleInput
               type="text"
-              placeholder={t.usernamePlaceholder}
+              placeholder={t.placeholder}
               value={name}
               onChange={setName}
               Icon={nameIcon}

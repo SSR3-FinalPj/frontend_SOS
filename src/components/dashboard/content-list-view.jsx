@@ -271,7 +271,7 @@ function ContentListView({
                     disabled={currentPage === 1}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-3 py-2 rounded-lg transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
                       currentPage === 1
                         ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
@@ -311,7 +311,7 @@ function ContentListView({
                     disabled={currentPage === totalPages}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-3 py-2 rounded-lg transition-all duration-200 ${
+                    className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2${
                       currentPage === totalPages
                         ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'

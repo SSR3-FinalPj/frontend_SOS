@@ -15,7 +15,7 @@ const loginTranslations = {
     subtitle: "계정에 로그인하여 AI 콘텐츠 관리를 시작하세요",
     // 🔽 추가
     name: "아이디",
-    namePlaceholder: "아이디를 입력하세요",
+    placeholder: "아이디를 입력하세요",
     password: "비밀번호",
     passwordPlaceholder: "비밀번호를 입력하세요",
     forgotPassword: "비밀번호를 잊으셨나요?",
@@ -28,7 +28,7 @@ const loginTranslations = {
     subtitle: "Sign in to your account to start AI content management",
     // 🔽 추가
     name: "Name",
-    namePlaceholder: "Enter your name",
+    placeholder: "Enter your name",
     password: "Password",
     passwordPlaceholder: "Enter your password",
     forgotPassword: "Forgot your password?",
