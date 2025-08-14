@@ -14,7 +14,9 @@ export default function LoginCard({
   onTogglePassword,
   go_back_to_landing,
   nameIcon, // New prop for name input icon
-  passwordIcon // New prop for password input icon
+  passwordIcon, // New prop for password input icon
+  autoLogin,
+  onAutoLoginChange
 }) {
   return (
     <motion.div
@@ -126,7 +128,7 @@ export default function LoginCard({
             </label>
             <AppleInput
               type="text"
-              placeholder={t.usernamePlaceholder}
+              placeholder={t.placeholder}
               value={name}
               onChange={setName}
               Icon={nameIcon}
@@ -157,20 +159,32 @@ export default function LoginCard({
             />
           </motion.div>
 
-          {/* Forgot Password Link */}
-          <motion.div 
-            className="text-right"
+          {/* Forgot Password Link & Auto-login Checkbox */}
+          <motion.div
+            className="flex justify-between items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ 
-              delay: 0.9, 
+            transition={{
+              delay: 0.9,
               duration: 0.4,
               ease: [0.16, 1, 0.3, 1]
             }}
           >
+            <div className="flex items-center">
+              <input
+                id="auto-login"
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                checked={autoLogin}
+                onChange={(e) => onAutoLoginChange(e.target.checked)}
+              />
+              <label htmlFor="auto-login" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                자동 로그인
+              </label>
+            </div>
             <motion.button
               type="button"
-              whileHover={{ 
+              whileHover={{
                 scale: 1.03,
                 transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
               }}

@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link, Plus, Unlink } from 'lucide-react';
 import { GlassCard } from '../ui/glass-card.jsx';
 
-function ConnectionManagementCard({ t, platformData }) {
+function ConnectionManagementCard({ platformData }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -15,9 +15,9 @@ function ConnectionManagementCard({ t, platformData }) {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
               <Link className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h3 className="text-xl font-medium text-gray-800 dark:text-white">{t.connectionManagement}</h3>
+            <h3 className="text-xl font-medium text-gray-800 dark:text-white">연동 관리</h3>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 text-sm">{t.connectedPlatforms}</p>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">연동된 플랫폼</p>
         </div>
 
         <div className="space-y-4 mb-6">
@@ -37,7 +37,7 @@ function ConnectionManagementCard({ t, platformData }) {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-green-600 dark:text-green-400">{t.connected}</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">연동됨</span>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -58,7 +58,7 @@ function ConnectionManagementCard({ t, platformData }) {
           className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 flex items-center justify-center gap-2"
         >
           <Plus className="w-5 h-5" />
-          {t.addNewPlatform}
+          새 플랫폼 추가
         </motion.button>
       </GlassCard>
     </motion.div>

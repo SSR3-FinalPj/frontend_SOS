@@ -17,7 +17,6 @@ import { period_options } from '../../constants/dashboard_constants.js';
 /**
  * Analytics Filter Sidebar 컴포넌트
  * @param {Object} props - 컴포넌트 props
- * @param {Object} props.t - 번역 객체
  * @param {string} props.current_view - 현재 뷰
  * @param {Function} props.set_current_view - 뷰 변경 함수
  * @param {string} props.selected_platform - 선택된 플랫폼
@@ -38,7 +37,6 @@ import { period_options } from '../../constants/dashboard_constants.js';
  * @returns {JSX.Element} Analytics Filter Sidebar 컴포넌트
  */
 const AnalyticsFilterSidebar = ({ 
-  t, 
   current_view, 
   set_current_view, 
   selected_platform, 
@@ -51,6 +49,13 @@ const AnalyticsFilterSidebar = ({
   get_selected_period_label,
   handle_period_select
 }) => {
+  const periodLabels = {
+    last7Days: '최근 7일',
+    last30Days: '최근 30일',
+    last3Months: '최근 3개월',
+    thisYear: '올해',
+    customPeriod: '직접 설정'
+  };
   const platform_options = [
     { id: 'youtube', label: 'YouTube', icon: Play, color: 'text-red-600' },
     { id: 'reddit', label: 'Reddit', icon: MessageSquare, color: 'text-orange-600' }
@@ -65,14 +70,14 @@ const AnalyticsFilterSidebar = ({
             <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
               <span className="text-white text-sm font-semibold">AI</span>
             </div>
-            <span className="text-xl font-light text-gray-800 dark:text-white">{t.brandName}</span>
+            <span className="text-xl font-light text-gray-800 dark:text-white">콘텐츠부스트</span>
           </div>
         </div>
 
         {/* 플랫폼 선택 */}
         <div className="mb-8">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-            {t.platform}
+            플랫폼
           </h3>
           <div className="space-y-2">
             {platform_options.map((platform) => {
@@ -103,7 +108,7 @@ const AnalyticsFilterSidebar = ({
             // 필터 목록 표시
             <>
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                {t.analysisPeriod}
+                분석 기간
               </h3>
               
               <div className="relative" ref={period_dropdown_ref}>
@@ -141,7 +146,7 @@ const AnalyticsFilterSidebar = ({
                               : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
                           }`}
                         >
-                          <span className="text-sm font-medium">{t[option.label]}</span>
+                          <span className="text-sm font-medium">{periodLabels[option.label]}</span>
                           {selected_period === option.id && (
                             <Check className="w-4 h-4" />
                           )}
@@ -156,7 +161,7 @@ const AnalyticsFilterSidebar = ({
             // 달력 표시 상태 - 실제 달력은 부모에서 렌더링
             <div className="w-full relative">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                {t.selectDateRange}
+                날짜 범위 선택
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 날짜 범위를 선택하세요
@@ -174,7 +179,7 @@ const AnalyticsFilterSidebar = ({
             className="w-full px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/5 hover:text-gray-800 dark:hover:text-white rounded-xl transition-all duration-200 text-left font-medium flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            {t.backToDashboard}
+            대시보드로 돌아가기
           </motion.button>
         </div>
       </div>

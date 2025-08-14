@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDown, 
-  ChevronLeft, 
-  ChevronRight, 
-  Clock, 
-  Image 
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Image
 } from 'lucide-react';
 import {
   Pagination,
@@ -17,9 +17,8 @@ import { GlassCard } from '../ui/glass-card.jsx';
 import { mockContentData } from '../../utils/mock-data.js';
 
 // 수정된 콘텐츠 리스트 뷰 - 3x2 그리드 (6개)
-function ContentListView({ 
-  t, 
-  selectedPlatform, 
+function ContentListView({
+  selectedPlatform,
   setSelectedPlatform,
   sortOrder,
   setSortOrder
@@ -28,7 +27,7 @@ function ContentListView({
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const itemsPerPage = 6; // 3x2 그리드
   const sortDropdownRef = useRef(null);
-  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -67,9 +66,9 @@ function ContentListView({
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('ko-KR', { 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('ko-KR', {
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -77,7 +76,7 @@ function ContentListView({
   const generatePageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -105,7 +104,7 @@ function ContentListView({
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -116,9 +115,9 @@ function ContentListView({
         {/* Left - Platform Filter (Text Links) */}
         <div className="flex items-center gap-6">
           {[
-            { id: 'all', label: t.allChannels },
-            { id: 'youtube', label: t.youtube },
-            { id: 'reddit', label: t.reddit }
+            { id: 'all', label: '모든 채널' },
+            { id: 'youtube', label: 'YouTube' },
+            { id: 'reddit', label: 'Reddit' }
           ].map((platform) => (
             <motion.button
               key={platform.id}
@@ -145,7 +144,7 @@ function ContentListView({
             className="flex items-center gap-2 px-4 py-2 bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 rounded-lg hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
           >
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {sortOrder === 'latest' ? t.latest : t.oldest}
+              {sortOrder === 'latest' ? '최신순' : '오래된순'}
             </span>
             <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${sortDropdownOpen ? 'rotate-180' : ''}`} />
           </motion.button>
@@ -161,8 +160,8 @@ function ContentListView({
                 className="absolute top-full right-0 mt-2 w-40 backdrop-blur-2xl bg-white/30 dark:bg-white/10 border border-white/40 dark:border-white/20 rounded-xl shadow-2xl p-2 z-50"
               >
                 {[
-                  { id: 'latest', label: t.latest },
-                  { id: 'oldest', label: t.oldest }
+                  { id: 'latest', label: '최신순' },
+                  { id: 'oldest', label: '오래된순' }
                 ].map((sort) => (
                   <motion.button
                     key={sort.id}
@@ -208,8 +207,8 @@ function ContentListView({
               >
                 {/* 정사각형 썸네일 */}
                 <div className="aspect-square overflow-hidden bg-gray-200 dark:bg-gray-700">
-                  <img 
-                    src={content.thumbnail} 
+                  <img
+                    src={content.thumbnail}
                     alt={content.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
@@ -220,7 +219,7 @@ function ContentListView({
                   {/* 플랫폼 배지 */}
                   <div className="mb-3">
                     <div className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
-                      content.platform === 'YouTube' 
+                      content.platform === 'YouTube'
                         ? 'bg-red-100 dark:bg-red-950/20 text-red-700 dark:text-red-400'
                         : 'bg-orange-100 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400'
                     }`}>
@@ -232,7 +231,7 @@ function ContentListView({
                   <h3 className="font-medium text-gray-800 dark:text-white mb-2 line-clamp-2 leading-tight">
                     {content.title}
                   </h3>
-                  
+
                   {/* 업로드 날짜 */}
                   <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                     <Clock className="w-3 h-3" />
@@ -279,7 +278,7 @@ function ContentListView({
                     }`}
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:block">{t.previous}</span>
+                    <span className="hidden sm:block">이전</span>
                   </motion.button>
                 </PaginationItem>
 
@@ -312,13 +311,13 @@ function ContentListView({
                     disabled={currentPage === totalPages}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                    className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2${
                       currentPage === totalPages
                         ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
                     }`}
                   >
-                    <span className="hidden sm:block">{t.next}</span>
+                    <span className="hidden sm:block">다음</span>
                     <ChevronRight className="w-4 h-4" />
                   </motion.button>
                 </PaginationItem>

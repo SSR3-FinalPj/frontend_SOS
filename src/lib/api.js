@@ -1,6 +1,5 @@
 import {
-  getAccessToken, setAccessToken, clearAccessToken,
-  getRefreshToken, clearRefreshToken
+  getAccessToken, setAccessToken, clearAccessToken
 } from './token.js';
 
 let isRefreshing = false;
@@ -12,20 +11,18 @@ async function refreshAccessToken() {
   }
   isRefreshing = true;
   try {
-    const rt = getRefreshToken();
-    if (!rt) throw new Error('No refresh token');
-
+    // 쿠키 인증 방식에서는 브라우저가 자동으로 쿠키를 전송하므로,
+    // 요청 본문에 리프레시 토큰을 담을 필요가 없습니다.
     const res = await fetch('/api/auth/refresh', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: rt })
+      // credentials: 'include' 옵션은 apiFetch 호출 시 자동으로 포함됩니다.
     });
     if (!res.ok) throw new Error(`Refresh failed: ${res.status}`);
 
-    const { accessToken, refreshToken } = await res.json();
+    const { accessToken } = await res.json();
     setAccessToken(accessToken);
-    // 백엔드가 refreshToken도 로테이션해 준다면 갱신
-    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+    // 새로운 리프레시 토큰은 서버에서 HttpOnly 쿠키로 설정해 줄 것이므로,
+    // 클라이언트에서 별도로 저장할 필요가 없습니다.
 
     waitQueue.forEach(p => p.resolve(accessToken));
     waitQueue = [];
@@ -34,7 +31,6 @@ async function refreshAccessToken() {
     waitQueue.forEach(p => p.reject(e));
     waitQueue = [];
     clearAccessToken();
-    clearRefreshToken();
     throw e;
   } finally {
     isRefreshing = false;
