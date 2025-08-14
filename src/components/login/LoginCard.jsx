@@ -96,7 +96,7 @@ export default function LoginCard({
               {t.welcomeBack}
             </h1>
             <p className="text-gray-600 dark:text-gray-300 font-light">
-              {t.subtitle}
+              {t.loginSubtitle}
             </p>
           </motion.div>
         </div>
@@ -124,11 +124,11 @@ export default function LoginCard({
             }}
           >
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t.name}
+              {t.username}
             </label>
             <AppleInput
               type="text"
-              placeholder={t.namePlaceholder}
+              placeholder={t.usernamePlaceholder}
               value={name}
               onChange={setName}
               Icon={nameIcon}

@@ -7,6 +7,7 @@ import { User, Lock } from 'lucide-react';
 import { setAccessToken, saveRefreshToken, setRememberMe, setSessionLoggedIn } from '../lib/token.js';
 // import { BASE_API_URL } from '../lib/config.js';
 
+// 로그인 번역
 const loginTranslations = {
   ko: {
     brandName: "콘텐츠부스트",
@@ -18,6 +19,9 @@ const loginTranslations = {
     passwordPlaceholder: "비밀번호를 입력하세요",
     forgotPassword: "비밀번호를 잊으셨나요?",
     loginButton: "로그인",
+    loginSuccess: "✅ 로그인 성공",
+    loginFailed: "❌ 로그인 실패: 토큰이 없습니다.",
+    loginError: "❌ 로그인 오류: "
   },
   en: {
     brandName: "ContentBoost",
@@ -29,6 +33,9 @@ const loginTranslations = {
     passwordPlaceholder: "Enter your password",
     forgotPassword: "Forgot your password?",
     loginButton: "Sign In",
+    loginSuccess: "✅ Login successful",
+    loginFailed: "❌ Login failed: No token received.",
+    loginError: "❌ Login error: "
   }
 };
 
@@ -41,7 +48,7 @@ export default function LoginPage() {
   const [msg, setMsg] = useState('');
   const [autoLogin, setAutoLogin] = useState(false); // ✅ 로그인 유지 체크
 
-  const t = loginTranslations[language] || loginTranslations['ko'];
+  const t = loginTranslations[language] || loginTranslations.ko;
 
   const handle_login = async (e) => {
     e.preventDefault();
@@ -76,10 +83,10 @@ export default function LoginPage() {
         setMsg('✅ 로그인 성공');
         setCurrentPage('dashboard'); // 대시보드로 이동
       } else {
-        setMsg('❌ 로그인 실패: 토큰이 없습니다.');
+        setMsg(t.loginFailed);
       }
     } catch (err) {
-      setMsg('❌ 로그인 오류: ' + err.message);
+      setMsg(t.loginError + err.message);
     } finally {
       setIsLoading(false);
     }
