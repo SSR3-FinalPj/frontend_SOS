@@ -7,31 +7,35 @@ import { User, Lock } from 'lucide-react';
 import { setAccessToken, saveRefreshToken } from '../lib/token.js';
 //import { BASE_API_URL } from '../lib/config.js'; // 없으면 그냥 BASE_API_URL = 'http://localhost:8080';
 
+// 로그인 번역
 const loginTranslations = {
   ko: {
     brandName: "콘텐츠부스트",
     welcomeBack: "다시 오신 것을 환영합니다",
-    subtitle: "계정에 로그인하여 AI 콘텐츠 관리를 시작하세요",
-    // 🔽 추가
-    name: "아이디",
-    namePlaceholder: "아이디를 입력하세요",
+    loginSubtitle: "계정에 로그인하여 AI 콘텐츠 관리를 시작하세요",
+    username: "아이디",
+    usernamePlaceholder: "아이디를 입력하세요",
     password: "비밀번호",
     passwordPlaceholder: "비밀번호를 입력하세요",
     forgotPassword: "비밀번호를 잊으셨나요?",
     loginButton: "로그인",
+    loginSuccess: "✅ 로그인 성공",
+    loginFailed: "❌ 로그인 실패: 토큰이 없습니다.",
+    loginError: "❌ 로그인 오류: "
   },
-
   en: {
     brandName: "ContentBoost",
     welcomeBack: "Welcome Back",
-    subtitle: "Sign in to your account to start AI content management",
-    // 🔽 추가
-    name: "Name",
-    namePlaceholder: "Enter your name",
+    loginSubtitle: "Sign in to your account to start AI content management",
+    username: "Username",
+    usernamePlaceholder: "Enter your username",
     password: "Password",
     passwordPlaceholder: "Enter your password",
     forgotPassword: "Forgot your password?",
     loginButton: "Sign In",
+    loginSuccess: "✅ Login successful",
+    loginFailed: "❌ Login failed: No token received.",
+    loginError: "❌ Login error: "
   }
 };
 
@@ -44,7 +48,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [msg, setMsg] = useState('');
 
-  const t = loginTranslations[language] || loginTranslations['ko'];
+  const t = loginTranslations[language] || loginTranslations.ko;
 
   const handle_login = async (e) => {
     e.preventDefault();
@@ -67,13 +71,13 @@ export default function LoginPage() {
       if (data.accessToken) {
         setAccessToken(data.accessToken);
         if (data.refreshToken) saveRefreshToken(data.refreshToken);
-        setMsg('✅ 로그인 성공');
+        setMsg(t.loginSuccess);
         setCurrentPage('dashboard'); // 대시보드로 이동
       } else {
-        setMsg('❌ 로그인 실패: 토큰이 없습니다.');
+        setMsg(t.loginFailed);
       }
     } catch (err) {
-      setMsg('❌ 로그인 오류: ' + err.message);
+      setMsg(t.loginError + err.message);
     } finally {
       setIsLoading(false);
     }

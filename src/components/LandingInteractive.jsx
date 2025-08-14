@@ -19,7 +19,6 @@ import {
   Phone,
   Moon,
   Sun,
-  Globe,
   ChevronDown,
   ArrowRight,
   Play,
@@ -35,75 +34,6 @@ const img2 = "https://via.placeholder.com/600x400/8B5CF6/FFFFFF?text=Insights";
 const imgAi2 = "https://via.placeholder.com/600x400/EF4444/FFFFFF?text=Automation";
 const img3 = "https://via.placeholder.com/600x400/06B6D4/FFFFFF?text=Optimization";
 
-// Translation content
-const translations = {
-  ko: {
-    brandName: "콘텐츠부스트",
-    login: "로그인",
-    getStarted: "시작하기",
-    features: "기능",
-    about: "소개",
-    heroTitle: "콘텐츠의",
-    heroTitle2: "진화",
-    heroSubtitle: "당신의 반응이 완성합니다.",
-    heroDescription: "AI가 실시간 데이터를 분석하여 가장 트렌디한 콘텐츠를 만들고, 모든 SNS 채널의 반응을 하나로 모아 분석합니다.",
-    startNow: "지금 시작하기",
-    coreFeatures: "핵심 기능",
-    coreFeaturesSubtitle: "세 가지 혁신으로 콘텐츠 관리가 달라집니다",
-    step1Title: "통합 관리",
-    step1Description: "모든 소셜 미디어 플랫폼을 하나의 대시보드에서 통합 관리하세요.",
-    step2Title: "AI 분석",
-    step2Description: "실시간 데이터 분석으로 콘텐츠 성과를 예측하고 최적화합니다.",
-    step3Title: "자동 최적화",
-    step3Description: "AI가 최적의 시간에 가장 효과적인 콘텐츠를 자동으로 발행합니다.",
-    transformTitle: "모든 것을",
-    transformTitle2: "바꿉니다",
-    transformSubtitle: "소셜 미디어 관리의 새로운 표준",
-    insightTitle: "깊이 있는 인사이트",
-    insightDescription: "모든 채널의 데이터를 통합 분석해 숨겨진 가치를 발견합니다.",
-    automationTitle: "완전한 자동화", 
-    automationDescription: "AI가 콘텐츠 생성부터 발행까지 모든 과정을 자동화합니다.",
-    optimizationTitle: "실시간 최적화",
-    optimizationDescription: "데이터 기반 인사이트로 실시간으로 전략을 조정합니다.",
-    readyTitle: "시작할",
-    readyTitle2: "준비가 되셨나요?",
-    readySubtitle: "지금 바로 콘텐츠 혁신을 경험해보세요",
-    copyright: "© 2025 콘텐츠부스트. 모든 권리 보유."
-  },
-  en: {
-    brandName: "ContentBoost",
-    login: "로그인",
-    getStarted: "시작하기",
-    features: "기능",
-    about: "소개",
-    heroTitle: "Content",
-    heroTitle2: "Evolution",
-    heroSubtitle: "Your reactions complete it.",
-    heroDescription: "AI analyzes real-time data to create the trendiest content, collecting and analyzing reactions from all SNS channels in one place.",
-    startNow: "지금 시작하기",
-    coreFeatures: "Core Features",
-    coreFeaturesSubtitle: "Three innovations that transform content management",
-    step1Title: "Unified Management",
-    step1Description: "Manage all social media platforms in one integrated dashboard.",
-    step2Title: "AI Analysis",
-    step2Description: "Predict and optimize content performance with real-time data analysis.",
-    step3Title: "Auto Optimization",
-    step3Description: "AI automatically publishes the most effective content at optimal times.",
-    transformTitle: "Changes",
-    transformTitle2: "Everything",
-    transformSubtitle: "The new standard for social media management",
-    insightTitle: "Deep Insights",
-    insightDescription: "Discover hidden value by analyzing integrated data from all channels.",
-    automationTitle: "Complete Automation",
-    automationDescription: "AI automates everything from content creation to publishing.",
-    optimizationTitle: "Real-time Optimization", 
-    optimizationDescription: "Adjust strategies in real-time with data-driven insights.",
-    readyTitle: "Ready to",
-    readyTitle2: "Get Started?",
-    readySubtitle: "Experience content innovation right now",
-    copyright: "© 2025 ContentBoost. All rights reserved."
-  }
-};
 
 // Glass card component for features
 function GlassFeatureCard({ 
@@ -170,9 +100,9 @@ function Section({
 }
 
 // Floating navigation
-function FloatingNav({ t }) {
+function FloatingNav() {
   const [isVisible, setIsVisible] = useState(false);
-  const { setCurrentPage, isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
+  const { setCurrentPage, isDarkMode, setIsDarkMode } = usePageStore();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -233,7 +163,7 @@ function FloatingNav({ t }) {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-sm">
                 <span className="text-white text-sm font-semibold">AI</span>
               </div>
-              <span className="text-xl font-semibold text-gray-800 dark:text-white">{t.brandName}</span>
+              <span className="text-xl font-semibold text-gray-800 dark:text-white">콘텐츠부스트</span>
             </motion.div>
 
             {/* Navigation - 한국어로 변경 */}
@@ -247,7 +177,7 @@ function FloatingNav({ t }) {
                 whileTap={{ scale: 0.95 }}
                 className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
               >
-                {t.features}
+                기능
               </motion.button>
               <motion.button 
                 onClick={() => scrollToSection('transform')}
@@ -258,24 +188,12 @@ function FloatingNav({ t }) {
                 whileTap={{ scale: 0.95 }}
                 className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
               >
-                {t.about}
+                소개
               </motion.button>
             </div>
 
             {/* Controls */}
             <div className="flex items-center gap-3">
-              {/* Language Toggle */}
-              <motion.button
-                onClick={() => setLanguage(language === 'ko' ? 'en' : 'ko')}
-                whileHover={{ 
-                  scale: 1.1,
-                  transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
-                }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-300"
-              >
-                <Globe className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-              </motion.button>
 
               {/* Dark Mode Toggle */}
               <motion.button
@@ -303,7 +221,7 @@ function FloatingNav({ t }) {
                 whileTap={{ scale: 0.97 }}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium"
               >
-                {t.getStarted}
+                시작하기
               </motion.button>
             </div>
           </div>
@@ -314,7 +232,7 @@ function FloatingNav({ t }) {
 }
 
 // Hero Section - "기능 살펴보기" 버튼 제거
-function HeroSection({ t }) {
+function HeroSection() {
   const { setCurrentPage } = usePageStore();
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -361,7 +279,7 @@ function HeroSection({ t }) {
                 ease: [0.16, 1, 0.3, 1] 
               }}
             >
-              {t.heroTitle}
+              콘텐츠의
             </motion.span>
             <br />
             <motion.span 
@@ -374,7 +292,7 @@ function HeroSection({ t }) {
                 ease: [0.16, 1, 0.3, 1] 
               }}
             >
-              {t.heroTitle2}
+              진화
             </motion.span>
           </h1>
           
@@ -388,7 +306,7 @@ function HeroSection({ t }) {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            {t.heroSubtitle}
+            당신의 반응이 완성합니다.
           </motion.p>
           
           <motion.p 
@@ -401,7 +319,7 @@ function HeroSection({ t }) {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            {t.heroDescription}
+            AI가 실시간 데이터를 분석하여 가장 트렌디한 콘텐츠를 만들고, 모든 SNS 채널의 반응을 하나로 모아 분석합니다.
           </motion.p>
         </motion.div>
 
@@ -432,7 +350,7 @@ function HeroSection({ t }) {
             }}
             className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-5 rounded-xl text-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center gap-3"
           >
-            {t.startNow}
+            지금 시작하기
             <motion.div
               animate={{ x: [0, 4, 0] }}
               transition={{ 
@@ -509,22 +427,22 @@ function HeroSection({ t }) {
 }
 
 // Features Section with Glass Cards
-function FeaturesSection({ t }) {
+function FeaturesSection() {
   const features = [
     {
       icon: Smartphone,
-      title: t.step1Title,
-      description: t.step1Description
+      title: "통합 관리",
+      description: "모든 소셜 미디어 플랫폼을 하나의 대시보드에서 통합 관리하세요."
     },
     {
       icon: Brain,
-      title: t.step2Title,
-      description: t.step2Description
+      title: "AI 분석",
+      description: "실시간 데이터 분석으로 콘텐츠 성과를 예측하고 최적화합니다."
     },
     {
       icon: Zap,
-      title: t.step3Title,
-      description: t.step3Description
+      title: "자동 최적화",
+      description: "AI가 최적의 시간에 가장 효과적인 콘텐츠를 자동으로 발행합니다."
     }
   ];
 
@@ -544,10 +462,10 @@ function FeaturesSection({ t }) {
           }}
         >
           <h2 className="text-6xl lg:text-7xl font-light tracking-tight text-gray-800 dark:text-white mb-6">
-            {t.coreFeatures}
+            핵심 기능
           </h2>
           <p className="text-2xl text-gray-600 dark:text-gray-300 font-light max-w-3xl mx-auto">
-            {t.coreFeaturesSubtitle}
+            세 가지 혁신으로 콘텐츠 관리가 달라집니다
           </p>
         </motion.div>
       </div>
@@ -568,23 +486,23 @@ function FeaturesSection({ t }) {
 }
 
 // Transform Section
-function TransformSection({ t }) {
+function TransformSection() {
   const benefits = [
     {
-      title: t.insightTitle,
-      description: t.insightDescription,
+      title: "깊이 있는 인사이트",
+      description: "모든 채널의 데이터를 통합 분석해 숨겨진 가치를 발견합니다.",
       image: img2,
       icon: BarChart3
     },
     {
-      title: t.automationTitle,
-      description: t.automationDescription,
+      title: "완전한 자동화",
+      description: "AI가 콘텐츠 생성부터 발행까지 모든 과정을 자동화합니다.",
       image: imgAi2,
       icon: Rocket
     },
     {
-      title: t.optimizationTitle,
-      description: t.optimizationDescription,
+      title: "실시간 최적화",
+      description: "데이터 기반 인사이트로 실시간으로 전략을 조정합니다.",
       image: img3,
       icon: Target
     }
@@ -607,14 +525,14 @@ function TransformSection({ t }) {
           }}
         >
           <h2 className="text-6xl lg:text-7xl font-light tracking-tight text-gray-800 dark:text-white mb-6">
-            <span>{t.transformTitle}</span>
+            <span>모든 것을</span>
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {t.transformTitle2}
+              바꿉니다
             </span>
           </h2>
           <p className="text-2xl text-gray-600 dark:text-gray-300 font-light max-w-3xl mx-auto">
-            {t.transformSubtitle}
+            소셜 미디어 관리의 새로운 표준
           </p>
         </motion.div>
       </div>
@@ -684,7 +602,7 @@ function TransformSection({ t }) {
 }
 
 // Final CTA Section
-function ReadySection({ t }) {
+function ReadySection() {
   const { setCurrentPage } = usePageStore();
 
   const goToLogin = () => {
@@ -707,14 +625,14 @@ function ReadySection({ t }) {
           }}
         >
           <h2 className="text-6xl lg:text-7xl font-light tracking-tight text-gray-800 dark:text-white mb-6">
-            <span>{t.readyTitle}</span>
+            <span>시작할</span>
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {t.readyTitle2}
+              준비가 되셨나요?
             </span>
           </h2>
           <p className="text-2xl text-gray-600 dark:text-gray-300 font-light max-w-3xl mx-auto mb-12">
-            {t.readySubtitle}
+            지금 바로 콘텐츠 혁신을 경험해보세요
           </p>
 
           <motion.button
@@ -730,7 +648,7 @@ function ReadySection({ t }) {
             }}
             className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-6 rounded-2xl text-xl font-medium transition-all duration-300 shadow-2xl hover:shadow-3xl"
           >
-            {t.startNow}
+            지금 시작하기
           </motion.button>
         </motion.div>
 
@@ -750,9 +668,9 @@ function ReadySection({ t }) {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
               <span className="text-white text-sm font-semibold">AI</span>
             </div>
-            <span className="text-2xl font-light text-gray-800 dark:text-white">{t.brandName}</span>
+            <span className="text-2xl font-light text-gray-800 dark:text-white">콘텐츠부스트</span>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{t.copyright}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">© 2025 콘텐츠부스트. 모든 권리 보유.</p>
         </motion.div>
       </div>
     </Section>
@@ -761,20 +679,16 @@ function ReadySection({ t }) {
 
 // Main Component
 export default function LandingInteractive() {
-  const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
+  const { isDarkMode, setIsDarkMode } = usePageStore();
 
   // Load preferences from localStorage
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
-    const savedLanguage = localStorage.getItem('contentboost-language');
     
     if (savedDarkMode !== null) {
       setIsDarkMode(JSON.parse(savedDarkMode));
     }
-    if (savedLanguage) {
-      setLanguage(savedLanguage);
-    }
-  }, [setIsDarkMode, setLanguage]);
+  }, [setIsDarkMode]);
 
   // Apply dark mode
   useEffect(() => {
@@ -787,24 +701,18 @@ export default function LandingInteractive() {
     localStorage.setItem('contentboost-dark-mode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
-  // Save language preference
-  useEffect(() => {
-    localStorage.setItem('contentboost-language', language);
-  }, [language]);
-
-  const t = translations[language] || translations['ko'];
 
   return (
     <div className="relative overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Floating Navigation */}
-      <FloatingNav t={t} />
+      <FloatingNav />
       
       {/* Content */}
       <div className="relative z-10">
-        <HeroSection t={t} />
-        <FeaturesSection t={t} />
-        <TransformSection t={t} />
-        <ReadySection t={t} />
+        <HeroSection />
+        <FeaturesSection />
+        <TransformSection />
+        <ReadySection />
       </div>
     </div>
   );
