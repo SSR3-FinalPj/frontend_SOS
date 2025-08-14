@@ -1,4 +1,4 @@
 node_modules
 CLAUDE.md
 /dist
-DS.store
+.DS_store
