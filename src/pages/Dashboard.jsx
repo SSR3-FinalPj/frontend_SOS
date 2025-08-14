@@ -397,15 +397,15 @@ function AnalyticsFilterSidebar({
   selectedPlatform, 
   setSelectedPlatform, 
   selectedPeriod, 
-  setSelectedPeriod 
+  setSelectedPeriod,
+  isCalendarVisible,
+  setIsCalendarVisible,
+  date_range,
+  set_date_range,
+  tempPeriodLabel,
+  setTempPeriodLabel
 }) {
   const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [date_range, set_date_range] = useState({
-    from: undefined,
-    to: undefined
-  });
-  const [tempPeriodLabel, setTempPeriodLabel] = useState('');
   const periodDropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -441,7 +441,7 @@ function AnalyticsFilterSidebar({
     setPeriodDropdownOpen(false);
     
     if (periodId === 'custom') {
-      setCalendarOpen(true);
+      setIsCalendarVisible(true);
     } else {
       setTempPeriodLabel('');
     }
@@ -455,22 +455,7 @@ function AnalyticsFilterSidebar({
     });
   };
 
-  const handleApplyDateRange = () => {
-    if (date_range.from && date_range.to) {
-      const fromStr = formatDate(date_range.from);
-      const toStr = formatDate(date_range.to);
-      setTempPeriodLabel(`${fromStr} ${t.to} ${toStr}`);
-    } else if (date_range.from) {
-      setTempPeriodLabel(formatDate(date_range.from));
-    }
-    setCalendarOpen(false);
-  };
-
-  const handleCalendarSelect = (range) => {
-    if (range) {
-      set_date_range(range);
-    }
-  };
+  // These handlers will be passed from parent component
 
   return (
     <div className="w-64 h-full flex flex-col relative z-10 flex-shrink-0">
@@ -516,110 +501,72 @@ function AnalyticsFilterSidebar({
           </div>
         </div>
 
-        {/* 분석 기간 드롭다운 */}
+        {/* 분석 기간 - 조건부 렌더링 */}
         <div className="mb-8 flex-1">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-            {t.analysisPeriod}
-          </h3>
-          
-          <div className="relative" ref={periodDropdownRef}>
-            <motion.button
-              onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center justify-between px-4 py-3 bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 rounded-xl hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
-            >
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                {getSelectedPeriodLabel()}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 flex-shrink-0 ml-2 ${periodDropdownOpen ? 'rotate-180' : ''}`} />
-            </motion.button>
-
-            {/* 드롭다운 메뉴 */}
-            <AnimatePresence>
-              {periodDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.2, ease: [0.21, 0.47, 0.32, 0.98] }}
-                  className="absolute top-full left-0 right-0 mt-2 backdrop-blur-2xl bg-white/30 dark:bg-white/10 border border-white/40 dark:border-white/20 rounded-xl shadow-2xl p-2 z-50"
+          {!isCalendarVisible ? (
+            // 필터 목록 표시
+            <>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                {t.analysisPeriod}
+              </h3>
+              
+              <div className="relative" ref={periodDropdownRef}>
+                <motion.button
+                  onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 rounded-xl hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
                 >
-                  {periodOptions.map((option) => (
-                    <motion.button
-                      key={option.id}
-                      onClick={() => handlePeriodSelect(option.id)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`w-full text-left px-3 py-3 rounded-lg transition-all duration-200 flex items-center justify-between ${
-                        selectedPeriod === option.id
-                          ? 'bg-blue-500 text-white shadow-lg'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                      }`}
-                    >
-                      <span className="text-sm font-medium">{option.label}</span>
-                      {selectedPeriod === option.id && (
-                        <Check className="w-4 h-4" />
-                      )}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                    {getSelectedPeriodLabel()}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 flex-shrink-0 ml-2 ${periodDropdownOpen ? 'rotate-180' : ''}`} />
+                </motion.button>
 
-          {/* 사용자 지정 달력 - 날짜 범위 선택 */}
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger asChild>
-              <div></div>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 backdrop-blur-2xl bg-white/90 dark:bg-gray-800/90 border border-white/40 dark:border-gray-600/30 rounded-xl shadow-2xl" align="start">
-              <div className="p-4">
-                <h4 className="text-sm font-medium text-gray-800 dark:text-white mb-3">
-                  {t.selectDateRange}
-                </h4>
-                <CalendarComponent
-                  mode="range"
-                  selected={date_range}
-                  onSelect={handleCalendarSelect}
-                  numberOfMonths={2}
-                  className="rounded-lg"
-                  showOutsideDays={false}
-                />
-                
-                {/* 선택된 기간 표시 */}
-                {(date_range.from || date_range.to) && (
-                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      {date_range.from && formatDate(date_range.from)}
-                      {date_range.from && date_range.to && ` ${t.to} `}
-                      {date_range.to && formatDate(date_range.to)}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="flex gap-2 mt-4">
-                  <motion.button
-                    onClick={() => setCalendarOpen(false)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-2 px-4 rounded-lg transition-colors text-sm"
-                  >
-                    취소
-                  </motion.button>
-                  <motion.button
-                    onClick={handleApplyDateRange}
-                    disabled={!date_range.from}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors text-sm"
-                  >
-                    {t.applyPeriod}
-                  </motion.button>
-                </div>
+                {/* 드롭다운 메뉴 */}
+                <AnimatePresence>
+                  {periodDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: [0.21, 0.47, 0.32, 0.98] }}
+                      className="absolute top-full left-0 right-0 mt-2 backdrop-blur-2xl bg-white/30 dark:bg-white/10 border border-white/40 dark:border-white/20 rounded-xl shadow-2xl p-2 z-50"
+                    >
+                      {periodOptions.map((option) => (
+                        <motion.button
+                          key={option.id}
+                          onClick={() => handlePeriodSelect(option.id)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`w-full text-left px-3 py-3 rounded-lg transition-all duration-200 flex items-center justify-between ${
+                            selectedPeriod === option.id
+                              ? 'bg-blue-500 text-white shadow-lg'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                          }`}
+                        >
+                          <span className="text-sm font-medium">{option.label}</span>
+                          {selectedPeriod === option.id && (
+                            <Check className="w-4 h-4" />
+                          )}
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </PopoverContent>
-          </Popover>
+            </>
+          ) : (
+            // 달력 표시 상태 - 실제 달력은 부모에서 렌더링
+            <div className="w-full relative">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                {t.selectDateRange}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                날짜 범위를 선택하세요
+              </p>
+            </div>
+          )}
         </div>
 
         {/* 뒤로가기 버튼 - 최하단에 위치 */}
@@ -647,7 +594,42 @@ function DetailedAnalyticsView({
 }) {
   const [selectedPlatform, setSelectedPlatform] = useState('youtube'); // 플랫폼 선택 가능하도록 변경
   const [selectedPeriod, setSelectedPeriod] = useState('last30Days');
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [date_range, set_date_range] = useState({
+    from: undefined,
+    to: undefined
+  });
+  const [tempPeriodLabel, setTempPeriodLabel] = useState('');
   const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
+
+  // Calendar handlers
+  const formatDate = (date) => {
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  const handleApplyDateRange = (range) => {
+    if (range && range.from && range.to) {
+      const fromStr = formatDate(range.from);
+      const toStr = formatDate(range.to);
+      setTempPeriodLabel(`${fromStr} ${t.to} ${toStr}`);
+      set_date_range(range);
+    }
+    setIsCalendarVisible(false);
+  };
+
+  const handleCalendarCancel = () => {
+    setIsCalendarVisible(false);
+  };
+
+  const handleCalendarRangeSelect = (range) => {
+    if (range) {
+      set_date_range(range);
+    }
+  };
 
   // 플랫폼별 KPI 데이터
   const getKpiData = () => {
@@ -752,6 +734,12 @@ function DetailedAnalyticsView({
         setSelectedPlatform={setSelectedPlatform}
         selectedPeriod={selectedPeriod}
         setSelectedPeriod={setSelectedPeriod}
+        isCalendarVisible={isCalendarVisible}
+        setIsCalendarVisible={setIsCalendarVisible}
+        date_range={date_range}
+        set_date_range={set_date_range}
+        tempPeriodLabel={tempPeriodLabel}
+        setTempPeriodLabel={setTempPeriodLabel}
       />
 
       {/* Main Content Area */}
@@ -945,6 +933,31 @@ function DetailedAnalyticsView({
           </div>
         </main>
       </div>
+
+      {/* Calendar Component - Rendered at root level to avoid stacking context issues */}
+      {isCalendarVisible && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/20 dark:bg-black/40" 
+          onClick={handleCalendarCancel}
+        >
+          <div 
+            className="absolute left-64 top-32"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
+              <CalendarComponent
+                mode="range"
+                selected_range={date_range}
+                on_range_select={handleCalendarRangeSelect}
+                on_apply={handleApplyDateRange}
+                on_cancel={handleCalendarCancel}
+                className="w-full"
+                show_actions={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
