@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Download, FileText, BarChart3 } from 'lucide-react';
 import { GlassCard } from '../ui/glass-card.jsx';
 
-function DataExportCard({ t }) {
+function DataExportCard() {
   const [selectedPeriod, setSelectedPeriod] = useState('7days');
 
   const handleExport = (format) => {
@@ -23,15 +23,15 @@ function DataExportCard({ t }) {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
               <Download className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-xl font-medium text-gray-800 dark:text-white">{t.dataExport}</h3>
+            <h3 className="text-xl font-medium text-gray-800 dark:text-white">데이터 내보내기</h3>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 text-sm">{t.exportPeriod}</p>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">선택한 기간의 데이터를 내보냅니다.</p>
         </div>
 
         {/* Period Selection */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            {t.selectPeriod}
+            기간 선택
           </label>
           <div className="flex gap-3">
             <motion.button
@@ -44,7 +44,7 @@ function DataExportCard({ t }) {
                   : 'bg-white/20 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
               }`}
             >
-              {t.last7Days}
+              최근 7일
             </motion.button>
             <motion.button
               onClick={() => setSelectedPeriod('30days')}
@@ -56,7 +56,7 @@ function DataExportCard({ t }) {
                   : 'bg-white/20 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
               }`}
             >
-              {t.last30Days}
+              최근 30일
             </motion.button>
           </div>
         </div>
@@ -70,7 +70,7 @@ function DataExportCard({ t }) {
             className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
           >
             <FileText className="w-5 h-5" />
-            {t.exportToCSV}
+            CSV로 내보내기
           </motion.button>
           <motion.button
             onClick={() => handleExport('excel')}
@@ -79,7 +79,7 @@ function DataExportCard({ t }) {
             className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
           >
             <BarChart3 className="w-5 h-5" />
-            {t.exportToExcel}
+            Excel로 내보내기
           </motion.button>
         </div>
       </GlassCard>
