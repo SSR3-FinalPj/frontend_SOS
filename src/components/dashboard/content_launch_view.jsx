@@ -1,0 +1,248 @@
+/**
+ * ContentLaunchView 컴포넌트
+ * 콘텐츠 론칭 메인 뷰
+ */
+
+import React from 'react';
+import { motion } from 'framer-motion';
+import ContentFolderCard from './content_folder_card';
+import ContentPreviewModal from './content_preview_modal';
+import ContentPublishModal from './content_publish_modal';
+import { use_content_launch } from '../../hooks/use_content_launch.jsx';
+import { use_content_modals } from '../../hooks/use_content_modals.jsx';
+
+/**
+ * ContentLaunchView 컴포넌트
+ * @param {Object} props - 컴포넌트 props
+ * @param {boolean} props.dark_mode - 다크모드 여부
+ * @returns {JSX.Element} ContentLaunchView 컴포넌트
+ */
+const ContentLaunchView = ({ dark_mode }) => {
+  // 커스텀 훅 사용
+  const {
+    open_folders,
+    uploading_items,
+    toggle_folder,
+    simulate_upload
+  } = use_content_launch();
+
+  const {
+    preview_modal,
+    publish_modal,
+    publish_form,
+    open_preview_modal,
+    close_preview_modal,
+    open_publish_modal,
+    close_publish_modal,
+    toggle_platform,
+    update_publish_form
+  } = use_content_modals();
+
+  // 날짜별로 그룹화된 AI 생성 콘텐츠 데이터
+  const date_folders = [
+    {
+      date: '2024-12-13',
+      display_date: '2024년 12월 13일',
+      item_count: 5,
+      items: [
+        {
+          id: '1',
+          title: 'AI 분석: 연말 파티 준비 완벽 가이드',
+          type: 'video',
+          platform: 'youtube',
+          status: 'ready',
+          engagement_score: 94,
+          estimated_views: 15200,
+          created_at: '09:15',
+          description: '2024년을 마무리하는 완벽한 연말 파티를 위한 단계별 가이드입니다. 예산 계획부터 장소 선정, 음식 준비, 데코레이션까지 모든 것을 다룹니다.',
+          video_url: '/video-sample.mp4'
+        },
+        {
+          id: '2',
+          title: '2024년 트렌드 총정리: 무엇이 바뀌었나?',
+          type: 'text',
+          platform: 'reddit',
+          status: 'ready',
+          engagement_score: 87,
+          estimated_views: 3400,
+          created_at: '11:30',
+          description: '올해 가장 주목받은 기술, 문화, 사회적 트렌드들을 분석하고 2025년 전망을 제시합니다.'
+        },
+        {
+          id: '3',
+          title: '파티 데코레이션 아이디어 인포그래픽',
+          type: 'image',
+          platform: 'instagram',
+          status: 'ready',
+          engagement_score: 91,
+          estimated_views: 8900,
+          created_at: '14:20',
+          description: '예산별, 테마별 파티 데코레이션 아이디어를 시각적으로 정리한 인포그래픽입니다.'
+        },
+        {
+          id: '4',
+          title: '효과적인 썸네일 제작 방법론',
+          type: 'video',
+          platform: 'youtube',
+          status: 'uploaded',
+          engagement_score: 89,
+          estimated_views: 12100,
+          created_at: '16:45',
+          description: '클릭률을 높이는 썸네일 디자인의 핵심 원리와 실전 팁을 공개합니다.',
+          video_url: '/video-sample2.mp4'
+        },
+        {
+          id: '5',
+          title: '브랜딩 전략: 색상 심리학 활용법',
+          type: 'text',
+          platform: 'reddit',
+          status: 'ready',
+          engagement_score: 85,
+          estimated_views: 2800,
+          created_at: '18:10',
+          description: '브랜드 아이덴티티 구축에서 색상이 미치는 심리적 영향과 전략적 활용 방법을 분석합니다.'
+        }
+      ]
+    },
+    {
+      date: '2024-12-12',
+      display_date: '2024년 12월 12일',
+      item_count: 3,
+      items: [
+        {
+          id: '6',
+          title: '소셜미디어 최적화 전략 영상',
+          type: 'video',
+          platform: 'youtube',
+          status: 'ready',
+          engagement_score: 92,
+          estimated_views: 18500,
+          created_at: '10:30',
+          description: '각 플랫폼별 알고리즘 특성을 이해하고 콘텐츠 최적화하는 방법을 설명합니다.',
+          video_url: '/video-sample3.mp4'
+        },
+        {
+          id: '7',
+          title: '커뮤니티 참여도 높이는 방법',
+          type: 'text',
+          platform: 'reddit',
+          status: 'ready',
+          engagement_score: 88,
+          estimated_views: 4200,
+          created_at: '15:20',
+          description: '온라인 커뮤니티에서 의미있는 토론을 이끌어내고 참여도를 높이는 전략을 공유합니다.'
+        },
+        {
+          id: '8',
+          title: '비주얼 콘텐츠 디자인 가이드',
+          type: 'image',
+          platform: 'instagram',
+          status: 'uploaded',
+          engagement_score: 86,
+          estimated_views: 7300,
+          created_at: '17:45',
+          description: '인스타그램에서 주목받는 비주얼 콘텐츠의 디자인 원칙과 트렌드를 정리했습니다.'
+        }
+      ]
+    }
+  ];
+
+  /**
+   * 게시 완료 핸들러
+   */
+  const handle_final_publish = async () => {
+    if (!publish_modal.item) return;
+    
+    close_publish_modal();
+    await simulate_upload(publish_modal.item.id);
+    
+    console.log('Published:', publish_form);
+  };
+
+  return (
+    <div className={`flex-1 ${
+      dark_mode 
+        ? 'bg-gradient-to-br from-gray-900/80 via-gray-800/40 to-gray-900/80' 
+        : 'bg-gradient-to-br from-indigo-50/80 via-white/40 to-cyan-50/80'
+    } h-full overflow-hidden flex flex-col relative`}>
+      
+      {/* 강화된 배경 패턴 */}
+      <div className={`absolute inset-0 ${
+        dark_mode 
+          ? 'bg-[radial-gradient(circle_at_15%_25%,rgba(99,102,241,0.03)_0%,transparent_40%),radial-gradient(circle_at_85%_75%,rgba(168,85,247,0.02)_0%,transparent_40%),radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.02)_0%,transparent_60%)]'
+          : 'bg-[radial-gradient(circle_at_15%_25%,rgba(99,102,241,0.08)_0%,transparent_40%),radial-gradient(circle_at_85%_75%,rgba(168,85,247,0.06)_0%,transparent_40%),radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.04)_0%,transparent_60%)]'
+      } pointer-events-none`} />
+
+      {/* 날짜별 폴더 목록 */}
+      <div className="flex-1 overflow-auto px-8 py-6 relative z-10">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* 통계 정보 */}
+          <div className="flex items-center justify-end gap-4 mb-6">
+            <div className={`${
+              dark_mode 
+                ? 'bg-gray-800/60 border-gray-600/60' 
+                : 'bg-white/60 border-white/60'
+            } backdrop-blur-sm rounded-xl px-4 py-2 border`}>
+              <div className="text-center">
+                <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+                  {date_folders.reduce((sum, folder) => sum + folder.item_count, 0)}
+                </div>
+                <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>총 콘텐츠</div>
+              </div>
+            </div>
+            
+            <div className={`${
+              dark_mode 
+                ? 'bg-gray-800/60 border-gray-600/60' 
+                : 'bg-white/60 border-white/60'
+            } backdrop-blur-sm rounded-xl px-4 py-2 border`}>
+              <div className="text-center">
+                <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+                  {date_folders.length}
+                </div>
+                <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>폴더</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 폴더 카드들 */}
+          {date_folders.map((folder) => (
+            <ContentFolderCard
+              key={folder.date}
+              folder={folder}
+              dark_mode={dark_mode}
+              is_open={open_folders.includes(folder.date)}
+              uploading_items={uploading_items}
+              on_toggle={() => toggle_folder(folder.date)}
+              on_preview={open_preview_modal}
+              on_publish={open_publish_modal}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 미리보기 모달 */}
+      <ContentPreviewModal
+        is_open={preview_modal.open}
+        item={preview_modal.item}
+        dark_mode={dark_mode}
+        on_close={close_preview_modal}
+        on_publish={open_publish_modal}
+      />
+
+      {/* 게시 모달 */}
+      <ContentPublishModal
+        is_open={publish_modal.open}
+        item={publish_modal.item}
+        publish_form={publish_form}
+        dark_mode={dark_mode}
+        on_close={close_publish_modal}
+        on_publish={handle_final_publish}
+        on_toggle_platform={toggle_platform}
+        on_update_form={update_publish_form}
+      />
+    </div>
+  );
+};
+
+export default React.memo(ContentLaunchView);
