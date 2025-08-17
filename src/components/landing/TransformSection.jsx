@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { BarChart3, Rocket, Target } from 'lucide-react';
-import { IMAGE_PATHS } from '../../constants/image_paths.js';
+import { IMAGE_PATHS } from '../../utils/image_paths.js';
 import Section from '../common/Section.jsx';
 
 /**

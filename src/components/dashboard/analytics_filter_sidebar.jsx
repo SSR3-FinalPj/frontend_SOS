@@ -12,7 +12,7 @@ import {
   ArrowLeft,
   Check 
 } from 'lucide-react';
-import { period_options } from '../../constants/dashboard_constants.js';
+import { period_options } from '../../utils/dashboard_constants.js';
 
 /**
  * Analytics Filter Sidebar 컴포넌트

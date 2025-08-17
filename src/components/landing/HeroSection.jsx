@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { usePageStore } from '../../stores/page_store.js';
-import { IMAGE_PATHS } from '../../constants/image_paths.js';
+import { IMAGE_PATHS } from '../../utils/image_paths.js';
 import Section from '../common/Section.jsx';
 
 /**

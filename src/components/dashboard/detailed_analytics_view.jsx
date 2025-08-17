@@ -18,7 +18,7 @@ import { usePageStore } from '../../stores/page_store.js';
 import { Calendar as CalendarComponent } from "../../components/ui/calendar.jsx";
 import { use_analytics_filters } from '../../hooks/use_analytics_filters.js';
 import { get_kpi_data } from '../../utils/dashboard_utils.js';
-import { latest_content_data, weekly_activity_data } from '../../constants/dashboard_constants.js';
+import { latest_content_data, weekly_activity_data } from '../../utils/dashboard_constants.js';
 import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
 
 /**

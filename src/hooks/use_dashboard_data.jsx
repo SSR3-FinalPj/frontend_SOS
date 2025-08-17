@@ -6,7 +6,7 @@ import { useState, useMemo } from 'react';
 import { 
   latest_content_data, 
   weekly_activity_data 
-} from '../constants/dashboard_constants.js';
+} from '../utils/dashboard_constants.js';
 import { get_platform_data, get_kpi_data } from '../utils/dashboard_utils.js';
 
 /**

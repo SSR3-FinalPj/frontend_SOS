@@ -3,7 +3,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { period_options } from '../constants/dashboard_constants.js';
+import { period_options } from '../utils/dashboard_constants.js';
 import { format_date } from '../utils/dashboard_utils.js';
 
 /**

@@ -9,7 +9,7 @@ import {
   is_sunday,
   is_today 
 } from '../../utils/calendar-utils.js';
-import { cn } from "./utils";
+import { cn } from "../../utils/ui_utils";
 
 function Calendar({
   selected_date,
