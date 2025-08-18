@@ -1,16 +1,11 @@
 import { motion } from 'framer-motion';
-import { usePageStore } from '../../stores/page_store.js';
+import { Link } from 'react-router-dom';
 import Section from '../common/Section.jsx';
 
 /**
  * 최종 CTA 섹션 컴포넌트
  */
 export default function ReadySection() {
-  const { setCurrentPage: set_current_page } = usePageStore();
-
-  const go_to_login = () => {
-    set_current_page('login');
-  };
 
   return (
     <Section className="relative z-10">
@@ -38,21 +33,22 @@ export default function ReadySection() {
             지금 바로 콘텐츠 혁신을 경험해보세요
           </p>
 
-          <motion.button
-            onClick={go_to_login}
-            whileHover={{ 
-              scale: 1.05, 
-              y: -4,
-              transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
-            }}
-            whileTap={{ 
-              scale: 0.95,
-              transition: { duration: 0.1 }
-            }}
-            className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-6 rounded-2xl text-xl font-medium transition-all duration-300 shadow-2xl hover:shadow-3xl"
-          >
-            지금 시작하기
-          </motion.button>
+          <Link to="/login">
+            <motion.button
+              whileHover={{ 
+                scale: 1.05, 
+                y: -4,
+                transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
+              }}
+              whileTap={{ 
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-6 rounded-2xl text-xl font-medium transition-all duration-300 shadow-2xl hover:shadow-3xl"
+            >
+              지금 시작하기
+            </motion.button>
+          </Link>
         </motion.div>
 
         {/* Footer */}

@@ -1,18 +1,13 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { usePageStore } from '../../stores/page_store.js';
-import { IMAGE_PATHS } from '../../constants/image_paths.js';
+import { IMAGE_PATHS } from '../../utils/image_paths.js';
 import Section from '../common/Section.jsx';
 
 /**
  * 히어로 섹션 컴포넌트
  */
 export default function HeroSection() {
-  const { setCurrentPage: set_current_page } = usePageStore();
-
-  const go_to_login = () => {
-    set_current_page('login');
-  };
 
   return (
     <Section>
@@ -99,8 +94,8 @@ export default function HeroSection() {
           }}
           className="flex justify-center items-center mb-16"
         >
-          <motion.button
-            onClick={go_to_login}
+          <Link to="/login">
+            <motion.button
             whileHover={{ 
               scale: 1.05, 
               y: -2,
@@ -124,6 +119,7 @@ export default function HeroSection() {
               <ArrowRight className="w-6 h-6" />
             </motion.div>
           </motion.button>
+          </Link>
         </motion.div>
 
         {/* Preview Image */}

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "./utils";
+import { cn } from "../../utils/ui_utils";
 
 function Textarea({ className, ...props }) {
   return (

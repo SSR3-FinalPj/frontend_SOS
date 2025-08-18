@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { usePageStore } from '../stores/page_store.js';
 import LoginCard from '../components/login/LoginCard.jsx';
 import { User, Lock } from 'lucide-react';
@@ -37,7 +38,8 @@ const loginTranslations = {
 };
 
 export default function LoginPage() {
-  const { setCurrentPage, language } = usePageStore();
+  const navigate = useNavigate();
+  const { language } = usePageStore();
   // 🔽 email → name
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -56,7 +58,7 @@ export default function LoginPage() {
       await loginApi(name, password);
       setAutoLoginEnabled(true); // "로그인 유지"를 활성화합니다.
       setMsg('✅ 로그인 성공');
-      setCurrentPage('dashboard'); // 대시보드로 이동
+      navigate('/dashboard'); // 대시보드로 이동
     } catch (err) {
       setMsg('❌ 로그인 오류: ' + err.message);
     } finally {
@@ -65,7 +67,7 @@ export default function LoginPage() {
   };
 
   const go_back_to_landing = () => {
-    setCurrentPage('landing');
+    navigate('/');
   };
 
   return (
@@ -86,6 +88,20 @@ export default function LoginPage() {
           nameIcon={User}
           passwordIcon={Lock}
         />
+        
+        {/* 개발용 임시 대시보드 접근 버튼 */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-6 text-center">
+            <Link to="/dashboard">
+              <button className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg text-sm border-2 border-dashed border-gray-400 transition-all duration-200">
+                🔧 [개발용] 대시보드 바로가기
+              </button>
+            </Link>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              개발 환경 전용 - 프로덕션에서는 보이지 않음
+            </p>
+          </div>
+        )}
       </div>
 
       {msg && (

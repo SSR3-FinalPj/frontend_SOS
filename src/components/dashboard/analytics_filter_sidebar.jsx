@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, 
@@ -12,13 +13,12 @@ import {
   ArrowLeft,
   Check 
 } from 'lucide-react';
-import { period_options } from '../../constants/dashboard_constants.js';
+import { period_options } from '../../utils/dashboard_constants.js';
 
 /**
  * Analytics Filter Sidebar 컴포넌트
  * @param {Object} props - 컴포넌트 props
  * @param {string} props.current_view - 현재 뷰
- * @param {Function} props.set_current_view - 뷰 변경 함수
  * @param {string} props.selected_platform - 선택된 플랫폼
  * @param {Function} props.set_selected_platform - 플랫폼 변경 함수
  * @param {string} props.selected_period - 선택된 기간
@@ -38,7 +38,6 @@ import { period_options } from '../../constants/dashboard_constants.js';
  */
 const AnalyticsFilterSidebar = ({ 
   current_view, 
-  set_current_view, 
   selected_platform, 
   set_selected_platform, 
   selected_period, 
@@ -49,6 +48,7 @@ const AnalyticsFilterSidebar = ({
   get_selected_period_label,
   handle_period_select
 }) => {
+  const navigate = useNavigate();
   const periodLabels = {
     last7Days: '최근 7일',
     last30Days: '최근 30일',
@@ -173,7 +173,7 @@ const AnalyticsFilterSidebar = ({
         {/* 뒤로가기 버튼 - 최하단에 위치 */}
         <div className="pt-6 border-t border-gray-200/40 dark:border-white/10">
           <motion.button
-            onClick={() => set_current_view('dashboard')}
+            onClick={() => navigate('/dashboard')}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/5 hover:text-gray-800 dark:hover:text-white rounded-xl transition-all duration-200 text-left font-medium flex items-center gap-2"

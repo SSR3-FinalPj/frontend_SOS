@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
 import { usePageStore } from '../../stores/page_store.js';
@@ -8,7 +9,7 @@ import { usePageStore } from '../../stores/page_store.js';
  */
 export default function FloatingNav() {
   const [is_visible, set_is_visible] = useState(false);
-  const { setCurrentPage: set_current_page, isDarkMode: is_dark_mode, setIsDarkMode: set_is_dark_mode } = usePageStore();
+  const { isDarkMode: is_dark_mode, setIsDarkMode: set_is_dark_mode } = usePageStore();
 
   useEffect(() => {
     const toggle_visibility = () => {
@@ -30,9 +31,6 @@ export default function FloatingNav() {
     }
   };
 
-  const go_to_login = () => {
-    set_current_page('login');
-  };
 
   return (
     <motion.header
@@ -120,17 +118,18 @@ export default function FloatingNav() {
                 )}
               </motion.button>
               
-              <motion.button 
-                onClick={go_to_login}
-                whileHover={{ 
-                  scale: 1.03,
-                  transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
-                }}
-                whileTap={{ scale: 0.97 }}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium"
-              >
-                시작하기
-              </motion.button>
+              <Link to="/login">
+                <motion.button 
+                  whileHover={{ 
+                    scale: 1.03,
+                    transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
+                  }}
+                  whileTap={{ scale: 0.97 }}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium"
+                >
+                  시작하기
+                </motion.button>
+              </Link>
             </div>
           </div>
         </motion.div>

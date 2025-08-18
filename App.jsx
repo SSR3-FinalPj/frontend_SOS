@@ -1,24 +1,35 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { tryRefreshOnBoot } from './src/lib/auth_bootstrap.js';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePageStore } from './src/stores/page_store.js';
-import LandingPage from './src/pages/LandingPage.jsx';
-import LoginPage from './src/pages/LoginPage.jsx';
-import Dashboard from './src/pages/Dashboard.jsx';
+import Router from './src/Router.jsx';
 
 export default function App() {
-    const { currentPage, isDarkMode, setIsDarkMode, language, setLanguage, setCurrentPage } = usePageStore();
-    const [bootDone, setBootDone] = useState(false);
+  const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
+  const [bootDone, setBootDone] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     (async () => {
       const ok = await tryRefreshOnBoot();
-      if (currentPage !== 'login') {
-        setCurrentPage(ok ? 'dashboard' : 'landing');
+      
+      // 현재 로그인 페이지가 아닌 경우에만 리다이렉션
+      if (location.pathname !== '/login') {
+        if (ok) {
+          // 인증 성공: 현재 경로가 루트(/)면 대시보드로, 아니면 현재 경로 유지
+          if (location.pathname === '/') {
+            navigate('/dashboard');
+          }
+        } else if (process.env.NODE_ENV !== 'development') {
+          // 인증 실패: 개발 환경이 아닐 때만 루트 페이지로 리다이렉션
+          navigate('/');
+        }
       }
       setBootDone(true);
     })();
-    }, []);
+  }, [navigate, location.pathname]);
+
   // Initialize dark mode and language from localStorage
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
@@ -48,64 +59,9 @@ export default function App() {
     localStorage.setItem('contentboost-language', language);
   }, [language]);
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'landing':
-        return (
-          <motion.div
-            key="landing"
-            initial={{ opacity: 0, scale: 1.01, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.99, y: -20 }}
-            transition={{ 
-              duration: 0.6, 
-              ease: [0.16, 1, 0.3, 1],
-              layout: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-            }}
-          >
-            <LandingPage />
-          </motion.div>
-        );
-      case 'login':
-        return (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0, scale: 1.01, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.99, y: -20 }}
-            transition={{ 
-              duration: 0.6, 
-              ease: [0.16, 1, 0.3, 1],
-              layout: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-            }}
-          >
-            <LoginPage />
-          </motion.div>
-        );
-      case 'dashboard':
-        return (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, scale: 1.01, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.99, y: -20 }}
-            transition={{ 
-              duration: 0.5, 
-              ease: [0.16, 1, 0.3, 1],
-              layout: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-            }}
-          >
-            <Dashboard />
-          </motion.div>
-        );
-      default:
-        return null;
-    }
-  };
+  if (!bootDone) {
+    return <div />;
+  }
 
-  return (
-    <AnimatePresence mode="wait">
-      {!bootDone ? <div /> : renderCurrentPage()}
-    </AnimatePresence>
-  );
+  return <Router />;
 }
