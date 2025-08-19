@@ -110,5 +110,4 @@ export const get_content_type_label = (type) => {
 export const get_platform_list = () => [
   'youtube',
   'reddit', 
-  'instagram'
 ];

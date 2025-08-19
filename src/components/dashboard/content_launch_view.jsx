@@ -1,6 +1,6 @@
 /**
  * ContentLaunchView 컴포넌트
- * 콘텐츠 론칭 메인 뷰
+ * .env 파일을 사용해 비디오 URL을 관리합니다.
  */
 
 import React from 'react';
@@ -38,12 +38,27 @@ const ContentLaunchView = ({ dark_mode }) => {
     update_publish_form
   } = use_content_modals();
 
-  // 날짜별로 그룹화된 AI 생성 콘텐츠 데이터
+  // ▼▼▼▼▼ .env 파일에서 비디오 URL을 가져옵니다 ▼▼▼▼▼
+  const testVideoUrl1 = import.meta.env.VITE_TEST_VIDEO_URL_1 || import.meta.env.VITE_FALLBACK_VIDEO_URL;
+
+  // 환경 변수 로딩 상태 확인 및 디버깅
+  console.log('=== 환경 변수 로딩 상태 ===');
+  console.log('VITE_TEST_VIDEO_URL_1:', import.meta.env.VITE_TEST_VIDEO_URL_1);
+  console.log('VITE_FALLBACK_VIDEO_URL:', import.meta.env.VITE_FALLBACK_VIDEO_URL);
+  console.log('최종 사용 URL:', testVideoUrl1);
+  
+  if (!testVideoUrl1) {
+    console.error('❌ 비디오 URL이 로드되지 않았습니다. .env 파일을 확인해주세요.');
+  } else {
+    console.log('✅ 비디오 URL 로드 성공:', testVideoUrl1);
+  }
+
+  // 날짜별로 그룹화된 AI 생성 콘텐츠 데이터 (환경 변수 사용)
   const date_folders = [
     {
       date: '2024-12-13',
       display_date: '2024년 12월 13일',
-      item_count: 5,
+      item_count: 4,
       items: [
         {
           id: '1',
@@ -55,7 +70,7 @@ const ContentLaunchView = ({ dark_mode }) => {
           estimated_views: 15200,
           created_at: '09:15',
           description: '2024년을 마무리하는 완벽한 연말 파티를 위한 단계별 가이드입니다. 예산 계획부터 장소 선정, 음식 준비, 데코레이션까지 모든 것을 다룹니다.',
-          video_url: '/video-sample.mp4'
+          video_url: testVideoUrl1 // 첫 번째 테스트 비디오
         },
         {
           id: '2',
@@ -69,17 +84,6 @@ const ContentLaunchView = ({ dark_mode }) => {
           description: '올해 가장 주목받은 기술, 문화, 사회적 트렌드들을 분석하고 2025년 전망을 제시합니다.'
         },
         {
-          id: '3',
-          title: '파티 데코레이션 아이디어 인포그래픽',
-          type: 'image',
-          platform: 'instagram',
-          status: 'ready',
-          engagement_score: 91,
-          estimated_views: 8900,
-          created_at: '14:20',
-          description: '예산별, 테마별 파티 데코레이션 아이디어를 시각적으로 정리한 인포그래픽입니다.'
-        },
-        {
           id: '4',
           title: '효과적인 썸네일 제작 방법론',
           type: 'video',
@@ -89,7 +93,7 @@ const ContentLaunchView = ({ dark_mode }) => {
           estimated_views: 12100,
           created_at: '16:45',
           description: '클릭률을 높이는 썸네일 디자인의 핵심 원리와 실전 팁을 공개합니다.',
-          video_url: '/video-sample2.mp4'
+          video_url: testVideoUrl1 // 두 번째 테스트 비디오
         },
         {
           id: '5',
@@ -107,7 +111,7 @@ const ContentLaunchView = ({ dark_mode }) => {
     {
       date: '2024-12-12',
       display_date: '2024년 12월 12일',
-      item_count: 3,
+      item_count: 2,
       items: [
         {
           id: '6',
@@ -119,7 +123,7 @@ const ContentLaunchView = ({ dark_mode }) => {
           estimated_views: 18500,
           created_at: '10:30',
           description: '각 플랫폼별 알고리즘 특성을 이해하고 콘텐츠 최적화하는 방법을 설명합니다.',
-          video_url: '/video-sample3.mp4'
+          video_url: testVideoUrl1 // 세 번째 테스트 비디오
         },
         {
           id: '7',
@@ -132,17 +136,6 @@ const ContentLaunchView = ({ dark_mode }) => {
           created_at: '15:20',
           description: '온라인 커뮤니티에서 의미있는 토론을 이끌어내고 참여도를 높이는 전략을 공유합니다.'
         },
-        {
-          id: '8',
-          title: '비주얼 콘텐츠 디자인 가이드',
-          type: 'image',
-          platform: 'instagram',
-          status: 'uploaded',
-          engagement_score: 86,
-          estimated_views: 7300,
-          created_at: '17:45',
-          description: '인스타그램에서 주목받는 비주얼 콘텐츠의 디자인 원칙과 트렌드를 정리했습니다.'
-        }
       ]
     }
   ];
