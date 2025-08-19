@@ -67,7 +67,10 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
       if (e.data && e.data.type === "google-oauth-complete") {
         clearTimers();
         setLoading(false);
-        fetchStatus();
+        // 백엔드 처리를 위한 딜레이 추가
+        setTimeout(() => {
+          fetchStatus();
+        }, 1000); // 1초 딜레이
         onDone && onDone();
       }
     };
