@@ -6,7 +6,7 @@ import { User, Lock } from 'lucide-react';
 
 // 🔹 토큰 유틸 + API 호출 가져오기
 import { loginApi } from '../lib/auth_bootstrap.js';
-import { setAutoLoginEnabled } from '../lib/token.js';
+//import { setAutoLoginEnabled } from '../lib/token.js';
 //import { BASE_API_URL } from '../lib/config.js'; // 없으면 그냥 BASE_API_URL = 'http://localhost:8080';
 
 const loginTranslations = {
@@ -56,7 +56,6 @@ export default function LoginPage() {
 
     try {
       await loginApi(name, password);
-      setAutoLoginEnabled(true); // "로그인 유지"를 활성화합니다.
       setMsg('✅ 로그인 성공');
       navigate('/dashboard'); // 대시보드로 이동
     } catch (err) {
@@ -89,19 +88,7 @@ export default function LoginPage() {
           passwordIcon={Lock}
         />
         
-        {/* 개발용 임시 대시보드 접근 버튼 */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-6 text-center">
-            <Link to="/dashboard">
-              <button className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg text-sm border-2 border-dashed border-gray-400 transition-all duration-200">
-                🔧 [개발용] 대시보드 바로가기
-              </button>
-            </Link>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              개발 환경 전용 - 프로덕션에서는 보이지 않음
-            </p>
-          </div>
-        )}
+        
       </div>
 
       {msg && (
