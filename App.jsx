@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { tryRefreshOnBoot } from './src/lib/auth_bootstrap.js';
-import { usePageStore } from './src/stores/page_store.js';
-import Router from './src/Router.jsx';
+
+// ✅ alias(@) 사용
+import { tryRefreshOnBoot } from '@/lib/auth_bootstrap';
+import { usePageStore } from '@/stores/page_store';
+import Router from '@/Router';
+import ConnectYouTubeButton from '@/components/ui/ConnectYouTubeButton';
 
 export default function App() {
   const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
@@ -10,19 +13,19 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 부트스트랩: 세션 복원
   useEffect(() => {
     (async () => {
       const ok = await tryRefreshOnBoot();
-      
-      // 현재 로그인 페이지가 아닌 경우에만 리다이렉션
-      if (location.pathname !== '/login') {
-        if (ok) {
-          // 인증 성공: 현재 경로가 루트(/)면 대시보드로, 아니면 현재 경로 유지
-          if (location.pathname === '/') {
-            navigate('/dashboard');
-          }
-        } else if (process.env.NODE_ENV !== 'development') {
-          // 인증 실패: 개발 환경이 아닐 때만 루트 페이지로 리다이렉션
+
+      if (ok) { // User is authenticated
+        if (location.pathname === '/login') {
+          navigate('/dashboard'); // If they try to go to login page, redirect to dashboard
+        }
+      } else { // User is not authenticated
+        // If trying to access a protected page, redirect to landing page
+        const protectedPaths = ['/dashboard', '/contents', '/contentlaunch', '/analytics', '/settings'];
+        if (protectedPaths.some(path => location.pathname.startsWith(path))) {
           navigate('/');
         }
       }
@@ -30,11 +33,11 @@ export default function App() {
     })();
   }, [navigate, location.pathname]);
 
-  // Initialize dark mode and language from localStorage
+  // 다크 모드/언어 초기화
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
     const savedLanguage = localStorage.getItem('contentboost-language');
-    
+
     if (savedDarkMode !== null) {
       setIsDarkMode(JSON.parse(savedDarkMode));
     }
@@ -43,7 +46,7 @@ export default function App() {
     }
   }, [setIsDarkMode, setLanguage]);
 
-  // Apply dark mode
+  // 다크 모드 적용
   useEffect(() => {
     const root = document.documentElement;
     if (isDarkMode) {
@@ -54,14 +57,18 @@ export default function App() {
     localStorage.setItem('contentboost-dark-mode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
-  // Save language preference
+  // 언어 설정 저장
   useEffect(() => {
     localStorage.setItem('contentboost-language', language);
   }, [language]);
 
   if (!bootDone) {
-    return <div />;
+    return <div />; // 로딩 화면
   }
 
-  return <Router />;
+  return (
+    <>
+      <Router />
+    </>
+  );
 }

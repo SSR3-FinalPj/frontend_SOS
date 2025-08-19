@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link, Plus, Unlink } from 'lucide-react';
 import { GlassCard } from '../ui/glass-card.jsx';
+import ConnectYouTubeButton from '../ui/ConnectYouTubeButton.jsx';
 
 function ConnectionManagementCard({ platformData }) {
   return (
@@ -52,17 +53,10 @@ function ConnectionManagementCard({ platformData }) {
           })}
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          새 플랫폼 추가
-        </motion.button>
+        <ConnectYouTubeButton />
       </GlassCard>
     </motion.div>
   );
 }
 
-export { ConnectionManagementCard };
+export default ConnectionManagementCard;
