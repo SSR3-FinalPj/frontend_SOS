@@ -1,9 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch as api } from "../../lib/api.js";
+import { Button } from "./button.jsx";
+import { cn } from "../../utils/ui_utils.js";
+
+function YouTubeIcon(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      {...props}
+    >
+      <path
+        fillRule="evenodd"
+        d="M19.802 5.802a2.5 2.5 0 0 1 1.696 1.696c.392 1.484.392 4.502.392 4.502s0 3.018-.392 4.502a2.5 2.5 0 0 1-1.696 1.696c-1.484.392-7.802.392-7.802.392s-6.318 0-7.802-.392a2.5 2.5 0 0 1-1.696-1.696C2 15.002 2 12 2 12s0-3.018.392-4.502A2.5 2.5 0 0 1 4.088 5.8c1.484-.392 7.802-.392 7.802-.392s6.318 0 7.802.392ZM9.992 15.002l5.208-3.002-5.208-3.002v6.004Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
 
 export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null); // { connected, channelTitle? }
+  const [error, setError] = useState(null);
   const popupRef = useRef(null);
   const popupTimerRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -13,15 +32,17 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
       const r = await api("/api/google/status", { method: "GET" });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json().catch(() => ({}));
-      setStatus(data && typeof data === "object" ? data : null);
+      onDone && onDone(data && typeof data === "object" ? data : null);
     } catch (e) {
       console.error(e);
-      setStatus(null);
+      setError(e.message);
+      onDone && onDone(null);
     }
   };
 
   const startOAuth = async () => {
     setLoading(true);
+    setError(null);
     clearTimers();
     try {
       const res = await api("/api/google/login-url", { method: "GET" });
@@ -30,29 +51,30 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
 
       popupRef.current = openOAuthPopup(url, "GoogleOAuth", 520, 700);
 
-      // 팝업 차단 시 폴백
+      // Fallback for popup blockers
       if (!popupRef.current) {
         window.location.href = url;
-        return; // 이 경우 로딩은 페이지 이동으로 종료됨
+        return; // Loading ends with page navigation in this case
       }
 
-      // 팝업 닫힘 폴링
+      // Poll for popup close
       popupTimerRef.current = setInterval(() => {
         const w = popupRef.current;
         if (w && w.closed) {
           clearTimers();
-          // 콜백 페이지가 메시지를 못 보낸 경우 대비
+          // Failsafe in case callback page fails to send message
           window.postMessage({ type: "google-oauth-complete", ok: true }, "*");
         }
       }, 600);
 
-      // 안전 타임아웃 (예: 3분)
+      // Safety timeout (e.g., 3 minutes)
       timeoutRef.current = setTimeout(() => {
         clearTimers();
         setLoading(false);
       }, 3 * 60 * 1000);
     } catch (e) {
       console.error(e);
+      setError(e.message);
       setLoading(false);
     }
   };
@@ -61,17 +83,16 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
     fetchStatus();
 
     const onMsg = (e) => {
-      // (선택) 콜백 도메인만 허용
+      // (Optional) only allow messages from our callback domain
       if (oauthOrigin && e.origin !== oauthOrigin) return;
 
       if (e.data && e.data.type === "google-oauth-complete") {
         clearTimers();
         setLoading(false);
-        // 백엔드 처리를 위한 딜레이 추가
+        // Add a delay for backend processing
         setTimeout(() => {
           fetchStatus();
-        }, 1000); // 1초 딜레이
-        onDone && onDone();
+        }, 1000); // 1s delay
       }
     };
 
@@ -96,12 +117,11 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
 
   return (
     <div className="flex items-center gap-3">
-      <button onClick={startOAuth} disabled={loading} className="px-3 py-2 rounded border">
+      <Button onClick={startOAuth} disabled={loading} variant="outline">
+        <YouTubeIcon className="size-5" />
         {loading ? "연결 중..." : "유튜브 연동"}
-      </button>
-      <span>
-        {status?.connected ? `✅${status.channelTitle ? " · " + status.channelTitle : ""}` : "연동 안 됨"}
-      </span>
+      </Button>
+      {error && <p className="text-sm text-red-500">Error: {error}</p>}
     </div>
   );
 }
@@ -117,7 +137,7 @@ function openOAuthPopup(url, title, w, h) {
   const left = (width - w) / 2 / systemZoom + dualLeft;
   const top = (height - h) / 2 / systemZoom + dualTop;
 
-  // 주의: postMessage 위해서는 'noopener'를 쓰지 마세요 (opener가 끊기면 안 됨)
+  // Note: do not use 'noopener' for postMessage to work (opener is needed)
   return window.open(
     url,
     title,

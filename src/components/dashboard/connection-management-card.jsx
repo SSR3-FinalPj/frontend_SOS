@@ -1,9 +1,22 @@
 import { motion } from 'framer-motion';
-import { Link, Plus, Unlink } from 'lucide-react';
+import { Link, Unlink } from 'lucide-react';
 import { GlassCard } from '../ui/glass-card.jsx';
 import ConnectYouTubeButton from '../ui/ConnectYouTubeButton.jsx';
+import { useState, useEffect } from 'react';
 
 function ConnectionManagementCard({ platformData }) {
+  const [platforms, setPlatforms] = useState(
+    platformData.map((platform) => ({ ...platform, status: null }))
+  );
+
+  const handleStatusChange = (platformName, status) => {
+    setPlatforms((prevPlatforms) =>
+      prevPlatforms.map((p) =>
+        p.name === platformName ? { ...p, status: status } : p
+      )
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -22,8 +35,10 @@ function ConnectionManagementCard({ platformData }) {
         </div>
 
         <div className="space-y-4 mb-6">
-          {platformData.map((platform, index) => {
+          {platforms.map((platform, index) => {
             const Icon = platform.icon;
+            const status = platform.status;
+
             return (
               <div key={index} className="flex items-center justify-between p-4 bg-white/10 dark:bg-white/5 rounded-xl border border-white/20 dark:border-white/10">
                 <div className="flex items-center gap-3">
@@ -36,24 +51,31 @@ function ConnectionManagementCard({ platformData }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-green-600 dark:text-green-400">연동됨</span>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
-                  >
-                    <Unlink className="w-4 h-4" />
-                  </motion.button>
+                  {status && status.connected ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-sm text-green-600 dark:text-green-400">
+                          {status.channelTitle || '연동됨'}
+                        </span>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
+                        onClick={() => handleStatusChange(platform.name, { connected: false, channelTitle: null })}
+                      >
+                        <Unlink className="w-4 h-4" />
+                      </motion.button>
+                    </>
+                  ) : (
+                    <ConnectYouTubeButton onDone={(newStatus) => handleStatusChange(platform.name, newStatus)} />
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
-
-        <ConnectYouTubeButton />
       </GlassCard>
     </motion.div>
   );
