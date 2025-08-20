@@ -155,16 +155,10 @@ const ContentLaunchView = ({ dark_mode }) => {
   return (
     <div className={`flex-1 ${
       dark_mode 
-        ? 'bg-gradient-to-br from-gray-900/80 via-gray-800/40 to-gray-900/80' 
-        : 'bg-gradient-to-br from-indigo-50/80 via-white/40 to-cyan-50/80'
+        ? 'bg-gray-900' 
+        : 'bg-transparent'
     } h-full overflow-hidden flex flex-col relative`}>
       
-      {/* 강화된 배경 패턴 */}
-      <div className={`absolute inset-0 ${
-        dark_mode 
-          ? 'bg-[radial-gradient(circle_at_15%_25%,rgba(99,102,241,0.03)_0%,transparent_40%),radial-gradient(circle_at_85%_75%,rgba(168,85,247,0.02)_0%,transparent_40%),radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.02)_0%,transparent_60%)]'
-          : 'bg-[radial-gradient(circle_at_15%_25%,rgba(99,102,241,0.08)_0%,transparent_40%),radial-gradient(circle_at_85%_75%,rgba(168,85,247,0.06)_0%,transparent_40%),radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.04)_0%,transparent_60%)]'
-      } pointer-events-none`} />
 
       {/* 날짜별 폴더 목록 */}
       <div className="flex-1 overflow-auto px-8 py-6 relative z-10">
@@ -173,9 +167,9 @@ const ContentLaunchView = ({ dark_mode }) => {
           <div className="flex items-center justify-end gap-4 mb-6">
             <div className={`${
               dark_mode 
-                ? 'bg-gray-800/60 border-gray-600/60' 
-                : 'bg-white/60 border-white/60'
-            } backdrop-blur-sm rounded-xl px-4 py-2 border`}>
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-gray-200'
+            } rounded-xl px-4 py-2 border shadow-sm`}>
               <div className="text-center">
                 <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
                   {date_folders.reduce((sum, folder) => sum + folder.item_count, 0)}
@@ -186,9 +180,9 @@ const ContentLaunchView = ({ dark_mode }) => {
             
             <div className={`${
               dark_mode 
-                ? 'bg-gray-800/60 border-gray-600/60' 
-                : 'bg-white/60 border-white/60'
-            } backdrop-blur-sm rounded-xl px-4 py-2 border`}>
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-gray-200'
+            } rounded-xl px-4 py-2 border shadow-sm`}>
               <div className="text-center">
                 <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
                   {date_folders.length}
