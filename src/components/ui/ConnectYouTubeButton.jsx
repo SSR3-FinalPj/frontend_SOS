@@ -12,13 +12,22 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const fetchStatus = async () => {
     try {
       const r = await api("/api/google/status", { method: "GET" });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) {
+        if (r.status === 403) {
+          setError("로그인이 필요합니다.");
+        }
+        throw new Error(`HTTP ${r.status}`);
+      }
       const data = await r.json().catch(() => ({}));
-      onDone && onDone(data && typeof data === "object" ? data : null);
+      const mapped = {
+        connected: data.connected ?? data.linked ?? false,
+        //추후 채널 ID나 이름 등 추가 정보가 필요할 경우 여기에 추가
+      }
+      onDone && onDone(mapped);
     } catch (e) {
       console.error(e);
       setError(e.message);
-      onDone && onDone(null);
+      onDone && onDone({ connected: false });
     }
   };
 
@@ -68,7 +77,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
       // (Optional) only allow messages from our callback domain
       if (oauthOrigin && e.origin !== oauthOrigin) return;
 
-      if (e.data && e.data.type === "google-oauth-complete") {
+      if (e.data?.type === "google-oauth-complete") {
         clearTimers();
         setLoading(false);
         // Add a delay for backend processing
