@@ -1,24 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch as api } from "../../lib/api.js";
 import { Button } from "./button.jsx";
-import { cn } from "../../utils/ui_utils.js";
-
-function YouTubeIcon(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      {...props}
-    >
-      <path
-        fillRule="evenodd"
-        d="M19.802 5.802a2.5 2.5 0 0 1 1.696 1.696c.392 1.484.392 4.502.392 4.502s0 3.018-.392 4.502a2.5 2.5 0 0 1-1.696 1.696c-1.484.392-7.802.392-7.802.392s-6.318 0-7.802-.392a2.5 2.5 0 0 1-1.696-1.696C2 15.002 2 12 2 12s0-3.018.392-4.502A2.5 2.5 0 0 1 4.088 5.8c1.484-.392 7.802-.392 7.802-.392s6.318 0 7.802.392ZM9.992 15.002l5.208-3.002-5.208-3.002v6.004Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
 
 export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);
@@ -116,13 +98,13 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   };
 
   return (
-    <div className="flex items-center gap-3">
-      <Button onClick={startOAuth} disabled={loading} variant="outline">
-        <YouTubeIcon className="size-5" />
-        {loading ? "연결 중..." : "유튜브 연동"}
-      </Button>
-      {error && <p className="text-sm text-red-500">Error: {error}</p>}
-    </div>
+    <Button
+      onClick={startOAuth}
+      disabled={loading}
+      className="bg-white text-gray-650 font-bold py-2 px-4 rounded-lg border border-gray-400 shadow-md hover:bg-gray-100 transition-all duration-300"
+    >
+      {loading ? "연결 중..." : "연동하기"}
+    </Button>
   );
 }
 

@@ -6,7 +6,13 @@ import { useState, useEffect } from 'react';
 
 function ConnectionManagementCard({ platformData }) {
   const [platforms, setPlatforms] = useState(
-    platformData.map((platform) => ({ ...platform, status: null }))
+    platformData.map((platform) => {
+      if (platform.name === "Reddit") {
+        // ✅ Reddit은 기본적으로 연결된 상태로 시작
+        return { ...platform, status: { connected: true, channelTitle: status.channelTitle } };
+      }
+      return { ...platform, status: null };
+    })
   );
 
   const handleStatusChange = (platformName, status) => {
