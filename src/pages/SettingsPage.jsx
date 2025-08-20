@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { usePageStore } from '../stores/page_store.js';
 
 // 컴포넌트들 import
 import Sidebar from '../components/dashboard/sidebar.jsx';
@@ -11,25 +10,7 @@ import SettingsView from '../components/dashboard/settings_view.jsx';
  * 환경설정 페이지
  */
 const SettingsPage = () => {
-  const { isDarkMode, language } = usePageStore();
-
-  // 번역 객체 (기본적인 설정 관련 번역)
-  const translations = {
-    ko: {
-      connectionManagement: '연결 관리',
-      dataExport: '데이터 내보내기',
-      platformConnections: '플랫폼 연결',
-      exportSettings: '내보내기 설정'
-    },
-    en: {
-      connectionManagement: 'Connection Management',
-      dataExport: 'Data Export',
-      platformConnections: 'Platform Connections',
-      exportSettings: 'Export Settings'
-    }
-  };
-
-  const t = translations[language] || translations['ko'];
+  
 
   return (
     <div className="h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
@@ -46,7 +27,7 @@ const SettingsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <SettingsView t={t} />
+            <SettingsView />
           </motion.div>
         </main>
       </div>
