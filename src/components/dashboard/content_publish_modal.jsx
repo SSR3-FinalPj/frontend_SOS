@@ -35,10 +35,8 @@ const ContentPublishModal = ({
     <Dialog open={is_open} onOpenChange={(open) => !open && on_close()}>
       <DialogContent className={`
         max-w-2xl 
-        relative 
         max-h-[90vh] 
         overflow-y-auto
-        fixed
         top-[50%]
         left-[50%]
         translate-x-[-50%]
@@ -178,7 +176,7 @@ const ContentPublishModal = ({
             <Button
               onClick={on_publish}
               disabled={publish_form.platforms.length === 0 || !publish_form.title.trim()}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl disabled:opacity-50"
             >
               <Upload className="h-4 w-4 mr-2" />
               지금 게시하기

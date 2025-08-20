@@ -44,9 +44,9 @@ const ContentFolderCard = ({
     >
       <Card className={`${
         dark_mode 
-          ? 'bg-gray-800/50 border-gray-600/60 hover:bg-gray-700/60' 
-          : 'bg-white/50 border-white/60 hover:bg-white/80'
-      } backdrop-blur-2xl shadow-xl rounded-3xl overflow-hidden transition-all duration-300`}>
+          ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' 
+          : 'bg-white border-gray-200 hover:bg-gray-50'
+      } shadow-xl rounded-3xl overflow-hidden transition-all duration-300`}>
         
         {/* 폴더 헤더 */}
         <CollapsibleTrigger className="w-full">
@@ -55,7 +55,7 @@ const ContentFolderCard = ({
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
                   {is_open ? (
-                    <FolderOpen className={`h-6 w-6 ${dark_mode ? 'text-blue-400' : 'text-blue-600'}`} />
+                    <FolderOpen className={`h-6 w-6 ${dark_mode ? 'text-gray-300' : 'text-gray-700'}`} />
                   ) : (
                     <Folder className={`h-6 w-6 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`} />
                   )}
@@ -81,13 +81,13 @@ const ContentFolderCard = ({
               
               <div className="flex items-center gap-3">
                 <Badge className={`${
-                  dark_mode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'
+                  dark_mode ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
                 } rounded-full px-3 py-1`}>
                   {folder.items.filter(item => item.status === 'ready').length}개 론칭 대기
                 </Badge>
                 
                 <Badge className={`${
-                  dark_mode ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-700'
+                  dark_mode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'
                 } rounded-full px-3 py-1`}>
                   {folder.items.filter(item => item.status === 'uploaded').length}개 완료
                 </Badge>
@@ -97,7 +97,7 @@ const ContentFolderCard = ({
         </CollapsibleTrigger>
 
         {/* 폴더 내용 (3열 그리드) */}
-        <CollapsibleContent className="transition-all duration-300 ease-in-out">
+        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-up-1 data-[state=open]:slide-down-1 duration-300 ease-out">
           <div className={`px-6 pb-6 border-t ${
             dark_mode ? 'border-gray-600/30' : 'border-gray-300/30'
           }`}>

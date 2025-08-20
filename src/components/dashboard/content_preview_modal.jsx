@@ -235,7 +235,7 @@ const ContentPreviewModal = ({
             {item.status === 'ready' && (
               <Button 
                 onClick={handle_publish_click}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl py-3 text-base"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl py-3 text-base"
               >
                 <Upload className="h-5 w-5 mr-2" />
                 지금 론칭
