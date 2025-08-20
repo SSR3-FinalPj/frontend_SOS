@@ -14,7 +14,6 @@ import ContentListPage from './pages/ContentListPage.jsx';
 import ContentLaunchPage from './pages/ContentLaunchPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
-import SettingsYouTube from './pages/SettingsYouTube.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 
 /**
@@ -36,7 +35,7 @@ const Router = () => {
       <Route path="/contentlaunch" element={<ContentLaunchPage />} />
       <Route path="/analytics" element={<AnalyticsPage />} />
       <Route path="/settings" element={<SettingsPage />} />
-      <Route path="/settings/youtube" element={<SettingsYouTube />} />
+      
       
       {/* 404 페이지 */}
       <Route path="*" element={<NotFoundPage />} />
