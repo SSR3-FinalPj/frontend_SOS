@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
@@ -8,21 +8,41 @@ import { usePageStore } from '../../stores/page_store.js';
  * 플로팅 네비게이션 컴포넌트
  */
 export default function FloatingNav() {
-  const [is_visible, set_is_visible] = useState(false);
+  const [is_scrolled, set_is_scrolled] = useState(false);
   const { isDarkMode: is_dark_mode, setIsDarkMode: set_is_dark_mode } = usePageStore();
 
-  useEffect(() => {
-    const toggle_visibility = () => {
-      if (window.pageYOffset > 100) {
-        set_is_visible(true);
+  // 쓰로틀링을 위한 함수
+  const throttle = useCallback((func, delay) => {
+    let timeoutId;
+    let lastExecTime = 0;
+    return function (...args) {
+      const currentTime = Date.now();
+      
+      if (currentTime - lastExecTime > delay) {
+        func.apply(this, args);
+        lastExecTime = currentTime;
       } else {
-        set_is_visible(false);
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          func.apply(this, args);
+          lastExecTime = Date.now();
+        }, delay - (currentTime - lastExecTime));
       }
     };
-
-    window.addEventListener('scroll', toggle_visibility);
-    return () => window.removeEventListener('scroll', toggle_visibility);
   }, []);
+
+  // 스크롤 핸들러
+  const handle_scroll = useCallback(() => {
+    const scroll_position = window.pageYOffset;
+    set_is_scrolled(scroll_position > 50);
+  }, []);
+
+  useEffect(() => {
+    const throttled_scroll = throttle(handle_scroll, 16); // 60fps
+    
+    window.addEventListener('scroll', throttled_scroll, { passive: true });
+    return () => window.removeEventListener('scroll', throttled_scroll);
+  }, [throttle, handle_scroll]);
 
   const scroll_to_section = (section_id) => {
     const element = document.getElementById(section_id);
@@ -36,15 +56,19 @@ export default function FloatingNav() {
     <motion.header
       initial={{ opacity: 0, y: -30 }}
       animate={{ 
-        opacity: is_visible ? 1 : 0.95, 
+        opacity: 1, 
         y: 0,
         transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
       }}
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
     >
-      <div className="w-full px-6 lg:px-8 py-4">
+      <div className="w-full">
         <motion.div 
-          className="backdrop-blur-2xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl px-6 py-3 shadow-lg"
+          className={`transition-all duration-500 ease-out px-6 lg:px-8 py-4 ${
+            is_scrolled 
+              ? 'backdrop-blur-3xl bg-white/30 dark:bg-gray-900/30 border-b border-white/50 dark:border-gray-700/50 shadow-lg' 
+              : 'backdrop-blur-xl bg-white/10 dark:bg-white/5 border-b border-white/20 dark:border-white/10 shadow-sm'
+          }`}
           whileHover={{ 
             scale: 1.01,
             transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
