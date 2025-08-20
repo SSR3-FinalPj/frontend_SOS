@@ -2,17 +2,13 @@ import { motion } from 'framer-motion';
 import { Link, Unlink } from 'lucide-react';
 import { GlassCard } from '../ui/glass-card.jsx';
 import ConnectYouTubeButton from '../ui/ConnectYouTubeButton.jsx';
+import ConnectRedditButton from '../ui/ConnectRedditButton.jsx'; // Reddit 버튼 import
 import { useState, useEffect } from 'react';
 
 function ConnectionManagementCard({ platformData }) {
   const [platforms, setPlatforms] = useState(
-    platformData.map((platform) => {
-      if (platform.name === "Reddit") {
-        // ✅ Reddit은 기본적으로 연결된 상태로 시작
-        return { ...platform, status: { connected: true, channelTitle: status.channelTitle } };
-      }
-      return { ...platform, status: null };
-    })
+    // 모든 플랫폼의 초기 상태를 null로 설정
+    platformData.map((platform) => ({ ...platform, status: null }))
   );
 
   const handleStatusChange = (platformName, status) => {
@@ -45,6 +41,17 @@ function ConnectionManagementCard({ platformData }) {
             const Icon = platform.icon;
             const status = platform.status;
 
+            const renderConnectButton = () => {
+              switch (platform.name) {
+                case 'YouTube':
+                  return <ConnectYouTubeButton onDone={(newStatus) => handleStatusChange(platform.name, newStatus)} />;
+                case 'Reddit':
+                  return <ConnectRedditButton onDone={(newStatus) => handleStatusChange(platform.name, newStatus)} />;
+                default:
+                  return null;
+              }
+            };
+
             return (
               <div key={index} className="flex items-center justify-between p-4 bg-white/10 dark:bg-white/5 rounded-xl border border-white/20 dark:border-white/10">
                 <div className="flex items-center gap-3">
@@ -75,7 +82,7 @@ function ConnectionManagementCard({ platformData }) {
                       </motion.button>
                     </>
                   ) : (
-                    <ConnectYouTubeButton onDone={(newStatus) => handleStatusChange(platform.name, newStatus)} />
+                    renderConnectButton()
                   )}
                 </div>
               </div>
