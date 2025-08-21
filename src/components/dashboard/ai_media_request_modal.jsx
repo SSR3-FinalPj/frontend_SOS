@@ -3,10 +3,10 @@
  * 위치 선택, 이미지 업로드, 요청 메모 기능을 포함한 제작 요청 폼
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, MapPin, Image as ImageIcon, FileText } from 'lucide-react';
+import { X, Upload, MapPin, Image as ImageIcon, FileText, ChevronDown, ChevronUp, Palette, Camera, Video, Settings } from 'lucide-react';
 import { Button } from '../ui/button.jsx';
 import { 
   SEOUL_DISTRICTS, 
@@ -38,6 +38,17 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
     motion: '',
     constraints: ''
   });
+  
+  // 아코디언 상태 관리
+  const [expanded_categories, set_expanded_categories] = useState({
+    style: false,
+    subject: false,
+    motion: false,
+    constraints: false
+  });
+  
+  // 구 드롭다운 상태 관리
+  const [is_district_dropdown_open, set_is_district_dropdown_open] = useState(false);
 
   // 참조
   const file_input_ref = useRef(null);
@@ -82,11 +93,69 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
     constraints: Object.keys(CATEGORY_TRANSLATIONS.constraints)
   };
 
+  // 카테고리 메타데이터
+  const CATEGORY_METADATA = {
+    style: {
+      title: '영상 스타일',
+      icon: Palette,
+      color: 'purple'
+    },
+    subject: {
+      title: '촬영 주제',
+      icon: Camera,
+      color: 'green'
+    },
+    motion: {
+      title: '카메라 움직임',
+      icon: Video,
+      color: 'blue'
+    },
+    constraints: {
+      title: '특별 요구사항',
+      icon: Settings,
+      color: 'orange'
+    }
+  };
+
   // 구별 명소 목록 가져오기
   const district_locations = selected_district ? get_locations_by_district(selected_district) : [];
   
-  // 검색 결과
-  const search_results = search_term ? search_locations(search_term) : [];
+  // 통합 검색 결과 (구 이름 + 명소 이름)
+  const search_results = useMemo(() => {
+    if (!search_term) return [];
+    
+    const results = [];
+    const search_lower = search_term.toLowerCase();
+    
+    // 구 이름으로 검색
+    const matching_districts = SEOUL_DISTRICTS.filter(district => 
+      district.toLowerCase().includes(search_lower)
+    );
+    
+    // 매칭된 구의 모든 명소들 추가
+    matching_districts.forEach(district => {
+      const locations = get_locations_by_district(district);
+      results.push(...locations.map(location => ({
+        ...location,
+        match_type: 'district' // 구 이름으로 매칭됨을 표시
+      })));
+    });
+    
+    // 명소 이름으로 검색 (기존 기능)
+    const location_results = search_locations(search_term).map(location => ({
+      ...location,
+      match_type: 'location' // 명소 이름으로 매칭됨을 표시
+    }));
+    
+    results.push(...location_results);
+    
+    // 중복 제거 (poi_id 기준)
+    const unique_results = results.filter((result, index, self) => 
+      index === self.findIndex(r => r.poi_id === result.poi_id)
+    );
+    
+    return unique_results;
+  }, [search_term]);
 
   // 파일 업로드 핸들러
   const handle_file_change = useCallback((file) => {
@@ -139,6 +208,12 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
     set_selected_district(district);
     set_selected_location(null);
     set_search_term('');
+    set_is_district_dropdown_open(false); // 드롭다운 닫기
+  }, []);
+  
+  // 드롭다운 토글 핸들러
+  const toggle_district_dropdown = useCallback(() => {
+    set_is_district_dropdown_open(prev => !prev);
   }, []);
 
   // 명소 선택 핸들러
@@ -153,6 +228,14 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
     set_request_categories(prev => ({
       ...prev,
       [category]: value
+    }));
+  }, []);
+  
+  // 아코디언 토글 핸들러
+  const toggle_category = useCallback((category) => {
+    set_expanded_categories(prev => ({
+      ...prev,
+      [category]: !prev[category]
     }));
   }, []);
 
@@ -263,7 +346,7 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
@@ -281,7 +364,7 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
           </div>
 
           {/* 컨텐츠 */}
-          <div className="p-6 space-y-6 max-h-[calc(90vh-140px)] overflow-y-auto">
+          <div className="p-6 space-y-5 max-h-[calc(95vh-140px)] overflow-y-auto">
             {/* 위치 선택 섹션 */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -295,9 +378,12 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="명소를 검색하세요 (예: 서울역, 강남역)"
+                  placeholder="구 이름 또는 명소를 검색하세요 (예: 강남구, 서울역)"
                   value={search_term}
-                  onChange={(e) => set_search_term(e.target.value)}
+                  onChange={(e) => {
+                    set_search_term(e.target.value);
+                    set_is_district_dropdown_open(false); // 검색 시 드롭다운 닫기
+                  }}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
@@ -305,69 +391,113 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
               {/* 검색 결과 또는 구별 선택 */}
               {search_term ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">검색 결과</p>
-                  <div className="max-h-40 overflow-y-auto space-y-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">검색 결과 ({search_results.length}개)</p>
+                  <div className="max-h-48 overflow-y-auto space-y-1">
                     {search_results.map((location) => (
                       <button
                         key={location.poi_id}
                         onClick={() => handle_location_select(location)}
-                        className={`w-full text-left px-3 py-2 rounded-xl transition-all duration-200 ${
+                        className={`w-full text-left px-3 py-3 rounded-xl transition-all duration-200 ${
                           selected_location?.poi_id === location.poi_id
                             ? 'bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200'
                             : 'bg-gray-50 dark:bg-gray-700 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
                         }`}
                       >
-                        <span className="font-medium">{location.name}</span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                          ({location.district})
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-medium">{location.name}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                              {location.district}
+                            </span>
+                          </div>
+                          {location.match_type === 'district' && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                              구 매칭
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))}
                     {search_results.length === 0 && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
-                        검색 결과가 없습니다.
+                      <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+                        "<span className="font-medium">{search_term}</span>"에 대한 검색 결과가 없습니다.
                       </p>
                     )}
                   </div>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* 구 선택 탭 */}
+                  {/* 구 선택 드롭다운 */}
                   <p className="text-sm text-gray-600 dark:text-gray-400">구 선택</p>
-                  <div className="grid grid-cols-5 gap-2 max-h-32 overflow-y-auto">
-                    {SEOUL_DISTRICTS.map((district) => (
-                      <button
-                        key={district}
-                        onClick={() => handle_district_select(district)}
-                        className={`px-3 py-2 text-sm rounded-xl transition-all duration-200 ${
-                          selected_district === district
-                            ? 'bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200'
-                            : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                        }`}
-                      >
-                        {district}
-                      </button>
-                    ))}
+                  
+                  <div className="relative">
+                    <button
+                      onClick={toggle_district_dropdown}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200"
+                    >
+                      <span className={selected_district ? 'text-gray-800 dark:text-white' : 'text-gray-500 dark:text-gray-400'}>
+                        {selected_district || '구를 선택하세요'}
+                      </span>
+                      {is_district_dropdown_open ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                    
+                    {/* 드롭다운 메뉴 */}
+                    <AnimatePresence>
+                      {is_district_dropdown_open && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden"
+                        >
+                          <div className="max-h-64 overflow-y-auto py-1">
+                            {SEOUL_DISTRICTS.map((district) => (
+                              <button
+                                key={district}
+                                onClick={() => handle_district_select(district)}
+                                className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 ${
+                                  selected_district === district
+                                    ? 'bg-blue-50 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-l-4 border-blue-500'
+                                    : 'text-gray-700 dark:text-gray-300'
+                                }`}
+                              >
+                                {district}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
                   {/* 선택된 구의 명소 목록 */}
                   {selected_district && (
                     <div className="space-y-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {selected_district} 명소
-                      </p>
-                      <div className="max-h-32 overflow-y-auto space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {selected_district} 명소
+                        </p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                          {district_locations.length}개
+                        </span>
+                      </div>
+                      <div className="max-h-40 overflow-y-auto space-y-1">
                         {district_locations.map((location) => (
                           <button
                             key={location.poi_id}
                             onClick={() => handle_location_select(location)}
-                            className={`w-full text-left px-3 py-2 rounded-xl transition-all duration-200 ${
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 ${
                               selected_location?.poi_id === location.poi_id
-                                ? 'bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200'
-                                : 'bg-gray-50 dark:bg-gray-700 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                                ? 'bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200 shadow-sm'
+                                : 'bg-gray-50 dark:bg-gray-700 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-sm'
                             }`}
                           >
-                            {location.name}
+                            <span className="font-medium">{location.name}</span>
                           </button>
                         ))}
                       </div>
@@ -381,9 +511,6 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
                 <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-lg">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
                     <span className="font-medium">선택된 위치:</span> {selected_location.name} ({selected_location.district})
-                  </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                    ID: {selected_location.poi_id}
                   </p>
                 </div>
               )}
@@ -453,7 +580,7 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
             </div>
 
             {/* 영상 제작 요청 카테고리 섹션 */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 <h3 className="text-lg font-medium text-gray-800 dark:text-white">
@@ -461,93 +588,96 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
                 </h3>
               </div>
 
-              {/* 스타일 선택 */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  영상 스타일
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {CATEGORY_OPTIONS.style.map((option) => (
+              {/* 아코디언 카테고리들 */}
+              {Object.entries(CATEGORY_METADATA).map(([category_key, metadata]) => {
+                const IconComponent = metadata.icon;
+                const is_expanded = expanded_categories[category_key];
+                const selected_value = request_categories[category_key];
+                
+                return (
+                  <div key={category_key} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    {/* 아코디언 헤더 */}
                     <button
-                      key={option}
-                      onClick={() => handle_category_select('style', option)}
-                      className={`px-3 py-2 text-sm rounded-xl transition-all duration-200 text-left ${
-                        request_categories.style === option
-                          ? 'bg-purple-100 dark:bg-purple-900 border border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-200'
-                          : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                      onClick={() => toggle_category(category_key)}
+                      className={`w-full px-4 py-3 flex items-center justify-between text-left transition-all duration-200 ${
+                        is_expanded 
+                          ? 'bg-gray-50 dark:bg-gray-800' 
+                          : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
                     >
-                      {option}
+                      <div className="flex items-center gap-3">
+                        <IconComponent className={
+                          category_key === 'style' ? 'w-4 h-4 text-purple-600 dark:text-purple-400' :
+                          category_key === 'subject' ? 'w-4 h-4 text-green-600 dark:text-green-400' :
+                          category_key === 'motion' ? 'w-4 h-4 text-blue-600 dark:text-blue-400' :
+                          'w-4 h-4 text-orange-600 dark:text-orange-400'
+                        } />
+                        <span className="font-medium text-gray-800 dark:text-white">
+                          {metadata.title}
+                        </span>
+                        {selected_value && (
+                          <span className={
+                            category_key === 'style' ? 'text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
+                            category_key === 'subject' ? 'text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                            category_key === 'motion' ? 'text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                            'text-xs px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200'
+                          }>
+                            선택됨
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {selected_value && (
+                          <span className="text-sm text-gray-600 dark:text-gray-400 max-w-32 truncate">
+                            {selected_value}
+                          </span>
+                        )}
+                        {is_expanded ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
                     </button>
-                  ))}
-                </div>
-              </div>
 
-              {/* 주제 선택 */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  촬영 주제
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {CATEGORY_OPTIONS.subject.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handle_category_select('subject', option)}
-                      className={`px-3 py-2 text-sm rounded-xl transition-all duration-200 text-left ${
-                        request_categories.subject === option
-                          ? 'bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-200'
-                          : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 카메라 움직임 선택 */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  카메라 움직임
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {CATEGORY_OPTIONS.motion.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handle_category_select('motion', option)}
-                      className={`px-3 py-2 text-sm rounded-xl transition-all duration-200 text-left ${
-                        request_categories.motion === option
-                          ? 'bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200'
-                          : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 제약사항 선택 */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  특별 요구사항
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {CATEGORY_OPTIONS.constraints.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handle_category_select('constraints', option)}
-                      className={`px-3 py-2 text-sm rounded-xl transition-all duration-200 text-left ${
-                        request_categories.constraints === option
-                          ? 'bg-orange-100 dark:bg-orange-900 border border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200'
-                          : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                    {/* 아코디언 콘텐츠 */}
+                    <AnimatePresence>
+                      {is_expanded && (
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: "auto" }}
+                          exit={{ height: 0 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {CATEGORY_OPTIONS[category_key].map((option) => (
+                                <button
+                                  key={option}
+                                  onClick={() => handle_category_select(category_key, option)}
+                                  className={`px-3 py-2 text-sm rounded-xl transition-all duration-200 text-left ${
+                                    request_categories[category_key] === option
+                                      ? (
+                                        category_key === 'style' ? 'bg-purple-100 dark:bg-purple-900 border border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-200' :
+                                        category_key === 'subject' ? 'bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-200' :
+                                        category_key === 'motion' ? 'bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200' :
+                                        'bg-orange-100 dark:bg-orange-900 border border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200'
+                                      )
+                                      : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                                  }`}
+                                >
+                                  {option}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
