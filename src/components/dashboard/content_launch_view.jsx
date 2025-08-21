@@ -3,11 +3,14 @@
  * .env 파일을 사용해 비디오 URL을 관리합니다.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Plus } from 'lucide-react';
 import ContentFolderCard from './content_folder_card';
 import ContentPreviewModal from './content_preview_modal';
 import ContentPublishModal from './content_publish_modal';
+import AIMediaRequestModal from './ai_media_request_modal.jsx';
+import { Button } from '../ui/button.jsx';
 import { use_content_launch } from '../../hooks/use_content_launch.jsx';
 import { use_content_modals } from '../../hooks/use_content_modals.jsx';
 
@@ -18,6 +21,9 @@ import { use_content_modals } from '../../hooks/use_content_modals.jsx';
  * @returns {JSX.Element} ContentLaunchView 컴포넌트
  */
 const ContentLaunchView = ({ dark_mode }) => {
+  // AI 미디어 요청 모달 상태
+  const [is_request_modal_open, set_is_request_modal_open] = useState(false);
+
   // 커스텀 훅 사용
   const {
     open_folders,
@@ -163,6 +169,18 @@ const ContentLaunchView = ({ dark_mode }) => {
       {/* 날짜별 폴더 목록 */}
       <div className="flex-1 overflow-auto px-8 py-6 relative z-10">
         <div className="max-w-7xl mx-auto space-y-6">
+          
+          {/* CTA 버튼 영역 */}
+          <div className="flex justify-end items-center">
+            <Button
+              onClick={() => set_is_request_modal_open(true)}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg font-semibold"
+              size="lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              새로운 미디어 제작 요청
+            </Button>
+          </div>
           {/* 통계 정보 */}
           <div className="flex items-center justify-end gap-4 mb-6">
             <div className={`${
@@ -227,6 +245,12 @@ const ContentLaunchView = ({ dark_mode }) => {
         on_publish={handle_final_publish}
         on_toggle_platform={toggle_platform}
         on_update_form={update_publish_form}
+      />
+
+      {/* AI 미디어 제작 요청 모달 */}
+      <AIMediaRequestModal
+        is_open={is_request_modal_open}
+        on_close={() => set_is_request_modal_open(false)}
       />
     </div>
   );
