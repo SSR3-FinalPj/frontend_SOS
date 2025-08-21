@@ -8,7 +8,6 @@ import { motion } from 'framer-motion';
 import { 
   Sun, 
   Moon, 
-  Bell, 
   Calendar,
   Activity,
   TrendingUp 
@@ -20,6 +19,7 @@ import { use_analytics_filters } from '../../hooks/use_analytics_filters.js';
 import { get_kpi_data } from '../../utils/dashboard_utils.js';
 import { latest_content_data, weekly_activity_data } from '../../utils/dashboard_constants.js';
 import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
+import Notification from '../ui/notification.jsx';
 
 /**
  * Detailed Analytics View 컴포넌트
@@ -133,14 +133,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
               </motion.button>
 
               {/* Notification */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200 relative"
-              >
-                <Bell className="w-4 h-4" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
-              </motion.button>
+              <Notification />
             </div>
           </div>
         </header>
