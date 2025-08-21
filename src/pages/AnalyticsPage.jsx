@@ -3,7 +3,6 @@
  * 독립적인 분석 페이지
  */
 
-import React from 'react';
 import DetailedAnalyticsView from '../components/dashboard/detailed_analytics_view.jsx';
 
 /**

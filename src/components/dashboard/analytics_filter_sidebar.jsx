@@ -13,48 +13,37 @@ import {
   ArrowLeft,
   Check 
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analytics_store.js';
 import { period_options } from '../../utils/dashboard_constants.js';
 
 /**
  * Analytics Filter Sidebar 컴포넌트
  * @param {Object} props - 컴포넌트 props
  * @param {string} props.current_view - 현재 뷰
- * @param {string} props.selected_platform - 선택된 플랫폼
- * @param {Function} props.set_selected_platform - 플랫폼 변경 함수
- * @param {string} props.selected_period - 선택된 기간
- * @param {Function} props.set_selected_period - 기간 변경 함수
- * @param {boolean} props.is_calendar_visible - 달력 표시 여부
- * @param {Function} props.set_is_calendar_visible - 달력 표시 상태 변경 함수
- * @param {Object} props.date_range - 날짜 범위
- * @param {Function} props.set_date_range - 날짜 범위 변경 함수
- * @param {string} props.temp_period_label - 임시 기간 라벨
- * @param {Function} props.set_temp_period_label - 임시 기간 라벨 변경 함수
- * @param {boolean} props.period_dropdown_open - 기간 드롭다운 열림 상태
- * @param {Function} props.set_period_dropdown_open - 기간 드롭다운 상태 변경 함수
- * @param {React.RefObject} props.period_dropdown_ref - 기간 드롭다운 참조
- * @param {Function} props.get_selected_period_label - 선택된 기간 라벨 반환 함수
- * @param {Function} props.handle_period_select - 기간 선택 핸들러
  * @returns {JSX.Element} Analytics Filter Sidebar 컴포넌트
  */
 const AnalyticsFilterSidebar = ({ 
-  current_view, 
-  selected_platform, 
-  set_selected_platform, 
-  selected_period, 
-  is_calendar_visible,
-  period_dropdown_open,
-  set_period_dropdown_open,
-  period_dropdown_ref,
-  get_selected_period_label,
-  handle_period_select
+  current_view
 }) => {
   const navigate = useNavigate();
+  const period_dropdown_ref = React.useRef(null);
+  const {
+    selected_platform,
+    set_selected_platform,
+    selected_period,
+    is_calendar_visible,
+    period_dropdown_open,
+    set_period_dropdown_open,
+    get_selected_period_label,
+    handle_period_select
+  } = useAnalyticsStore();
+
   const periodLabels = {
     last7Days: '최근 7일',
     last30Days: '최근 30일',
     last3Months: '최근 3개월',
     thisYear: '올해',
-    customPeriod: '직접 설정'
+    custom: '직접 설정'
   };
   const platform_options = [
     { id: 'youtube', label: 'YouTube', icon: Play, color: 'text-red-600' },
