@@ -14,14 +14,14 @@ const TrafficSourceChart = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.5 }}
     >
-      <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl p-6 shadow-xl h-96">
+      <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
             <PieChartIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-800 dark:text-white">트래픽 소스 분석</h3>
         </div>
-        <div className="h-72 w-full">
+        <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -34,7 +34,7 @@ const TrafficSourceChart = () => {
                 dataKey="value"
                 nameKey="name"
               >
-                {data.map((entry, index) => (
+                {traffic_source_data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
