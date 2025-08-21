@@ -169,7 +169,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-green-500/20 flex items-center justify-center">
                       <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">최신 콘텐츠</h3>
+                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">업로드된 콘텐츠</h3>
                   </div>
 
                   <div className="space-y-3 overflow-y-auto max-h-80">
