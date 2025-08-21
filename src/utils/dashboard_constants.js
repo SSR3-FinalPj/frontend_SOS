@@ -73,7 +73,23 @@ export const latest_content_data = [
 export const period_options = [
   { id: 'last7Days', label: 'last7Days' },
   { id: 'last30Days', label: 'last30Days' },
-  { id: 'last3Months', label: 'last3Months' },
-  { id: 'thisYear', label: 'thisYear' },
+  //{ id: 'last3Months', label: 'last3Months' },
+  //{ id: 'thisYear', label: 'thisYear' },
   { id: 'custom', label: 'custom' }
+];
+
+export const audience_demo_data = [
+  { age: "18-24", male: 40, female: 35 },
+  { age: "25-34", male: 50, female: 45 },
+  { age: "35-44", male: 30, female: 28 },
+  { age: "45-54", male: 20, female: 18 },
+  { age: "55+", male: 10, female: 12 }
+];
+
+
+export const traffic_source_data = [
+  { name: "검색", value: 400 },
+  { name: "추천 영상", value: 300 },
+  { name: "외부 유입", value: 200 },
+  { name: "기타", value: 100 }
 ];

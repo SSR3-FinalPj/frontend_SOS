@@ -12,14 +12,16 @@ import {
   Activity,
   TrendingUp 
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { usePageStore } from '../../stores/page_store.js';
 import { Calendar as CalendarComponent } from "../../components/ui/calendar.jsx";
 import { useAnalyticsStore } from '../../stores/analytics_store.js';
 import { get_kpi_data } from '../../utils/dashboard_utils.js';
-import { latest_content_data, weekly_activity_data } from '../../utils/dashboard_constants.js';
+import { latest_content_data } from '../../utils/dashboard_constants.js';
 import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
 import Notification from '../ui/notification.jsx';
+import AudienceDemographicsChart from '../ui/AudienceDemographicsChart.jsx';
+import TrafficSourceChart from '../ui/TrafficSourceChart.jsx';
 
 /**
  * Detailed Analytics View 컴포넌트
@@ -43,30 +45,6 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
 
   // KPI 데이터 가져오기
   const kpi_data = get_kpi_data(selected_platform);
-
-  // Custom Tooltip for Weekly Activity Chart
-  const custom_tooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-800/90 border border-white/30 dark:border-gray-600/30 rounded-xl p-4 shadow-xl">
-          <p className="font-medium text-gray-800 dark:text-white mb-2">{data.date}</p>
-          <div className="space-y-1 text-sm">
-            <p className="text-blue-600 dark:text-blue-400">
-              {selected_platform === 'youtube' ? '조회수' : '업보트'}: {data.views.toLocaleString()}
-            </p>
-            <p className="text-red-600 dark:text-red-400">
-              좋아요: {data.likes.toLocaleString()}
-            </p>
-            <p className="text-green-600 dark:text-green-400">
-              댓글: {data.comments.toLocaleString()}
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
@@ -149,7 +127,10 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
               })}
             </div>
 
-            {/* Bottom Row - Charts */}
+            {/* Audience Demographics Chart */}
+            <AudienceDemographicsChart />
+
+            {/* Bottom Row - Content and Traffic */}
             <div className="grid grid-cols-2 gap-8">
               {/* Latest Content */}
               <motion.div
@@ -196,59 +177,8 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
                 </div>
               </motion.div>
 
-              {/* Weekly Activity Analysis */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-              >
-                <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl p-6 shadow-xl h-96">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">주간 활동</h3>
-                  </div>
-
-                  <div className="h-72 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={weekly_activity_data} margin={{ top: 5, right: 5, left: 20, bottom: 20 }}>
-                        <defs>
-                          <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <XAxis 
-                          dataKey="day" 
-                          axisLine={false} 
-                          tickLine={false}
-                          tick={{ fontSize: 11, fill: 'currentColor', opacity: 0.7 }}
-                        />
-                        <YAxis 
-                          axisLine={false} 
-                          tickLine={false}
-                          tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.7 }}
-                          tickFormatter={(value) => {
-                            if (value >= 1000) {
-                              return (value / 1000).toFixed(0) + 'K';
-                            }
-                            return value;
-                          }}
-                        />
-                        <Tooltip content={custom_tooltip} />
-                        <Area 
-                          type="monotone" 
-                          dataKey="views" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2}
-                          fill="url(#viewsGradient)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </motion.div>
+              {/* Traffic Source Chart */}
+              <TrafficSourceChart />
             </div>
           </div>
         </main>
