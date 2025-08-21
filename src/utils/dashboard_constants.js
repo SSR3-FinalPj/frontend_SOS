@@ -75,5 +75,5 @@ export const period_options = [
   { id: 'last30Days', label: 'last30Days' },
   { id: 'last3Months', label: 'last3Months' },
   { id: 'thisYear', label: 'thisYear' },
-  { id: 'custom', label: 'customPeriod' }
+  { id: 'custom', label: 'custom' }
 ];

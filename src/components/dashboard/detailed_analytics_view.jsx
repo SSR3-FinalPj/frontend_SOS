@@ -16,7 +16,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area } from 'recharts';
 import { usePageStore } from '../../stores/page_store.js';
 import { Calendar as CalendarComponent } from "../../components/ui/calendar.jsx";
-import { use_analytics_filters } from '../../hooks/use_analytics_filters.js';
+import { useAnalyticsStore } from '../../stores/analytics_store.js';
 import { get_kpi_data } from '../../utils/dashboard_utils.js';
 import { latest_content_data, weekly_activity_data } from '../../utils/dashboard_constants.js';
 import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
@@ -33,23 +33,13 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
   
   const {
     selected_platform,
-    set_selected_platform,
-    selected_period,
     is_calendar_visible,
-    set_is_calendar_visible,
     date_range,
-    set_date_range,
-    temp_period_label,
-    set_temp_period_label,
-    period_dropdown_open,
-    set_period_dropdown_open,
-    period_dropdown_ref,
     get_selected_period_label,
-    handle_period_select,
     handle_apply_date_range,
     handle_calendar_cancel,
     handle_calendar_range_select
-  } = use_analytics_filters();
+  } = useAnalyticsStore();
 
   // KPI 데이터 가져오기
   const kpi_data = get_kpi_data(selected_platform);
@@ -87,20 +77,6 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
       <AnalyticsFilterSidebar 
         current_view={current_view} 
         set_current_view={set_current_view}
-        selected_platform={selected_platform}
-        set_selected_platform={set_selected_platform}
-        selected_period={selected_period}
-        is_calendar_visible={is_calendar_visible}
-        set_is_calendar_visible={set_is_calendar_visible}
-        date_range={date_range}
-        set_date_range={set_date_range}
-        temp_period_label={temp_period_label}
-        set_temp_period_label={set_temp_period_label}
-        period_dropdown_open={period_dropdown_open}
-        set_period_dropdown_open={set_period_dropdown_open}
-        period_dropdown_ref={period_dropdown_ref}
-        get_selected_period_label={get_selected_period_label}
-        handle_period_select={handle_period_select}
       />
 
       {/* Main Content Area */}
@@ -113,7 +89,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
                 {selected_platform === 'youtube' ? '유튜브 상세 분석' : '레딧 상세 분석'}
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
-                최근 30일 데이터
+                {get_selected_period_label()}
               </p>
             </div>
 
@@ -193,7 +169,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-green-500/20 flex items-center justify-center">
                       <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">최신 콘텐츠</h3>
+                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">업로드된 콘텐츠</h3>
                   </div>
 
                   <div className="space-y-3 overflow-y-auto max-h-80">
