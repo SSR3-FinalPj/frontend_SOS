@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar } from 'lucide-react';
+import { Calendar, Eye, Heart, MessageSquare } from 'lucide-react';
 import { latest_content_data } from '../../utils/dashboard_constants.js';
 
 const UploadedContentList = () => {
@@ -27,7 +27,7 @@ const UploadedContentList = () => {
                 </div>
               </div>
               
-              <div className="w-12 h-8 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+              <div className="w-24 h-14 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                 <img 
                   src={content.thumbnail} 
                   alt={content.title}
@@ -36,10 +36,24 @@ const UploadedContentList = () => {
               </div>
               
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-gray-800 dark:text-white truncate mb-1">
+                <h4 className="text-sm font-medium text-gray-800 dark:text-white truncate">
                   {content.title}
                 </h4>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-4 mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    <span>{content.views.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Heart className="w-3 h-3" />
+                    <span>{content.likes.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare className="w-3 h-3" />
+                    <span>{content.comments.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                   {content.uploadDate}
                 </div>
               </div>
