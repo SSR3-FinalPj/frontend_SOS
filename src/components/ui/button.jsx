@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
+import { motion } from "framer-motion";
 
 import { cn } from "../../utils/ui_utils";
 
@@ -19,6 +20,8 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        glass:
+          "backdrop-blur-sm bg-white/40 dark:bg-white/15 border border-white/30 dark:border-white/20 text-gray-800 dark:text-white shadow-lg hover:bg-white/50 dark:hover:bg-white/25 transition-colors rounded-2xl",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -42,6 +45,20 @@ function Button({
   ...props
 }) {
   const Comp = asChild ? Slot : "button";
+  const is_glass_variant = variant === "glass";
+
+  if (is_glass_variant && !asChild) {
+    return (
+      <motion.button
+        data-slot="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        {...props}
+      />
+    );
+  }
 
   return (
     <Comp
