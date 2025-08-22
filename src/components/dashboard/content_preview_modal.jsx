@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Image, TrendingUp, Eye, Upload, X as XIcon, AlertCircle } from 'lucide-react';
+import { Image, Upload, X as XIcon, AlertCircle } from 'lucide-react';
 import { get_platform_color, get_content_type_label } from '../../utils/content_launch_utils.jsx';
 import { getEmbeddableVideoUrl } from '../../utils/video_url_utils.js';
 
@@ -175,24 +175,11 @@ const ContentInfo = React.memo(({ item, dark_mode }) => {
           <h2 className={`text-2xl font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>{item.title}</h2>
         </DialogTitle>
         <div className="flex items-center gap-2 mt-2">
-          <Badge className={`${get_platform_color(item.platform)} rounded-full px-3 py-1`}>{item.platform}</Badge>
           <span className={`text-sm ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>{get_content_type_label(item.type)}</span>
         </div>
       </div>
 
       <div className="flex items-center gap-6 text-sm">
-        <div className="flex items-center gap-1.5">
-          <TrendingUp className="h-4 w-4 text-green-500" />
-          <span className={`${dark_mode ? 'text-gray-300' : 'text-gray-700'}`}>
-            예상 참여율: <span className="font-semibold">{item.engagement_score}%</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Eye className="h-4 w-4 text-blue-500" />
-          <span className={`${dark_mode ? 'text-gray-300' : 'text-gray-700'}`}>
-            예상 조회수: <span className="font-semibold">{item.estimated_views?.toLocaleString()}</span>
-          </span>
-        </div>
       </div>
       
       <DialogDescription asChild>
@@ -213,9 +200,8 @@ const ContentPreviewModal = ({
   on_publish 
 }) => {
   // ▼▼▼▼▼ 더 안전한 null 체크 ▼▼▼▼▼
-  if (!item) {
-    console.warn('ContentPreviewModal: item is null, modal should not be open');
-    // item이 null이면 모달을 열지 않음
+  if (!is_open || !item) {
+    // 모달이 닫혀있거나 item이 null이면 렌더링하지 않음
     return null;
   }
   // ▲▲▲▲▲ 더 안전한 null 체크 ▲▲▲▲▲

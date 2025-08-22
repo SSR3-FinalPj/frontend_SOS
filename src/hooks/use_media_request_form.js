@@ -150,6 +150,15 @@ export const useMediaRequestForm = (on_close) => {
         user_request: Object.keys(translated_categories).length > 0 ? translated_categories : null
       };
       
+      // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
+      const last_request_info = {
+        location: selected_location,
+        image_url: image_url, // base64 이미지 URL 저장 (파일 객체 대신)
+        categories: translated_categories,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
+      
       // Zustand 스토어에 '생성 중' 영상 추가
       use_content_launch.getState().add_pending_video(video_data, creation_date);
       

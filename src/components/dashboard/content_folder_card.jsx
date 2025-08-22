@@ -80,17 +80,33 @@ const ContentFolderCard = ({
               </div>
               
               <div className="flex items-center gap-3">
-                <Badge className={`${
-                  dark_mode ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
-                } rounded-full px-3 py-1`}>
-                  {folder.items.filter(item => item.status === 'ready').length}개 론칭 대기
-                </Badge>
-                
-                <Badge className={`${
-                  dark_mode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'
-                } rounded-full px-3 py-1`}>
-                  {folder.items.filter(item => item.status === 'uploaded').length}개 완료
-                </Badge>
+                {(() => {
+                  const ready_count = folder.items.filter(item => item.status === 'ready').length;
+                  const uploaded_count = folder.items.filter(item => item.status === 'uploaded').length;
+                  
+                  console.log(`[${folder.date}] 폴더 카운터:`, {
+                    total_items: folder.items.length,
+                    ready_count,
+                    uploaded_count,
+                    items: folder.items.map(item => ({ id: item.id || item.temp_id, status: item.status }))
+                  });
+                  
+                  return (
+                    <>
+                      <Badge className={`${
+                        dark_mode ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
+                      } rounded-full px-3 py-1`}>
+                        {ready_count}개 론칭 대기
+                      </Badge>
+                      
+                      <Badge className={`${
+                        dark_mode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'
+                      } rounded-full px-3 py-1`}>
+                        {uploaded_count}개 완료
+                      </Badge>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </CardContent>
@@ -104,7 +120,7 @@ const ContentFolderCard = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
               {folder.items.map((item) => (
                 <ContentItemCard
-                  key={item.id}
+                  key={item.id || item.temp_id}
                   item={item}
                   dark_mode={dark_mode}
                   uploading_items={uploading_items}

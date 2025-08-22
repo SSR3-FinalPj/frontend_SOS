@@ -8,7 +8,9 @@ import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Clock, TrendingUp, Eye, Upload, CheckCircle2, Loader2 } from 'lucide-react';
+import { Clock, Upload, CheckCircle2, Loader2 } from 'lucide-react';
+import Timer from '../ui/timer.jsx';
+import jumpCatGif from '/src/assets/images/Jumpcat/jump_cat.gif';
 import { 
   get_type_icon, 
   get_platform_color, 
@@ -33,7 +35,19 @@ const ContentItemCard = ({
   on_preview, 
   on_publish 
 }) => {
-  const is_uploading = uploading_items.includes(item.id);
+  // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
+  const item_id = item.video_id || item.temp_id || item.id;
+  const is_uploading = uploading_items.includes(item_id);
+  
+  console.log('ContentItemCard render:', {
+    title: item.title,
+    video_id: item.video_id,
+    temp_id: item.temp_id,
+    id: item.id,
+    final_item_id: item_id,
+    is_uploading,
+    uploading_items
+  });
 
   return (
     <Card className={`${
@@ -45,32 +59,69 @@ const ContentItemCard = ({
         
         {/* 썸네일 영역 - 클릭 시 미리보기 */}
         <div 
-          className={`w-full h-32 ${
-            dark_mode ? 'bg-gray-600/50' : 'bg-gray-100'
-          } rounded-xl mb-4 flex items-center justify-center relative overflow-hidden cursor-pointer hover:bg-gray-500/60 transition-colors`}
+          className="w-full h-32 rounded-xl mb-4 relative overflow-hidden cursor-pointer"
           onClick={() => on_preview(item)}
         >
-          <div className={`w-16 h-16 ${
-            dark_mode ? 'bg-gray-500/50' : 'bg-gray-200'
-          } rounded-full flex items-center justify-center`}>
-            {get_type_icon(item.type)}
-          </div>
+          {item.status === 'PROCESSING' ? (
+            <>
+              {/* PROCESSING 상태: 배경 이미지 (회색 필터) */}
+              {item.image_url ? (
+                <img 
+                  src={item.image_url} 
+                  alt="썸네일"
+                  className="w-full h-full object-cover filter grayscale"
+                />
+              ) : (
+                <div className={`w-full h-full ${
+                  dark_mode ? 'bg-gray-600/50' : 'bg-gray-100'
+                }`} />
+              )}
+              
+              {/* PROCESSING 오버레이: 고양이 + 타이머 */}
+              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
+                <img 
+                  src={jumpCatGif}
+                  alt="생성 중"
+                  className="w-12 h-12"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 숨기고 대체 아이콘 표시
+                    e.target.style.display = 'none';
+                    console.warn('고양이 GIF 로드 실패:', jumpCatGif);
+                  }}
+                />
+                <Timer startTime={item.start_time} className="text-white text-sm" />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* 기본 상태: 기존 UI */}
+              <div className={`w-full h-32 ${
+                dark_mode ? 'bg-gray-600/50' : 'bg-gray-100'
+              } flex items-center justify-center hover:bg-gray-500/60 transition-colors`}>
+                <div className={`w-16 h-16 ${
+                  dark_mode ? 'bg-gray-500/50' : 'bg-gray-200'
+                } rounded-full flex items-center justify-center`}>
+                  {get_type_icon(item.type)}
+                </div>
+              </div>
+              
+              {/* 미리보기 오버레이 */}
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="bg-white/90 rounded-full p-2">
+                  {/* 미리보기 아이콘 */}
+                </div>
+              </div>
+            </>
+          )}
           
-          {/* 미리보기 오버레이 */}
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <div className="bg-white/90 rounded-full p-2">
-              <Eye className="h-5 w-5 text-gray-800" />
-            </div>
-          </div>
-          
-          {/* 플랫폼 배지 */}
+          {/* 플랫폼 배지 - 공통 */}
           <div className="absolute top-2 left-2">
             <Badge className={`${get_platform_color(item.platform)} rounded-full px-2 py-1 text-xs border`}>
               {item.platform}
             </Badge>
           </div>
           
-          {/* 상태 아이콘 */}
+          {/* 상태 아이콘 - 공통 */}
           <div className="absolute top-2 right-2">
             <TooltipProvider>
               <Tooltip>
@@ -105,25 +156,10 @@ const ContentItemCard = ({
               </span>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <TrendingUp className={`h-3 w-3 ${dark_mode ? 'text-gray-400' : 'text-gray-500'}`} />
-                <span className={`${dark_mode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>
-                  {item.engagement_score}%
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <Eye className={`h-3 w-3 ${dark_mode ? 'text-gray-400' : 'text-gray-500'}`} />
-                <span className={`${dark_mode ? 'text-gray-300' : 'text-gray-700'} font-medium`}>
-                  {(item.estimated_views / 1000).toFixed(1)}K
-                </span>
-              </div>
-            </div>
           </div>
 
-          {/* 업로드 버튼 */}
-          {item.status === 'ready' && (
+          {/* 업로드 버튼 - ready 및 READY_TO_LAUNCH 상태 */}
+          {(item.status === 'ready' || item.status === 'READY_TO_LAUNCH') && (
             <Button
               onClick={(e) => {
                 e.stopPropagation();
