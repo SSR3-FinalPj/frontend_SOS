@@ -137,15 +137,11 @@ const ContentLaunchView = ({ dark_mode }) => {
   };
 
   return (
-    <div className={`flex-1 ${
-      dark_mode 
-        ? 'bg-gray-900' 
-        : 'bg-transparent'
-    } h-full overflow-hidden flex flex-col relative`}>
+    <div className="flex-1 h-full overflow-hidden flex flex-col relative">
       
 
       {/* 날짜별 폴더 목록 */}
-      <div className="flex-1 overflow-auto px-8 py-6 relative z-10">
+      <div className="h-full overflow-auto px-8 py-6 relative z-10">
         <div className="max-w-7xl mx-auto space-y-6">
           
           {/* 통계 정보 및 CTA 버튼 */}
