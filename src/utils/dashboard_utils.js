@@ -115,7 +115,7 @@ export const get_platform_data = (youtubeData) => {
     });
   }
 
-  const engagementRate = (totalLikes && totalViews) ? ((totalLikes / totalViews) * 100).toFixed(2) : "0.00";
+  const engagementRate = (totalLikes && totalViews) ? Math.min(100, ((totalLikes * 0.5 + totalComments * 0.8) / totalViews) * 100).toFixed(2) : "0.00";
 
   const youtubePlatform = {
     name: "YouTube",

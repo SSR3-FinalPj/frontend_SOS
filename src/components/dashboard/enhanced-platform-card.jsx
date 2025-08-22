@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip.jsx';
 
 function EnhancedPlatformCard({ platform, index }) {
   const Icon = platform.icon;
@@ -56,9 +57,18 @@ function EnhancedPlatformCard({ platform, index }) {
               <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
               </div>
-              <span className="text-green-600 dark:text-green-400 font-medium text-sm">
-                {platform.growth.value}
-              </span>
+              <TooltipProvider delayDuration={1000}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-green-600 dark:text-green-400 font-medium text-sm cursor-help">
+                      {platform.growth.value}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>참여율은 (좋아요 수 × 0.5 + 댓글 수 × 0.8) ÷ 조회수으로 계산됩니다.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
               {platform.growth.period}

@@ -8,6 +8,7 @@ import { EnhancedPlatformCard } from "./enhanced-platform-card.jsx";
 import { get_platform_data } from '../../utils/dashboard_utils.js';
 import { getDashboardData } from '../../lib/api.js';
 import { format, subDays } from 'date-fns';
+import { TooltipProvider } from '../../components/ui/tooltip.jsx';
 
 /**
  * Main Dashboard View 컴포넌트
@@ -49,17 +50,19 @@ const MainDashboardView = () => {
   }
 
   return (
-    <div className="p-6 relative z-10">
-      <div className="grid grid-cols-2 gap-6 h-[calc(100vh-200px)]">
-        {platform_data.map((platform, index) => (
-          <EnhancedPlatformCard 
-            key={platform.name} 
-            platform={platform} 
-            index={index}
-          />
-        ))}
+    <TooltipProvider>
+      <div className="p-6 relative z-10">
+        <div className="grid grid-cols-2 gap-6 h-[calc(100vh-200px)]">
+          {platform_data.map((platform, index) => (
+            <EnhancedPlatformCard 
+              key={platform.name} 
+              platform={platform} 
+              index={index}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
