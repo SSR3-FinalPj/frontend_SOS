@@ -191,7 +191,7 @@ export const useMediaRequestForm = (on_close) => {
       console.log('2단계 - S3 업로드 완료');
 
       // 3단계: 백엔드에 업로드 완료 알림
-      const notify_response = await apiFetch('/api/upload', {
+      const notify_response = await apiFetch('/api/images/confirm', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
