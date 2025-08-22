@@ -3,16 +3,46 @@
  * 메인 대시보드 뷰 (플랫폼 카드들)
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { EnhancedPlatformCard } from "./enhanced-platform-card.jsx";
 import { get_platform_data } from '../../utils/dashboard_utils.js';
+import { getDashboardData } from '../../lib/api.js';
 
 /**
  * Main Dashboard View 컴포넌트
  * @returns {JSX.Element} Main Dashboard View 컴포넌트
  */
 const MainDashboardView = () => {
-  const platform_data = get_platform_data();
+  const [youtubeData, setYoutubeData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchYoutubeData = async () => {
+      try {
+        setLoading(true);
+        const data = await getDashboardData({ type: 'total' });
+        setYoutubeData(data.youtube.data); // Assuming data.youtube.data contains the relevant info
+      } catch (err) {
+        setError(err);
+        console.error("Failed to fetch YouTube dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchYoutubeData();
+  }, []);
+
+  const platform_data = get_platform_data(youtubeData);
+
+  if (loading) {
+    return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading dashboard data...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-center text-red-500 dark:text-red-400">Error: {error.message}</div>;
+  }
 
   return (
     <div className="p-6 relative z-10">
