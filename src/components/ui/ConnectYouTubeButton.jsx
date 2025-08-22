@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch as api } from "../../lib/api.js";
 import { Button } from "./button.jsx";
+import { useYouTubeStore } from "../../stores/youtube_store.js";
 
 export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);
@@ -8,6 +9,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const popupRef = useRef(null);
   const popupTimerRef = useRef(null);
   const timeoutRef = useRef(null);
+  const setChannelInfo = useYouTubeStore((s) => s.setChannelInfo);
 
   const fetchStatus = async () => {
     try {
@@ -18,11 +20,25 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         }
         throw new Error(`HTTP ${r.status}`);
       }
+
       const data = await r.json().catch(() => ({}));
       const mapped = {
         connected: data.connected ?? data.linked ?? false,
-        //추후 채널 ID나 이름 등 추가 정보가 필요할 경우 여기에 추가
+      };
+
+      // ✅ 연결된 경우라면, 채널 ID 요청
+      if (mapped.connected) {
+        try {
+          const res = await api("/api/youtube/channelId", { method: "GET" });
+          if (res.ok) {
+            const ch = await res.json();
+            setChannelInfo(ch); // { channelId, channelTitle }
+          }
+        } catch (err) {
+          console.error("채널 정보 조회 실패:", err);
+        }
       }
+
       onDone && onDone(mapped);
     } catch (e) {
       console.error(e);
@@ -58,7 +74,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         }
       }, 600);
 
-      // Safety timeout (e.g., 3 minutes)
+      // Safety timeout (3분)
       timeoutRef.current = setTimeout(() => {
         clearTimers();
         setLoading(false);
@@ -74,16 +90,14 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
     fetchStatus();
 
     const onMsg = (e) => {
-      // (Optional) only allow messages from our callback domain
       if (oauthOrigin && e.origin !== oauthOrigin) return;
-
       if (e.data?.type === "google-oauth-complete") {
         clearTimers();
         setLoading(false);
         // Add a delay for backend processing
         setTimeout(() => {
           fetchStatus();
-        }, 1000); // 1s delay
+        }, 1000); // 1초 딜레이
       }
     };
 
@@ -106,46 +120,47 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
     popupRef.current = null;
   };
 
-return (
-  <Button onClick={startOAuth} disabled={loading} variant="outline">
-    <div className="gsi-material-button">
-      <div className="gsi-material-button-state"></div>
-      <div className="gsi-material-button-content-wrapper flex items-center gap-2">
-        <div className="gsi-material-button-icon">
-          <svg
-            version="1.1"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 48 48"
-            xmlnsXlink="http://www.w3.org/1999/xlink"
-            style={{ display: "block" }}
-          >
-            <path
-              fill="#EA4335"
-              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-            />
-            <path
-              fill="#4285F4"
-              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-            />
-            <path
-              fill="#34A853"
-              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-            />
-            <path fill="none" d="M0 0h48v48H0z" />
-          </svg>
+  return (
+    <Button onClick={startOAuth} disabled={loading} variant="outline">
+      <div className="gsi-material-button">
+        <div className="gsi-material-button-state"></div>
+        <div className="gsi-material-button-content-wrapper flex items-center gap-2">
+          <div className="gsi-material-button-icon">
+            {/* Google 로고 */}
+            <svg
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 48 48"
+              xmlnsXlink="http://www.w3.org/1999/xlink"
+              style={{ display: "block" }}
+            >
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+              />
+              <path fill="none" d="M0 0h48v48H0z" />
+            </svg>
+          </div>
+          <span className="gsi-material-button-contents">
+            {loading ? "연결 중..." : "Google 계정으로 연동하기"}
+          </span>
+          <span style={{ display: "none" }}>Sign in with Google</span>
         </div>
-        <span className="gsi-material-button-contents">
-          {loading ? "연결 중..." : "Google 계정으로 연동하기"}
-        </span>
-        <span style={{ display: "none" }}>Sign in with Google</span>
       </div>
-    </div>
-  </Button>
-);
+    </Button>
+  );
 }
 
 function openOAuthPopup(url, title, w, h) {
