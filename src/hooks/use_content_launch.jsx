@@ -14,7 +14,7 @@ export const use_content_launch = create(
   persist(
     (set, get) => ({
       // 기존 상태
-      open_folders: ['2024-12-13'],
+      open_folders: [],
       uploading_items: [],
       
       // 새로운 상태 - localStorage에 저장될 '생성 중' 영상들
@@ -73,37 +73,39 @@ export const use_content_launch = create(
       fetch_folders: async () => {
         try {
           // TODO: 실제 API 호출로 교체
-          const api_folders = [
-            {
-              date: '2024-12-13',
-              display_date: '2024년 12월 13일',
-              item_count: 5,
-              items: [
-                {
-                  id: 'video_1',
-                  title: '서울 명동 AI 영상',
-                  status: 'COMPLETED',
-                  created_at: '2024-12-13T10:30:00Z'
-                }
-              ]
-            }
-          ];
+          // 현재는 빈 배열로 초기화 (목업 데이터 제거됨)
+          const api_folders = [];
           
           const pending_videos = get().pending_videos;
           
-          // '생성 중' 영상들을 폴더 형태로 구성
-          const pending_folder = pending_videos.length > 0 ? {
-            date: 'pending',
-            display_date: '생성 중인 영상',
-            is_pending: true,
-            item_count: pending_videos.length,
-            items: pending_videos
-          } : null;
+          // pending_videos를 날짜별로 그룹화
+          const grouped_by_date = {};
+          pending_videos.forEach(video => {
+            const date = video.creation_date;
+            if (!grouped_by_date[date]) {
+              grouped_by_date[date] = [];
+            }
+            grouped_by_date[date].push(video);
+          });
           
-          // '생성 중' 폴더를 최상단에 배치
-          const merged_folders = pending_folder 
-            ? [pending_folder, ...api_folders]
-            : api_folders;
+          // 날짜별 폴더 생성
+          const pending_folders = Object.keys(grouped_by_date).map(date => ({
+            date: date,
+            display_date: new Date(date).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            item_count: grouped_by_date[date].length,
+            items: grouped_by_date[date],
+            is_pending: true
+          }));
+          
+          // 날짜순 정렬 (최신 날짜가 위로)
+          pending_folders.sort((a, b) => new Date(b.date) - new Date(a.date));
+          
+          // API 폴더와 pending 폴더 병합
+          const merged_folders = [...pending_folders, ...api_folders];
           
           set({ folders: merged_folders });
         } catch (error) {
