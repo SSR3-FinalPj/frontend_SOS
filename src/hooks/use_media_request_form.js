@@ -182,7 +182,7 @@ export const useMediaRequestForm = (on_close) => {
       const upload_response = await fetch(presign.url, {
         method: 'PUT',
         headers: { 'Content-Type': presign.contentType },
-        body: uploaded_fileㄱ
+        body: uploaded_file
       });
 
       if (!upload_response.ok) {
