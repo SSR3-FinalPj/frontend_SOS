@@ -100,9 +100,27 @@ export const get_kpi_data = (selected_platform) => {
  * @returns {Array} 플랫폼 데이터 배열
  */
 export const get_platform_data = (youtubeData) => {
+  let totalViews = youtubeData?.total?.total_view_count || 0;
+  let totalLikes = youtubeData?.total?.total_like_count || 0;
+  let totalComments = youtubeData?.total?.total_comment_count || 0;
+  let processedChartData = [];
+
+  if (youtubeData && Array.isArray(youtubeData.daily)) {
+    youtubeData.daily.forEach(dayData => {
+      processedChartData.push({
+        day: dayData.date, // Assuming 'date' is available and can be used as 'day'
+        views: dayData.view_count || 0,
+        likes: dayData.like_count || 0,
+      });
+    });
+  }
+
+  const engagementRate = (totalLikes && totalViews) ? ((totalLikes / totalViews) * 100).toFixed(2) : "0.00";
+
   const youtubePlatform = {
     name: "YouTube",
     description: "동영상 플랫폼",
+    totalVideos: youtubeData?.total?.total_video_count?.toLocaleString() || 0, // Total number of videos from the 'total' object
     status: "활성",
     statusColor: "text-green-500",
     icon: Play,
@@ -111,16 +129,16 @@ export const get_platform_data = (youtubeData) => {
     borderColor: "border-red-200/40 dark:border-red-800/30",
     accentColor: "text-red-600 dark:text-red-400",
     metrics: {
-      views: { value: youtubeData?.total_view_count?.toLocaleString() || "24.5K", label: "조회수", icon: Eye },
-      likes: { value: youtubeData?.total_like_count?.toLocaleString() || "3.2K", label: "좋아요", icon: Heart },
-      engagementRate: { value: ((youtubeData?.total_like_count && youtubeData?.total_view_count) ? ((youtubeData.total_like_count / youtubeData.total_view_count) * 100).toFixed(2) + '%' : "13.2%"), label: "참여율", icon: TrendingUp }
+      views: { value: totalViews.toLocaleString(), label: "조회수", icon: Eye },
+      likes: { value: totalLikes.toLocaleString(), label: "좋아요", icon: Heart },
+      comments: { value: totalComments.toLocaleString(), label: "총 댓글", icon: MessageSquare }
     },
     growth: {
-      value: "참여율 13.2%", // API does not provide growth data for total
+      value: `참여율 ${engagementRate}%`,
       period: "지난 7일",
-      isPositive: true
+      isPositive: true // This would need actual growth data to determine
     },
-    chartData: youtube_chart_data, // API does not provide chart data for total
+    chartData: processedChartData.length > 0 ? processedChartData : youtube_chart_data, // Use processed data if available, else fallback
     chartMetrics: {
       primary: { key: "views", label: "조회수", color: "#dc2626" },
       secondary: { key: "likes", label: "좋아요", color: "#7c3aed" }
