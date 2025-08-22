@@ -41,31 +41,46 @@ export const latest_content_data = [
     rank: 1,
     title: "AI로 만드는 숏폼 영상 가이드",
     uploadDate: "2024-12-15",
-    thumbnail: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=300&fit=crop"
+    thumbnail: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=300&fit=crop",
+    views: 18500,
+    likes: 680,
+    comments: 201
   },
   {
     rank: 2,
     title: "호기심이 뭔지 쾌락적 카피라이팅",
     uploadDate: "2024-12-14",
-    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop"
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
   },
   {
     rank: 3,
     title: "소셜미디어 마케팅 전략",
     uploadDate: "2024-12-13",
-    thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=300&fit=crop"
+    thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=300&fit=crop",
+    views: 12800,
+    likes: 455,
+    comments: 112
   },
   {
     rank: 4,
     title: "데이터 분석으로 콘텐츠 성과 개선하기",
     uploadDate: "2024-12-12",
-    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop"
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
   },
   {
     rank: 5,
     title: "커뮤니티 참여도를 높이는 5가지 방법",
     uploadDate: "2024-12-11",
-    thumbnail: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop"
+    thumbnail: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop",
+    views: 8200,
+    likes: 290,
+    comments: 67
   }
 ];
 
@@ -73,7 +88,23 @@ export const latest_content_data = [
 export const period_options = [
   { id: 'last7Days', label: 'last7Days' },
   { id: 'last30Days', label: 'last30Days' },
-  { id: 'last3Months', label: 'last3Months' },
-  { id: 'thisYear', label: 'thisYear' },
+  //{ id: 'last3Months', label: 'last3Months' },
+  //{ id: 'thisYear', label: 'thisYear' },
   { id: 'custom', label: 'custom' }
+];
+
+export const audience_demo_data = [
+  { age: "18-24", male: 40, female: 35 },
+  { age: "25-34", male: 50, female: 45 },
+  { age: "35-44", male: 30, female: 28 },
+  { age: "45-54", male: 20, female: 18 },
+  { age: "55+", male: 10, female: 12 }
+];
+
+
+export const traffic_source_data = [
+  { name: "검색", value: 400 },
+  { name: "추천 영상", value: 300 },
+  { name: "외부 유입", value: 200 },
+  { name: "기타", value: 100 }
 ];
