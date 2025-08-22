@@ -9,7 +9,9 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const popupRef = useRef(null);
   const popupTimerRef = useRef(null);
   const timeoutRef = useRef(null);
-  const setChannelInfo = useYouTubeStore((s) => s.setChannelInfo);
+
+  // ✅ store 값 가져오기
+  const { channelId, setChannelInfo } = useYouTubeStore();
 
   const fetchStatus = async () => {
     try {
@@ -26,8 +28,8 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         connected: data.connected ?? data.linked ?? false,
       };
 
-      // ✅ 연결된 경우라면, 채널 ID 요청
-      if (mapped.connected) {
+      // ✅ 연결된 경우 + 아직 store에 채널 ID 없음 → 채널 정보 요청
+      if (mapped.connected && !channelId) {
         try {
           const res = await api("/api/youtube/channelId", { method: "GET" });
           if (res.ok) {
@@ -58,10 +60,10 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
 
       popupRef.current = openOAuthPopup(url, "GoogleOAuth", 520, 700);
 
-      // Fallback for popup blockers
+      // 팝업 차단 fallback
       if (!popupRef.current) {
         window.location.href = url;
-        return; // Loading ends with page navigation in this case
+        return;
       }
 
       // Poll for popup close
@@ -69,7 +71,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         const w = popupRef.current;
         if (w && w.closed) {
           clearTimers();
-          // Failsafe in case callback page fails to send message
+          // failsafe
           window.postMessage({ type: "google-oauth-complete", ok: true }, "*");
         }
       }, 600);
@@ -97,7 +99,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         // Add a delay for backend processing
         setTimeout(() => {
           fetchStatus();
-        }, 1000); // 1초 딜레이
+        }, 1000);
       }
     };
 
@@ -174,7 +176,6 @@ function openOAuthPopup(url, title, w, h) {
   const left = (width - w) / 2 / systemZoom + dualLeft;
   const top = (height - h) / 2 / systemZoom + dualTop;
 
-  // Note: do not use 'noopener' for postMessage to work (opener is needed)
   return window.open(
     url,
     title,
