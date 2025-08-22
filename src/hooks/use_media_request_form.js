@@ -175,18 +175,35 @@ export const useMediaRequestForm = (on_close) => {
         throw new Error(`Presigned URL 요청 실패: ${presign_response.status}`);
       }
 
-      const { presignedUrl } = await presign_response.json();
+      const presign = await presign_response.json();
+      console.log('1단계 - Presigned URL 획득:', presign.url.substring(0, 15) + '...');
 
       // 2단계: S3에 직접 파일 업로드
-      const upload_response = await fetch(presignedUrl, {
+      const upload_response = await fetch(presign.url, {
         method: 'PUT',
-        headers: { 'Content-Type': uploaded_file.type },
-        body: uploaded_file
+        headers: { 'Content-Type': presign.contentType },
+        body: uploaded_fileㄱ
       });
 
       if (!upload_response.ok) {
         throw new Error(`S3 업로드 실패: ${upload_response.status}`);
       }
+      console.log('2단계 - S3 업로드 완료');
+
+      // 3단계: 백엔드에 업로드 완료 알림
+      const notify_response = await apiFetch('/api/upload', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: presign.key,
+          locationCode: selected_location.poi_id
+        })
+      });
+
+      if (!notify_response.ok) {
+        throw new Error(`업로드 완료 알림 실패: ${notify_response.status}`);
+      }
+      console.log('3단계 - 업로드 완료 알림 전송 성공');
 
       // 성공 처리
       set_is_success_modal_open(true);
