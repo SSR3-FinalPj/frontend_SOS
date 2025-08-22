@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { CATEGORY_TRANSLATIONS } from '../utils/media_request_constants.js';
 import { use_content_launch } from './use_content_launch.jsx';
+import { apiFetch } from '../lib/api.js';
 
 /**
  * useMediaRequestForm 커스텀 훅
@@ -162,7 +163,30 @@ export const useMediaRequestForm = (on_close) => {
       // Zustand 스토어에 '생성 중' 영상 추가
       use_content_launch.getState().add_pending_video(video_data, creation_date);
       
-      // TODO: 실제 API 호출 구현
+      // S3 Presigned URL을 이용한 2단계 업로드
+      // 1단계: 백엔드에서 presigned URL 가져오기
+      const presign_response = await apiFetch('/api/images/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentType: uploaded_file.type })
+      });
+
+      if (!presign_response.ok) {
+        throw new Error(`Presigned URL 요청 실패: ${presign_response.status}`);
+      }
+
+      const { presignedUrl } = await presign_response.json();
+
+      // 2단계: S3에 직접 파일 업로드
+      const upload_response = await fetch(presignedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': uploaded_file.type },
+        body: uploaded_file
+      });
+
+      if (!upload_response.ok) {
+        throw new Error(`S3 업로드 실패: ${upload_response.status}`);
+      }
 
       // 성공 처리
       set_is_success_modal_open(true);
