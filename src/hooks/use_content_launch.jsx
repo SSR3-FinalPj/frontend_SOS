@@ -114,23 +114,54 @@ export const use_content_launch = create(
       /**
        * 새로운 '생성 중' 영상을 추가하는 함수
        * @param {Object} video_data - 영상 데이터 객체
+       * @param {string} creation_date - 생성 날짜 (YYYY-MM-DD 형식)
        */
-      add_pending_video: (video_data) => {
+      add_pending_video: (video_data, creation_date) => {
         const new_pending_video = {
           temp_id: `temp-${Date.now()}`,
           title: video_data.title || '새로운 AI 영상',
           status: 'PROCESSING',
           start_time: new Date().toISOString(),
           image_url: video_data.image_url,
+          creation_date: creation_date,
           ...video_data
         };
         
+        // 현재 folders 상태에서 creation_date와 일치하는 폴더 찾기
+        const current_folders = get().folders;
+        const existing_folder_index = current_folders.findIndex(folder => folder.date === creation_date);
+        
+        if (existing_folder_index !== -1) {
+          // 기존 폴더가 있는 경우: 해당 폴더의 items 맨 앞에 추가
+          const updated_folders = [...current_folders];
+          updated_folders[existing_folder_index] = {
+            ...updated_folders[existing_folder_index],
+            items: [new_pending_video, ...updated_folders[existing_folder_index].items],
+            item_count: updated_folders[existing_folder_index].item_count + 1
+          };
+          set({ folders: updated_folders });
+        } else {
+          // 새로운 폴더 생성: 현재 날짜로 폴더를 만들고 전체 폴더 목록 맨 앞에 추가
+          const new_folder = {
+            date: creation_date,
+            display_date: new Date(creation_date).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            item_count: 1,
+            items: [new_pending_video]
+          };
+          
+          set((state) => ({
+            folders: [new_folder, ...state.folders]
+          }));
+        }
+        
+        // pending_videos 상태도 업데이트 (localStorage 저장용)
         set((state) => ({
           pending_videos: [new_pending_video, ...state.pending_videos]
         }));
-        
-        // 상태 업데이트 후 폴더 목록 갱신
-        get().fetch_folders();
       },
       
       /**

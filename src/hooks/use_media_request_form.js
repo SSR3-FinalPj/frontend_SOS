@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { CATEGORY_TRANSLATIONS } from '../utils/media_request_constants.js';
+import { use_content_launch } from './use_content_launch.jsx';
 
 /**
  * useMediaRequestForm 커스텀 훅
@@ -125,6 +126,33 @@ export const useMediaRequestForm = (on_close) => {
       
       form_data.append('reference_image', uploaded_file);
 
+      // 이미지를 Base64로 변환
+      const convert_to_base64 = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      };
+
+      const image_url = await convert_to_base64(uploaded_file);
+      
+      // 현재 날짜 생성 (YYYY-MM-DD 형식)
+      const creation_date = new Date().toISOString().split('T')[0];
+      
+      // 영상 데이터 구성
+      const video_data = {
+        title: `${selected_location.name} AI 영상`,
+        location_id: selected_location.poi_id,
+        location_name: selected_location.name,
+        image_url: image_url,
+        user_request: Object.keys(translated_categories).length > 0 ? translated_categories : null
+      };
+      
+      // Zustand 스토어에 '생성 중' 영상 추가
+      use_content_launch.getState().add_pending_video(video_data, creation_date);
+      
       // TODO: 실제 API 호출 구현
 
       // 성공 처리

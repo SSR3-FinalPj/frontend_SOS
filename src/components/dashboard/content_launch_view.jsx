@@ -3,7 +3,7 @@
  * .env 파일을 사용해 비디오 URL을 관리합니다.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import ContentFolderCard from './content_folder_card';
 import ContentPreviewModal from './content_preview_modal';
@@ -28,9 +28,11 @@ const ContentLaunchView = ({ dark_mode }) => {
     open_folders,
     uploading_items,
     folders,
+    pending_videos,
     toggle_folder,
     simulate_upload,
-    fetch_folders
+    fetch_folders,
+    remove_pending_video
   } = use_content_launch();
 
   const {
@@ -49,6 +51,40 @@ const ContentLaunchView = ({ dark_mode }) => {
   useEffect(() => {
     fetch_folders();
   }, [fetch_folders]);
+
+  /**
+   * 웹소켓 완료 메시지 처리 함수
+   * @param {string} video_id - 완료된 영상의 ID
+   */
+  const handle_completion = useCallback(async (video_id) => {
+    try {
+      // '생성 중' 영상을 localStorage에서 제거
+      remove_pending_video(video_id);
+      
+      // 폴더 목록 갱신 (API에서 새로운 완료된 영상 포함)
+      await fetch_folders();
+      
+      console.log(`영상 ${video_id} 생성 완료 처리됨`);
+    } catch (error) {
+      console.error('완료 처리 중 오류:', error);
+    }
+  }, [remove_pending_video, fetch_folders]);
+
+  // TODO: 웹소켓 연동 시 주석 해제
+  // const { connect, disconnect, is_connected } = use_websocket({
+  //   url: 'ws://localhost:8080/video-completion',
+  //   on_message: (message) => {
+  //     const data = JSON.parse(message.data);
+  //     if (data.type === 'VIDEO_COMPLETED' && data.video_id) {
+  //       handle_completion(data.video_id);
+  //     }
+  //   }
+  // });
+  
+  // useEffect(() => {
+  //   connect();
+  //   return () => disconnect();
+  // }, [connect, disconnect]);
 
   /**
    * 게시 완료 핸들러
@@ -113,6 +149,22 @@ const ContentLaunchView = ({ dark_mode }) => {
                   <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>폴더</div>
                 </div>
               </div>
+              
+              {/* 테스트용 임시 완료 처리 버튼 */}
+              {pending_videos.length > 0 && (
+                <Button
+                  onClick={() => {
+                    const first_pending_video = pending_videos[0];
+                    if (first_pending_video) {
+                      handle_completion(first_pending_video.temp_id);
+                    }
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-lg"
+                  size="sm"
+                >
+                  임시 완료 처리 (테스트)
+                </Button>
+              )}
             </div>
           </div>
 
