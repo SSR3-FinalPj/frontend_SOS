@@ -114,8 +114,6 @@ export const useMediaRequestForm = (on_close) => {
       // 백엔드 전송 데이터 구성
       const form_data = new FormData();
       form_data.append('location_id', selected_location.poi_id);
-      form_data.append('location_name', selected_location.name);
-      form_data.append('district', selected_location.district);
       
       // 선택된 카테고리가 있을 때만 user_request에 포함
       if (Object.keys(translated_categories).length > 0) {
@@ -128,14 +126,6 @@ export const useMediaRequestForm = (on_close) => {
       form_data.append('reference_image', uploaded_file);
 
       // TODO: 실제 API 호출 구현
-      console.log('제작 요청 데이터:', {
-        location_id: selected_location.poi_id,
-        location_name: selected_location.name,
-        district: selected_location.district,
-        user_request: Object.keys(translated_categories).length > 0 ? { user: translated_categories } : {},
-        has_image: true,
-        is_initial_generation: Object.keys(translated_categories).length === 0
-      });
 
       // 성공 처리
       set_is_success_modal_open(true);
