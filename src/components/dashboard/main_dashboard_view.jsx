@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { EnhancedPlatformCard } from "./enhanced-platform-card.jsx";
 import { get_platform_data } from '../../utils/dashboard_utils.js';
 import { getDashboardData } from '../../lib/api.js';
+import { format, subDays } from 'date-fns';
 
 /**
  * Main Dashboard View 컴포넌트
@@ -21,7 +22,10 @@ const MainDashboardView = () => {
     const fetchYoutubeData = async () => {
       try {
         setLoading(true);
-        const data = await getDashboardData({ type: 'total' });
+        const endDate = format(new Date(), 'yyyy-MM-dd');
+        const startDate = format(subDays(new Date(), 6), 'yyyy-MM-dd'); // Last 7 days including today
+
+        const data = await getDashboardData({ type: 'range', startDate, endDate });
         setYoutubeData(data.youtube.data); // Assuming data.youtube.data contains the relevant info
       } catch (err) {
         setError(err);

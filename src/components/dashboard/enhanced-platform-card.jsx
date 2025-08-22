@@ -22,6 +22,9 @@ function EnhancedPlatformCard({ platform, index }) {
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">{platform.name}</h3>
               <p className="text-base text-gray-600 dark:text-gray-400">{platform.description}</p>
+              {platform.totalVideos !== undefined && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">총 영상: {platform.totalVideos}개</p>
+              )}
             </div>
           </div>
 
