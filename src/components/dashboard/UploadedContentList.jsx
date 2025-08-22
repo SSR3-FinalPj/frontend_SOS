@@ -20,9 +20,9 @@ const UploadedContentList = () => {
 
         <div className="space-y-3 overflow-y-auto max-h-80 custom-scrollbar pr-2">
           {latest_content_data.map((content, index) => (
-            <div key={index} className="flex items-center gap-3 p-3 bg-white/20 dark:bg-white/5 rounded-xl">
+            <div key={index} className="flex items-center gap-4 p-3 bg-white/20 dark:bg-white/5 rounded-xl">
               <div className="flex-shrink-0">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
                   {content.rank}
                 </div>
               </div>
