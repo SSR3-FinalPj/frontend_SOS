@@ -109,7 +109,7 @@ const ImageUploader = ({ uploaded_file, on_file_change }) => {
         <input
           ref={file_input_ref}
           type="file"
-          accept=".png,.jpg"
+          accept=".png,.jpg,.jpeg,image/png,image/jpeg"
           onChange={handle_file_input_change}
           className="hidden"
         />
@@ -163,7 +163,7 @@ const ImageUploader = ({ uploaded_file, on_file_change }) => {
                 이미지를 드래그하거나 클릭하여 업로드
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                PNG, JPG 파일 (최대 10MB)
+                PNG, JPG/JPEG 파일 (최대 10MB)
               </p>
             </div>
           </div>
@@ -183,7 +183,7 @@ const ImageUploader = ({ uploaded_file, on_file_change }) => {
       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
         <p>• 선택한 명소의 샘플 이미지를 넣어주세요.</p>
         <p>• AI가 업로드된 이미지를 기반으로 영상을 생성합니다.</p>
-        <p>• 지원 형식: PNG, JPG | 최대 크기: 10MB</p>
+        <p>• 지원 형식: PNG, JPG/JPEG | 최대 크기: 10MB</p>
       </div>
     </div>
   );

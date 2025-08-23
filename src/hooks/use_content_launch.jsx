@@ -24,6 +24,10 @@ export const use_content_launch = create(
       // 폴더 데이터 (API + localStorage 병합 결과)
       folders: [],
 
+      // 영상 선택 상태
+      selected_video_id: null,
+      selected_video_data: null,
+
       /**
        * 폴더 열기/닫기 토글
        * @param {string} date - 날짜 문자열
@@ -183,6 +187,72 @@ export const use_content_launch = create(
         set((state) => ({
           pending_videos: [...state.pending_videos, new_pending_video]
         }));
+      },
+      
+      /**
+       * 우선순위 재생성: 진행 중인 영상들을 교체하는 함수
+       * @param {Object} newVideoData - 새 영상 데이터 객체
+       * @param {string} creationDate - 생성 날짜 (YYYY-MM-DD 형식)
+       */
+      replace_processing_video: (newVideoData, creationDate) => {
+        // 1. 새로운 영상 데이터 생성 (add_pending_video와 동일한 구조)
+        const new_pending_video = {
+          temp_id: `temp-${Date.now()}`,
+          title: newVideoData.title || '새로운 AI 영상',
+          status: 'PROCESSING',
+          start_time: new Date().toISOString(),
+          image_url: newVideoData.image_url,
+          creation_date: creationDate,
+          ...newVideoData
+        };
+        
+        // 2. folders에서 PROCESSING 상태인 항목들 제거하고 새 영상 추가
+        const current_folders = get().folders;
+        const updated_folders = current_folders.map(folder => {
+          // 각 폴더에서 PROCESSING 상태 항목들 제거
+          const filtered_items = folder.items.filter(item => item.status !== 'PROCESSING');
+          
+          // 해당 생성 날짜 폴더인 경우 새 영상 추가
+          if (folder.date === creationDate) {
+            return {
+              ...folder,
+              items: [...filtered_items, new_pending_video],
+              item_count: filtered_items.length + 1
+            };
+          } else {
+            return {
+              ...folder,
+              items: filtered_items,
+              item_count: filtered_items.length
+            };
+          }
+        });
+        
+        // 3. 해당 날짜 폴더가 없는 경우 새로 생성
+        const existing_folder = updated_folders.find(folder => folder.date === creationDate);
+        if (!existing_folder) {
+          const new_folder = {
+            date: creationDate,
+            display_date: new Date(creationDate).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            item_count: 1,
+            items: [new_pending_video]
+          };
+          
+          updated_folders.unshift(new_folder); // 맨 앞에 추가
+        }
+        
+        // 4. 전체 상태 업데이트
+        set((state) => ({
+          folders: updated_folders,
+          pending_videos: [...state.pending_videos.filter(video => video.status !== 'PROCESSING'), new_pending_video]
+        }));
+        
+        // 5. 폴더 목록 재갱신
+        get().fetch_folders();
       },
       
       /**
@@ -374,6 +444,42 @@ export const use_content_launch = create(
         get().fetch_folders();
         
         console.log(`영상 ID 업데이트 완료: ${temp_id} → ${video_id}`);
+      },
+
+      /**
+       * 영상 선택 함수
+       * @param {Object} video - 선택할 영상 객체
+       */
+      select_video: (video) => {
+        const video_id = video.video_id || video.temp_id || video.id;
+        const current_selected = get().selected_video_id;
+        
+        // 이미 선택된 영상을 다시 클릭하면 선택 해제
+        if (current_selected === video_id) {
+          set({
+            selected_video_id: null,
+            selected_video_data: null
+          });
+          console.log(`영상 선택 해제: ${video_id}`);
+        } else {
+          // 새로운 영상 선택
+          set({
+            selected_video_id: video_id,
+            selected_video_data: video
+          });
+          console.log(`영상 선택: ${video_id}`, video);
+        }
+      },
+
+      /**
+       * 영상 선택 해제 함수
+       */
+      clear_selection: () => {
+        set({
+          selected_video_id: null,
+          selected_video_data: null
+        });
+        console.log('영상 선택 해제됨');
       }
     }),
     {

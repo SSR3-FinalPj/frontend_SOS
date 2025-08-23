@@ -35,7 +35,9 @@ const ContentFolderCard = ({
   uploading_items,
   on_toggle, 
   on_preview, 
-  on_publish 
+  on_publish,
+  selected_video_id,
+  on_video_select
 }) => {
   return (
     <Collapsible
@@ -126,6 +128,8 @@ const ContentFolderCard = ({
                   uploading_items={uploading_items}
                   on_preview={on_preview}
                   on_publish={on_publish}
+                  selected_video_id={selected_video_id}
+                  on_video_select={on_video_select}
                 />
               ))}
             </div>
