@@ -165,52 +165,64 @@ export const useMediaRequestForm = (on_close) => {
       
       // S3 Presigned URL을 이용한 2단계 업로드
       // 1단계: 백엔드에서 presigned URL 가져오기
-      const presign_response = await apiFetch('/api/images/presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: uploaded_file.type })
-      });
+// 1) presign 호출
+const presignRes = await apiFetch('/api/images/presign', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' }, // Authorization은 apiFetch가 자동 추가
+  body: JSON.stringify({ contentType: uploaded_file.type })
+});
 
-      if (!presign_response.ok) {
-        throw new Error(`Presigned URL 요청 실패: ${presign_response.status}`);
-      }
+if (!presignRes.ok) {
+  const errText = await presignRes.text().catch(() => '');
+  throw new Error(`Presigned URL 요청 실패: ${presignRes.status} ${errText}`);
+}
 
-      const presign = await presign_response.json();
-      console.log('1단계 - Presigned URL 획득:', presign.url.substring(0, 15) + '...');
+// 2) presign 결과 파싱 + 로그
+const presign = await presignRes.json(); // { url, key, contentType }
+const { url, key, contentType } = presign;
+
+// 보안상 쿼리(서명) 없이 경로만 보고 싶으면:
+try {
+  const u = new URL(url);
+} catch { /* url 파싱 실패해도 무시 */ }
+
+// 표로 깔끔하게 보고 싶으면:
+
 
       // 2단계: S3에 직접 파일 업로드
-      const upload_response = await fetch(presign.url, {
-        method: 'PUT',
-        headers: { 'Content-Type': presign.contentType },
-        body: uploaded_file
-      });
+const uploadRes = await fetch(url, {
+  method: 'PUT',
+  headers: { 'Content-Type': contentType }, // presign에 사용한 값과 완전히 동일!
+  body: uploaded_file
+});
 
-      if (!upload_response.ok) {
-        throw new Error(`S3 업로드 실패: ${upload_response.status}`);
-      }
-      console.log('2단계 - S3 업로드 완료');
+if (!uploadRes.ok) {
+  const errText = await uploadRes.text().catch(() => '');
+  throw new Error(`S3 업로드 실패: ${uploadRes.status} ${errText}`);
+}
 
       // 3단계: 백엔드에 업로드 완료 알림
-      const notify_response = await apiFetch('/api/images/confirm', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          key: presign.key,
-          locationCode: selected_location.poi_id
-        })
-      });
+const notifyRes = await apiFetch('/api/images/confirm', {
+  method: 'POST', // ✅ 서버는 POST로 받음
+  headers: { 'Content-Type': 'application/json' }, // Authorization은 apiFetch가 자동 추가
+  body: JSON.stringify({
+    key, // presign에서 받은 key 그대로
+    locationCode: selected_location.poi_id
+  })
+});
 
-      if (!notify_response.ok) {
-        throw new Error(`업로드 완료 알림 실패: ${notify_response.status}`);
-      }
-      console.log('3단계 - 업로드 완료 알림 전송 성공');
+if (!notifyRes.ok) {
+  const errText = await notifyRes.text().catch(() => '');
+  throw new Error(`업로드 완료 알림 실패: ${notifyRes.status} ${errText}`);
+}
+
+const confirmJson = await notifyRes.json().catch(() => ({}));
 
       // 성공 처리
       set_is_success_modal_open(true);
       reset_form();
       
     } catch (error) {
-      console.error('제작 요청 전송 실패:', error);
       alert('요청 전송에 실패했습니다. 다시 시도해주세요.');
     } finally {
       set_is_submitting(false);
