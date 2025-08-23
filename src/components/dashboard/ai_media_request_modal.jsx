@@ -11,7 +11,7 @@ import { Button } from '../ui/button.jsx';
 import SuccessModal from '../ui/success_modal.jsx';
 import LocationSelector from '../ui/location_selector.jsx';
 import ImageUploader from '../ui/image_uploader.jsx';
-import CategoryAccordion from '../ui/category_accordion.jsx';
+import NaturalPromptInput from '../ui/natural_prompt_input.jsx';
 import { useMediaRequestForm } from '../../hooks/use_media_request_form.js';
 
 /**
@@ -26,15 +26,13 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
   const {
     selected_location,
     uploaded_file,
-    request_categories,
-    expanded_categories,
+    prompt_text,
     is_submitting,
     is_success_modal_open,
     is_form_valid,
     handle_location_select,
     handle_file_change,
-    handle_category_change,
-    handle_toggle_category,
+    handle_prompt_change,
     handle_submit,
     handle_success_modal_close
   } = useMediaRequestForm(on_close);
@@ -112,12 +110,10 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
               on_file_change={handle_file_change}
             />
 
-            {/* 카테고리 선택 컴포넌트 */}
-            <CategoryAccordion
-              request_categories={request_categories}
-              on_category_change={handle_category_change}
-              expanded_categories={expanded_categories}
-              on_toggle_category={handle_toggle_category}
+            {/* 자연어 프롬프트 입력 컴포넌트 */}
+            <NaturalPromptInput
+              prompt_text={prompt_text}
+              on_prompt_change={handle_prompt_change}
             />
           </div>
 

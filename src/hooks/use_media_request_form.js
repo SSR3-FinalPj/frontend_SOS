@@ -4,7 +4,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import { CATEGORY_TRANSLATIONS } from '../utils/media_request_constants.js';
 import { use_content_launch } from './use_content_launch.jsx';
 import { apiFetch } from '../lib/api.js';
 
@@ -19,21 +18,8 @@ export const useMediaRequestForm = (on_close) => {
   const [uploaded_file, set_uploaded_file] = useState(null);
   const [is_submitting, set_is_submitting] = useState(false);
   
-  // 카테고리별 요청 상태
-  const [request_categories, set_request_categories] = useState({
-    style: '',
-    subject: '',
-    motion: '',
-    constraints: ''
-  });
-  
-  // 아코디언 상태 관리
-  const [expanded_categories, set_expanded_categories] = useState({
-    style: false,
-    subject: false,
-    motion: false,
-    constraints: false
-  });
+  // 자연어 프롬프트 상태
+  const [prompt_text, set_prompt_text] = useState('');
   
   // 성공 모달 상태
   const [is_success_modal_open, set_is_success_modal_open] = useState(false);
@@ -48,20 +34,9 @@ export const useMediaRequestForm = (on_close) => {
     set_uploaded_file(file);
   }, []);
 
-  // 카테고리 선택 핸들러
-  const handle_category_change = useCallback((category, value) => {
-    set_request_categories(prev => ({
-      ...prev,
-      [category]: value
-    }));
-  }, []);
-  
-  // 아코디언 토글 핸들러
-  const handle_toggle_category = useCallback((category) => {
-    set_expanded_categories(prev => ({
-      ...prev,
-      [category]: !prev[category]
-    }));
+  // 프롬프트 변경 핸들러
+  const handle_prompt_change = useCallback((value) => {
+    set_prompt_text(value);
   }, []);
 
   // 성공 모달 닫기 핸들러
@@ -74,18 +49,7 @@ export const useMediaRequestForm = (on_close) => {
   const reset_form = useCallback(() => {
     set_selected_location(null);
     set_uploaded_file(null);
-    set_request_categories({
-      style: '',
-      subject: '',
-      motion: '',
-      constraints: ''
-    });
-    set_expanded_categories({
-      style: false,
-      subject: false,
-      motion: false,
-      constraints: false
-    });
+    set_prompt_text('');
   }, []);
 
   // 폼 제출 핸들러
@@ -104,24 +68,15 @@ export const useMediaRequestForm = (on_close) => {
     set_is_submitting(true);
 
     try {
-      // 선택된 카테고리만 영어로 변환 (빈 값 제외)
-      const translated_categories = {};
-      
-      Object.entries(request_categories).forEach(([key, value]) => {
-        if (value && value.trim() && CATEGORY_TRANSLATIONS[key] && CATEGORY_TRANSLATIONS[key][value]) {
-          translated_categories[key] = CATEGORY_TRANSLATIONS[key][value];
-        }
-      });
-
       // 백엔드 전송 데이터 구성
       const form_data = new FormData();
       form_data.append('location_id', selected_location.poi_id);
       
-      // 선택된 카테고리가 있을 때만 user_request에 포함
-      if (Object.keys(translated_categories).length > 0) {
-        form_data.append('user_request', JSON.stringify({ user: translated_categories }));
+      // 프롬프트가 있을 때만 user_request에 포함
+      if (prompt_text && prompt_text.trim()) {
+        form_data.append('user_request', JSON.stringify({ prompt: prompt_text.trim() }));
       } else {
-        // 첫 생성 시에는 빈 객체 전송
+        // 프롬프트 없을 시에는 빈 객체 전송
         form_data.append('user_request', JSON.stringify({}));
       }
       
@@ -148,14 +103,14 @@ export const useMediaRequestForm = (on_close) => {
         location_id: selected_location.poi_id,
         location_name: selected_location.name,
         image_url: image_url,
-        user_request: Object.keys(translated_categories).length > 0 ? translated_categories : null
+        user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null
       };
       
       // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
       const last_request_info = {
         location: selected_location,
         image_url: image_url, // base64 이미지 URL 저장 (파일 객체 대신)
-        categories: translated_categories,
+        prompt: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
@@ -227,7 +182,7 @@ const confirmJson = await notifyRes.json().catch(() => ({}));
     } finally {
       set_is_submitting(false);
     }
-  }, [selected_location, uploaded_file, request_categories, reset_form]);
+  }, [selected_location, uploaded_file, prompt_text, reset_form]);
 
   // 폼 검증 상태
   const is_form_valid = selected_location && uploaded_file && !is_submitting;
@@ -236,8 +191,7 @@ const confirmJson = await notifyRes.json().catch(() => ({}));
     // 상태
     selected_location,
     uploaded_file,
-    request_categories,
-    expanded_categories,
+    prompt_text,
     is_submitting,
     is_success_modal_open,
     is_form_valid,
@@ -245,8 +199,7 @@ const confirmJson = await notifyRes.json().catch(() => ({}));
     // 핸들러
     handle_location_select,
     handle_file_change,
-    handle_category_change,
-    handle_toggle_category,
+    handle_prompt_change,
     handle_submit,
     handle_success_modal_close,
     reset_form
