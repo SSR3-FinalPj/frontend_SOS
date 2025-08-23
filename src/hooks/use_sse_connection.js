@@ -14,7 +14,7 @@ import { useNotificationStore } from '../stores/notification_store.js';
  */
 export const useSSEConnection = (endpoint = '/api/sse/notifications', enabled = true) => {
   // 연결 상태 관리
-  const [is_connected, set_is_connected] = useState(true); // 테스트시에 false로 변경
+  const [is_connected, set_is_connected] = useState(false); // 테스트시에 false로 변경
   const [connection_error, set_connection_error] = useState(null);
   const [reconnect_attempts, set_reconnect_attempts] = useState(0);
   

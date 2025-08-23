@@ -277,7 +277,7 @@ const ContentLaunchView = ({ dark_mode }) => {
       {/* AI 미디어 제작 요청 모달 */}
       <AIMediaRequestModal
         is_open={is_request_modal_open}
-        on_close={() => set_is_request_modal_open(true)} //true 로 변경시 실시간 알림 활성화 현재는 테스트 환경
+        on_close={() => set_is_request_modal_open(false)}
       />
     </div>
   );
