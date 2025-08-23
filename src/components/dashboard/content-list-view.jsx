@@ -1,20 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Image
-} from 'lucide-react';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-} from "../ui/pagination.jsx";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image } from 'lucide-react';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from "../ui/pagination.jsx";
 import { GlassCard } from '../ui/glass-card.jsx';
-import { mockContentData } from '../../utils/mock-data.js';
+import { apiFetch } from '../../lib/api.js';
+import { useYouTubeStore } from '../../stores/youtube_store.js';
 
 // 수정된 콘텐츠 리스트 뷰 - 3x2 그리드 (6개)
 function ContentListView({
@@ -25,8 +15,43 @@ function ContentListView({
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [contents, setContents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const itemsPerPage = 6; // 3x2 그리드
   const sortDropdownRef = useRef(null);
+  const { channelId } = useYouTubeStore();
+
+  // ✅ API 호출해서 유튜브 영상 불러오기
+  useEffect(() => {
+    const fetchVideos = async () => {
+      if (!channelId) return;
+      setLoading(true);
+      try {
+        const res = await apiFetch(`/api/youtube/channel/${channelId}/videos`);
+        if (!res.ok) throw new Error("영상 목록 불러오기 실패");
+        const data = await res.json();
+
+        // VideoListDto → UI용으로 매핑
+        const mapped = data.videos.map(v => ({
+          id: v.videoId,
+          title: v.title,
+          platform: "YouTube",
+          uploadDate: v.publishedAt,
+          thumbnail: v.thumbnailUrl,
+          views: v.viewCount,
+          likes: v.likeCount
+        }));
+        setContents(mapped);
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVideos();
+  }, [channelId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -35,13 +60,12 @@ function ContentListView({
         setSortDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Filter and sort content
-  const filteredAndSortedContent = mockContentData
+  const filteredAndSortedContent = contents
     .filter(content => {
       if (selectedPlatform === 'all') return true;
       return content.platform.toLowerCase() === selectedPlatform.toLowerCase();
@@ -187,73 +211,70 @@ function ContentListView({
       </div>
 
       {/* 3x2 그리드 콘텐츠 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="min-h-[500px]"
-      >
-        <div className="grid grid-cols-3 gap-6">
-          {displayedContent.map((content, index) => (
-            <motion.div
-              key={content.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-            >
+      {loading ? (
+        <div className="p-6 text-center text-gray-500 dark:text-gray-400">로딩 중...</div>
+      ) : error ? (
+        <div className="p-6 text-center text-red-500 dark:text-red-400">에러: {error}</div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="min-h-[500px]"
+        >
+          <div className="grid grid-cols-3 gap-6">
+            {displayedContent.map((content, index) => (
               <motion.div
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                key={content.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                {/* 정사각형 썸네일 */}
-                <div className="aspect-square overflow-hidden bg-gray-200 dark:bg-gray-700">
-                  <img
-                    src={content.thumbnail}
-                    alt={content.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+                <motion.div
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                >
+                  {/* 정사각형 썸네일 */}
+                  <div className="aspect-square overflow-hidden bg-gray-200 dark:bg-gray-700">
+                    <img
+                      src={content.thumbnail}
+                      alt={content.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
 
-                {/* 콘텐츠 정보 */}
-                <div className="p-4">
-                  {/* 플랫폼 배지 */}
-                  <div className="mb-3">
-                    <div className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
-                      content.platform === 'YouTube'
-                        ? 'bg-red-100 dark:bg-red-950/20 text-red-700 dark:text-red-400'
-                        : 'bg-orange-100 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400'
-                    }`}>
-                      {content.platform}
+                  {/* 콘텐츠 정보 */}
+                  <div className="p-4">
+                    {/* 플랫폼 배지 */}
+                    <div className="mb-3">
+                      <div className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
+                        content.platform === 'YouTube'
+                          ? 'bg-red-100 dark:bg-red-950/20 text-red-700 dark:text-red-400'
+                          : 'bg-orange-100 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400'
+                      }`}>
+                        {content.platform}
+                      </div>
+                    </div>
+
+                    {/* 제목 */}
+                    <h3 className="font-medium text-gray-800 dark:text-white mb-2 line-clamp-2 leading-tight">
+                      {content.title}
+                    </h3>
+
+                    {/* 업로드 날짜 */}
+                    <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      <span>{formatDate(content.uploadDate)}</span>
                     </div>
                   </div>
-
-                  {/* 제목 */}
-                  <h3 className="font-medium text-gray-800 dark:text-white mb-2 line-clamp-2 leading-tight">
-                    {content.title}
-                  </h3>
-
-                  {/* 업로드 날짜 */}
-                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                    <Clock className="w-3 h-3" />
-                    <span>{formatDate(content.uploadDate)}</span>
-                  </div>
-                </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* 빈 카드들로 그리드 레이아웃 유지 */}
-        {displayedContent.length < 6 && (
-          <div className="grid grid-cols-3 gap-6 mt-6">
-            {Array.from({ length: 6 - displayedContent.length }, (_, index) => (
-              <div key={`empty-${index}`} className="aspect-square opacity-0"></div>
             ))}
           </div>
-        )}
-      </motion.div>
+        </motion.div>
+      )}
 
-      {/* Custom Pagination Component */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -264,7 +285,7 @@ function ContentListView({
           <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl p-4 shadow-xl">
             <Pagination>
               <PaginationContent className="gap-2">
-                {/* Previous Button */}
+                {/* Previous */}
                 <PaginationItem>
                   <motion.button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
@@ -304,14 +325,14 @@ function ContentListView({
                   </PaginationItem>
                 ))}
 
-                {/* Next Button */}
+                {/* Next */}
                 <PaginationItem>
                   <motion.button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2${
+                    className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
                       currentPage === totalPages
                         ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
@@ -328,7 +349,7 @@ function ContentListView({
       )}
 
       {/* Empty State */}
-      {filteredAndSortedContent.length === 0 && (
+      {!loading && filteredAndSortedContent.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
