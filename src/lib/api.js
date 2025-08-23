@@ -121,3 +121,28 @@ export async function getDashboardData({ type = 'total', ...options }) {
       return { youtube: rawData };
   }
 }
+
+/* ------------------ 유튜브 채널 영상 목록 조회 ------------------ */
+/**
+ * @param {string} channelId - 조회할 유튜브 채널의 ID (필수)
+ * @param {object} [options]
+ * @param {'latest' | 'oldest'} [options.sortBy] - 정렬 순서
+ * @param {number} [options.page] - 페이지 번호
+ * @param {number} [options.limit] - 페이지당 아이템 수
+ */
+export async function getYouTubeVideosByChannelId(channelId, { sortBy = 'latest', page = 1, limit = 6 } = {}) {
+  if (!channelId) {
+    return Promise.reject(new Error('YouTube 채널 ID가 필요합니다.'));
+  }
+  
+  const params = new URLSearchParams({ sortBy, page, limit });
+  const url = `/api/youtube/channel/${channelId}/videos?${params.toString()}`;
+  
+  const res = await apiFetch(url);
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`YouTube 영상 목록 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+  return await res.json();
+}
