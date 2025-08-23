@@ -108,7 +108,7 @@ function EnhancedPlatformCard({ platform, index }) {
             {/* Chart Container */}
             <div className="h-32 w-full bg-white/20 dark:bg-white/5 rounded-xl border border-white/30 dark:border-white/20 p-3">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={platform.chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <LineChart data={platform.chartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
                   <XAxis 
                     dataKey="day" 
                     axisLine={false} 
