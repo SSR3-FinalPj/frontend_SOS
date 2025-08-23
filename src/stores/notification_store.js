@@ -107,4 +107,31 @@ export const useNotificationStore = create((set, get) => ({
       data: list_data,
     });
   },
+  
+  // SSE 전용 알림 추가 메서드
+  add_sse_notification: (sse_data) => {
+    const new_notification = {
+      id: Date.now().toString(),
+      type: sse_data.type || 'sse_notification',
+      message: sse_data.message,
+      data: sse_data.data || {},
+      read: false,
+      timestamp: sse_data.timestamp || new Date().toISOString(),
+    };
+    
+    set((state) => ({
+      notifications: [new_notification, ...state.notifications],
+      unread_count: state.unread_count + 1,
+    }));
+  },
+  
+  // SSE 영상 생성 완료 전용 처리
+  handle_sse_video_completed: (message, timestamp) => {
+    get().add_sse_notification({
+      type: 'video_completed_sse',
+      message: message,
+      timestamp: timestamp,
+      data: { source: 'sse' },
+    });
+  },
 }));

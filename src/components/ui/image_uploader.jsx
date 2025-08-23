@@ -109,7 +109,7 @@ const ImageUploader = ({ uploaded_file, on_file_change }) => {
         <input
           ref={file_input_ref}
           type="file"
-          accept="image/*"
+          accept=".png,.jpg"
           onChange={handle_file_input_change}
           className="hidden"
         />

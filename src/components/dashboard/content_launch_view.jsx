@@ -12,6 +12,7 @@ import AIMediaRequestModal from './ai_media_request_modal.jsx';
 import { Button } from '../ui/button.jsx';
 import { use_content_launch } from '../../hooks/use_content_launch.jsx';
 import { use_content_modals } from '../../hooks/use_content_modals.jsx';
+import { useSSEConnection } from '../../hooks/use_sse_connection.js';
 
 /**
  * ContentLaunchView 컴포넌트
@@ -48,6 +49,9 @@ const ContentLaunchView = ({ dark_mode }) => {
     toggle_platform,
     update_publish_form
   } = use_content_modals();
+
+  // SSE 연결 (백엔드 연동 시 활성화)
+  const { is_connected, connection_error } = useSSEConnection('/api/sse/notifications', false); // 현재는 비활성화
 
   // 컴포넌트 마운트 시 폴더 데이터 로딩
   useEffect(() => {
@@ -273,7 +277,7 @@ const ContentLaunchView = ({ dark_mode }) => {
       {/* AI 미디어 제작 요청 모달 */}
       <AIMediaRequestModal
         is_open={is_request_modal_open}
-        on_close={() => set_is_request_modal_open(false)}
+        on_close={() => set_is_request_modal_open(true)} //true 로 변경시 실시간 알림 활성화 현재는 테스트 환경
       />
     </div>
   );
