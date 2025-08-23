@@ -181,24 +181,13 @@ if (!presignRes.ok) {
 const presign = await presignRes.json(); // { url, key, contentType }
 const { url, key, contentType } = presign;
 
-// 전체 원본
-console.log('[presign] raw:', presign);
-
-// 개별 필드
-console.log('[presign] url:', url);
-console.log('[presign] key:', key);
-console.log('[presign] contentType:', contentType);
-
 // 보안상 쿼리(서명) 없이 경로만 보고 싶으면:
 try {
   const u = new URL(url);
-  console.log('[presign] s3 path (no query):', `${u.origin}${u.pathname}`);
 } catch { /* url 파싱 실패해도 무시 */ }
 
 // 표로 깔끔하게 보고 싶으면:
-console.table({ url, key, contentType });
 
-      console.log('1단계 - Presigned URL 획득:', presign.url.substring(0, 15) + '...');
 
       // 2단계: S3에 직접 파일 업로드
 const uploadRes = await fetch(url, {
@@ -209,7 +198,6 @@ const uploadRes = await fetch(url, {
 
 if (!uploadRes.ok) {
   const errText = await uploadRes.text().catch(() => '');
-  console.error('[S3 PUT ERROR]', uploadRes.status, errText); // ← 여기서 <Code>...</Code> 확인
   throw new Error(`S3 업로드 실패: ${uploadRes.status} ${errText}`);
 }
 
@@ -229,14 +217,12 @@ if (!notifyRes.ok) {
 }
 
 const confirmJson = await notifyRes.json().catch(() => ({}));
-console.log('3단계 - 업로드 완료 알림 전송 성공', confirmJson);
 
       // 성공 처리
       set_is_success_modal_open(true);
       reset_form();
       
     } catch (error) {
-      console.error('제작 요청 전송 실패:', error);
       alert('요청 전송에 실패했습니다. 다시 시도해주세요.');
     } finally {
       set_is_submitting(false);
