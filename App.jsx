@@ -6,6 +6,7 @@ import { tryRefreshOnBoot } from '@/lib/auth_bootstrap';
 import { usePageStore } from '@/stores/page_store';
 import Router from '@/Router';
 import ConnectYouTubeButton from '@/components/ui/ConnectYouTubeButton';
+import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 
 export default function App() {
   const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
@@ -69,6 +70,7 @@ export default function App() {
   return (
     <>
       <Router />
+      <CookieConsentBanner />
     </>
   );
 }
