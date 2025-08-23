@@ -76,6 +76,7 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
         tabIndex={-1}
       >
         <motion.div
+          key="main-modal"
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -143,6 +144,7 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
 
       {/* 성공 모달 */}
       <SuccessModal
+        key="success-modal"
         is_open={is_success_modal_open}
         on_close={handle_success_modal_close}
         message="AI 미디어 제작 요청이 성공적으로 전송되었습니다!"

@@ -5,6 +5,8 @@
 
 import { useState, useCallback } from 'react';
 import { CATEGORY_TRANSLATIONS } from '../utils/media_request_constants.js';
+import { use_content_launch } from './use_content_launch.jsx';
+import { apiFetch } from '../lib/api.js';
 
 /**
  * useMediaRequestForm 커스텀 훅
@@ -114,8 +116,6 @@ export const useMediaRequestForm = (on_close) => {
       // 백엔드 전송 데이터 구성
       const form_data = new FormData();
       form_data.append('location_id', selected_location.poi_id);
-      form_data.append('location_name', selected_location.name);
-      form_data.append('district', selected_location.district);
       
       // 선택된 카테고리가 있을 때만 user_request에 포함
       if (Object.keys(translated_categories).length > 0) {
@@ -127,15 +127,83 @@ export const useMediaRequestForm = (on_close) => {
       
       form_data.append('reference_image', uploaded_file);
 
-      // TODO: 실제 API 호출 구현
-      console.log('제작 요청 데이터:', {
+      // 이미지를 Base64로 변환
+      const convert_to_base64 = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      };
+
+      const image_url = await convert_to_base64(uploaded_file);
+      
+      // 현재 날짜 생성 (YYYY-MM-DD 형식)
+      const creation_date = new Date().toISOString().split('T')[0];
+      
+      // 영상 데이터 구성
+      const video_data = {
+        title: `${selected_location.name} AI 영상`,
         location_id: selected_location.poi_id,
         location_name: selected_location.name,
-        district: selected_location.district,
-        user_request: Object.keys(translated_categories).length > 0 ? { user: translated_categories } : {},
-        has_image: true,
-        is_initial_generation: Object.keys(translated_categories).length === 0
+        image_url: image_url,
+        user_request: Object.keys(translated_categories).length > 0 ? translated_categories : null
+      };
+      
+      // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
+      const last_request_info = {
+        location: selected_location,
+        image_url: image_url, // base64 이미지 URL 저장 (파일 객체 대신)
+        categories: translated_categories,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
+      
+      // Zustand 스토어에 '생성 중' 영상 추가
+      use_content_launch.getState().add_pending_video(video_data, creation_date);
+      
+      // S3 Presigned URL을 이용한 2단계 업로드
+      // 1단계: 백엔드에서 presigned URL 가져오기
+      const presign_response = await apiFetch('/api/images/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentType: uploaded_file.type })
       });
+
+      if (!presign_response.ok) {
+        throw new Error(`Presigned URL 요청 실패: ${presign_response.status}`);
+      }
+
+      const presign = await presign_response.json();
+      console.log('1단계 - Presigned URL 획득:', presign.url.substring(0, 15) + '...');
+
+      // 2단계: S3에 직접 파일 업로드
+      const upload_response = await fetch(presign.url, {
+        method: 'PUT',
+        headers: { 'Content-Type': presign.contentType },
+        body: uploaded_file
+      });
+
+      if (!upload_response.ok) {
+        throw new Error(`S3 업로드 실패: ${upload_response.status}`);
+      }
+      console.log('2단계 - S3 업로드 완료');
+
+      // 3단계: 백엔드에 업로드 완료 알림
+      const notify_response = await apiFetch('/api/images/confirm', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: presign.key,
+          locationCode: selected_location.poi_id
+        })
+      });
+
+      if (!notify_response.ok) {
+        throw new Error(`업로드 완료 알림 실패: ${notify_response.status}`);
+      }
+      console.log('3단계 - 업로드 완료 알림 전송 성공');
 
       // 성공 처리
       set_is_success_modal_open(true);
