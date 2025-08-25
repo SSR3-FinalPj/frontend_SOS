@@ -35,7 +35,7 @@ export default function TransformSection() {
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: false, margin: "-100px" }}
           transition={{ 
             duration: 1, 
             ease: [0.16, 1, 0.3, 1],
@@ -66,7 +66,7 @@ export default function TransformSection() {
               key={index}
               initial={{ opacity: 0, y: 80 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: false, margin: "-100px" }}
               transition={{ 
                 duration: 0.8, 
                 delay: index * 0.15, 
