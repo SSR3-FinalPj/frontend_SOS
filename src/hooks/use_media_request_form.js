@@ -3,16 +3,18 @@
  * 폼의 모든 상태와 핸들러들을 관리
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from './use_content_launch.jsx';
 import { apiFetch } from '../lib/api.js';
 
 /**
  * useMediaRequestForm 커스텀 훅
  * @param {Function} on_close - 모달 닫기 함수
+ * @param {boolean} isPriority - 우선순위 재생성 모드 여부
+ * @param {Object|null} selectedVideoData - 선택된 영상 데이터 (자동 import용)
  * @returns {Object} 폼 상태와 핸들러들
  */
-export const useMediaRequestForm = (on_close) => {
+export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null) => {
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -51,6 +53,48 @@ export const useMediaRequestForm = (on_close) => {
     set_uploaded_file(null);
     set_prompt_text('');
   }, []);
+
+  // 선택된 영상 데이터로 폼 자동 초기화
+  useEffect(() => {
+    if (selectedVideoData) {
+      console.log('선택된 영상 데이터로 폼 자동 초기화:', selectedVideoData);
+      
+      // 위치 정보 자동 설정
+      if (selectedVideoData.location_name || selectedVideoData.location_id) {
+        const auto_location = {
+          poi_id: selectedVideoData.location_id,
+          name: selectedVideoData.location_name || '선택된 위치',
+          // 추가 위치 정보가 있다면 여기에 포함
+        };
+        set_selected_location(auto_location);
+      }
+      
+      // 이미지 자동 설정 (image_url이 있는 경우)
+      if (selectedVideoData.image_url) {
+        // URL을 File 객체로 변환하는 로직
+        fetch(selectedVideoData.image_url)
+          .then(response => response.blob())
+          .then(blob => {
+            const file = new File([blob], `${selectedVideoData.title || 'selected'}_image.jpg`, {
+              type: blob.type || 'image/jpeg'
+            });
+            set_uploaded_file(file);
+          })
+          .catch(error => {
+            console.warn('이미지 자동 로드 실패:', error);
+          });
+      }
+      
+      // 프롬프트 자동 설정
+      const auto_prompt = selectedVideoData.title 
+        ? `"${selectedVideoData.title}"과 유사한 영상을 생성해주세요.`
+        : '선택한 영상과 유사한 새로운 영상을 생성해주세요.';
+      set_prompt_text(auto_prompt);
+    } else {
+      // 선택된 영상이 없으면 폼 초기화
+      reset_form();
+    }
+  }, [selectedVideoData, reset_form]);
 
   // 폼 제출 핸들러
   const handle_submit = useCallback(async () => {
@@ -115,8 +159,14 @@ export const useMediaRequestForm = (on_close) => {
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
-      // Zustand 스토어에 '생성 중' 영상 추가
-      use_content_launch.getState().add_pending_video(video_data, creation_date);
+      // Zustand 스토어에 '생성 중' 영상 추가 또는 교체
+      if (isPriority) {
+        // 우선순위 모드: 기존 PROCESSING 영상들을 교체
+        use_content_launch.getState().replace_processing_video(video_data, creation_date);
+      } else {
+        // 일반 모드: 새 영상 추가
+        use_content_launch.getState().add_pending_video(video_data, creation_date);
+      }
       
       // S3 Presigned URL을 이용한 2단계 업로드
       // 1단계: 백엔드에서 presigned URL 가져오기
