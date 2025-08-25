@@ -28,7 +28,7 @@ function ContentListView({
       setLoading(true);
       setError(null);
       
-      if (selectedPlatform !== 'youtube') {
+      if (selectedPlatform === 'reddit') {
         setContents([]);
         setTotalPages(0);
         setLoading(false);
