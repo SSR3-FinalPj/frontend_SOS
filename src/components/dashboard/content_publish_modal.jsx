@@ -82,7 +82,7 @@ const ContentPublishModal = ({
                   onClick={() => on_toggle_platform(platform)}
                   className={`rounded-2xl px-4 py-3 flex items-center gap-2 transition-opacity ${
                     publish_form.platforms.includes(platform)
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+                      ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white'
                       : dark_mode 
                         ? 'border-gray-600/60 hover:bg-gray-700/60' 
                         : 'border-gray-300/60 hover:bg-gray-100'
@@ -176,7 +176,7 @@ const ContentPublishModal = ({
             <Button
               onClick={on_publish}
               disabled={publish_form.platforms.length === 0 || !publish_form.title.trim()}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl disabled:opacity-50"
             >
               <Upload className="h-4 w-4 mr-2" />
               지금 게시하기

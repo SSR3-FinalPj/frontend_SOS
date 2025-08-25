@@ -153,7 +153,7 @@ const ContentLaunchView = ({ dark_mode }) => {
             {/* AI 미디어 제작 요청 버튼 */}
             <Button
               onClick={() => set_is_request_modal_open(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg font-semibold rounded-2xl"
+              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white shadow-lg font-semibold rounded-2xl"
               size="lg"
             >
               <Plus className="w-5 h-5 mr-2" />
