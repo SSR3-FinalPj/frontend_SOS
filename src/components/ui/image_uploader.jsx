@@ -88,7 +88,7 @@ const ImageUploader = ({ uploaded_file, on_file_change }) => {
       <div className="flex items-center gap-2">
         <ImageIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
         <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-          참고 이미지 업로드
+          이미지 업로드
         </h3>
       </div>
 
@@ -109,7 +109,7 @@ const ImageUploader = ({ uploaded_file, on_file_change }) => {
         <input
           ref={file_input_ref}
           type="file"
-          accept="image/*"
+          accept=".png,.jpg"
           onChange={handle_file_input_change}
           className="hidden"
         />
@@ -181,8 +181,8 @@ const ImageUploader = ({ uploaded_file, on_file_change }) => {
 
       {/* 업로드 가이드 */}
       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-        <p>• 촬영하고 싶은 장소나 스타일의 참고 이미지를 업로드해주세요.</p>
-        <p>• AI가 업로드된 이미지를 분석하여 비슷한 느낌의 영상을 생성합니다.</p>
+        <p>• 선택한 명소의 샘플 이미지를 넣어주세요.</p>
+        <p>• AI가 업로드된 이미지를 기반으로 영상을 생성합니다.</p>
         <p>• 지원 형식: PNG, JPG | 최대 크기: 10MB</p>
       </div>
     </div>
