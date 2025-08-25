@@ -94,7 +94,7 @@ const LocationSelector = ({ selected_location, on_location_select }) => {
       <div className="flex items-center gap-2">
         <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
         <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-          촬영 위치 선택
+          위치 선택
         </h3>
       </div>
 
