@@ -8,12 +8,12 @@ import Section from '../common/Section.jsx';
 export default function ReadySection() {
 
   return (
-    <Section className="relative z-10">
+    <Section className="relative z-10 pb-8">
       <div className="text-center">
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: false, margin: "-100px" }}
           transition={{ 
             duration: 1, 
             ease: [0.16, 1, 0.3, 1],
@@ -49,27 +49,6 @@ export default function ReadySection() {
               지금 시작하기
             </motion.button>
           </Link>
-        </motion.div>
-
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ 
-            duration: 0.8, 
-            delay: 0.4,
-            ease: [0.16, 1, 0.3, 1]
-          }}
-          className="mt-20 pt-12 border-t border-gray-400/40 dark:border-white/20"
-        >
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">AI</span>
-            </div>
-            <span className="text-2xl font-light text-gray-800 dark:text-white">콘텐츠부스트</span>
-          </div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">© 2025 콘텐츠부스트. 모든 권리 보유.</p>
         </motion.div>
       </div>
     </Section>

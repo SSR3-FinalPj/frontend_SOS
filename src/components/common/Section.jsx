@@ -11,7 +11,7 @@ export default function Section({
   id
 }) {
   return (
-    <section id={id} className={`relative min-h-screen flex items-center justify-start py-20 ${className}`}>
+    <section id={id} className={`relative flex items-center justify-start py-20 ${className}`}>
       <div className="w-full px-6 lg:px-8">
         {children}
       </div>
