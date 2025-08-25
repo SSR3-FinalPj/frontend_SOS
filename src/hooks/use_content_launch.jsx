@@ -301,7 +301,7 @@ export const use_content_launch = create(
             body: JSON.stringify({
               location_id: last_request.location.poi_id,
               location_name: last_request.location.name,
-              user_request: last_request.categories,
+              user_request: last_request.prompt,
               auto_generated: true
             })
           });
@@ -341,7 +341,7 @@ export const use_content_launch = create(
               location_id: last_request.location.poi_id,
               location_name: last_request.location.name,
               image_url: last_request.image_url || null, // base64 이미지 URL 사용
-              user_request: last_request.categories,
+              user_request: last_request.prompt,
               auto_generated: true
             };
             
