@@ -8,6 +8,7 @@ import { useAuthAndChannelInfoInitializer } from '@/hooks/use_auth_and_channel_i
 import Router from '@/Router';
 import ConnectYouTubeButton from '@/components/ui/ConnectYouTubeButton';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
+import SSEProvider from '@/components/common/SSEProvider';
 
 export default function App() {
   const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
@@ -67,9 +68,9 @@ export default function App() {
   }
 
   return (
-    <>
+    <SSEProvider>
       <Router />
       <CookieConsentBanner />
-    </>
+    </SSEProvider>
   );
 }
