@@ -19,9 +19,10 @@ import { useMediaRequestForm } from '../../hooks/use_media_request_form.js';
  * @param {Object} props - 컴포넌트 props
  * @param {boolean} props.is_open - 모달 열림 상태
  * @param {Function} props.on_close - 모달 닫기 함수
+ * @param {boolean} props.isPriority - 우선순위 재생성 모드 여부
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
-const AIMediaRequestModal = ({ is_open, on_close }) => {
+const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null }) => {
   // 폼 상태 관리 커스텀 훅 사용
   const {
     selected_location,
@@ -35,7 +36,7 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
     handle_prompt_change,
     handle_submit,
     handle_success_modal_close
-  } = useMediaRequestForm(on_close);
+  } = useMediaRequestForm(on_close, isPriority, selectedVideoData);
 
   // 모달 닫기 핸들러
   const handle_close = useCallback(() => {
@@ -130,7 +131,7 @@ const AIMediaRequestModal = ({ is_open, on_close }) => {
             <Button
               onClick={handle_submit}
               disabled={!is_form_valid}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 text-white font-semibold"
+              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
             >
               {is_submitting ? '요청 중...' : '제작 요청하기'}
             </Button>

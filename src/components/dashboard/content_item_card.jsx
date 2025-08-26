@@ -8,7 +8,7 @@ import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Clock, Upload, CheckCircle2, Loader2 } from 'lucide-react';
+import { Clock, Upload, CheckCircle2, Loader2, Check } from 'lucide-react';
 import Timer from '../ui/timer.jsx';
 import jumpCatGif from '/src/assets/images/Jumpcat/jump_cat.gif';
 import { 
@@ -33,11 +33,17 @@ const ContentItemCard = ({
   dark_mode, 
   uploading_items, 
   on_preview, 
-  on_publish 
+  on_publish,
+  selected_video_id,
+  on_video_select
 }) => {
   // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
   const item_id = item.video_id || item.temp_id || item.id;
   const is_uploading = uploading_items.includes(item_id);
+  const is_selected = selected_video_id === item_id;
+  
+  // 선택 가능한 상태인지 확인 (업로드 완료된 영상만)
+  const is_selectable = item.status === 'uploaded';
   
   console.log('ContentItemCard render:', {
     title: item.title,
@@ -49,18 +55,36 @@ const ContentItemCard = ({
     uploading_items
   });
 
+  // 선택 클릭 핸들러
+  const handle_select = (e) => {
+    e.stopPropagation();
+    if (is_selectable && on_video_select) {
+      on_video_select(item);
+    }
+  };
+
   return (
     <Card className={`${
-      dark_mode 
-        ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' 
-        : 'bg-white border-gray-200 hover:bg-gray-50'
-    } shadow-lg rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 group`}>
+      is_selected
+        ? dark_mode
+          ? 'bg-green-900/20 border-green-500 hover:bg-green-900/30'
+          : 'bg-green-50 border-green-400 hover:bg-green-100'
+        : dark_mode 
+          ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' 
+          : 'bg-white border-gray-200 hover:bg-gray-50'
+    } shadow-lg rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 group ${
+      is_selectable ? 'cursor-pointer' : ''
+    }`} 
+    onClick={is_selectable ? handle_select : undefined}>
       <CardContent className="p-4">
         
         {/* 썸네일 영역 - 클릭 시 미리보기 */}
         <div 
           className="w-full h-32 rounded-xl mb-4 relative overflow-hidden cursor-pointer"
-          onClick={() => on_preview(item)}
+          onClick={(e) => {
+            e.stopPropagation();
+            on_preview(item);
+          }}
         >
           {item.status === 'PROCESSING' ? (
             <>
@@ -122,7 +146,15 @@ const ContentItemCard = ({
           </div>
           
           {/* 상태 아이콘 - 공통 */}
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-2 flex gap-1">
+            {/* 선택 표시 아이콘 */}
+            {is_selected && (
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-white" />
+              </div>
+            )}
+            
+            {/* 기존 상태 아이콘 */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
@@ -156,6 +188,23 @@ const ContentItemCard = ({
               </span>
             </div>
             
+            {/* 선택 가능 표시 */}
+            {is_selectable && !is_selected && (
+              <span className={`text-xs ${
+                dark_mode ? 'text-green-400' : 'text-green-600'
+              } font-medium`}>
+                선택 가능
+              </span>
+            )}
+            
+            {/* 선택됨 표시 */}
+            {is_selected && (
+              <span className={`text-xs ${
+                dark_mode ? 'text-green-400' : 'text-green-600'
+              } font-medium`}>
+                ✓ 선택됨
+              </span>
+            )}
           </div>
 
           {/* 업로드 버튼 - ready 및 READY_TO_LAUNCH 상태 */}
@@ -166,7 +215,7 @@ const ContentItemCard = ({
                 on_publish(item);
               }}
               disabled={is_uploading}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl transition-all duration-300 font-medium shadow-sm hover:shadow-md"
+              className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl transition-all duration-300 font-medium shadow-sm hover:shadow-md"
             >
               {is_uploading ? (
                 <>
