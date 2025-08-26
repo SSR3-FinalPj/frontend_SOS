@@ -119,11 +119,12 @@ export const useNotificationStore = create((set, get) => ({
       timestamp: sse_data.timestamp || new Date().toISOString(),
     };
     
-    // 알림을 스토어에 추가
+    // 일반 알림을 스토어에 추가 (드롭다운용)
     set((state) => ({
       notifications: [new_notification, ...state.notifications],
       unread_count: state.unread_count + 1,
     }));
+
     
     // video-ready 이벤트의 경우 use_content_launch 스토어와 연동
     if (sse_data.type === 'video_completed' || sse_data.type === 'video_ready') {
@@ -168,4 +169,5 @@ export const useNotificationStore = create((set, get) => ({
       data: { source: 'sse' },
     });
   },
+
 }));

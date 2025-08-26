@@ -40,10 +40,15 @@ export const useSSEConnection = ({
       const data = JSON.parse(raw);
       const ts = data.timestamp ?? data.tm;
       if (data.message && ts) {
+        // VIDEO_READY 메시지인 경우 토스트 알림을 위한 특별한 메시지 설정
+        const displayMessage = data.message === 'VIDEO_READY' 
+          ? '영상이 생성되었습니다!' 
+          : data.message;
+
         // SSE 이벤트 데이터를 notification_store로 전달 (스토어 간 연동 포함)
         add_sse_notification({
-          type: eventType === 'video-ready' ? 'video_ready' : 'video_completed',
-          message: data.message,
+          type: eventType === 'video-ready' ? 'video_completed' : 'video_completed',
+          message: displayMessage,
           timestamp: ts,
           video_id: data.video_id,
           temp_id: data.temp_id,
