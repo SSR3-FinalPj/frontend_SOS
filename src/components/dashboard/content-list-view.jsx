@@ -1,11 +1,14 @@
+//content-list-view
+
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image, MessageSquare, ThumbsUp, ArrowBigUp, Eye } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from "../ui/pagination.jsx";
 import { GlassCard } from '../ui/glass-card.jsx';
 import { getYouTubeVideosByChannelId } from '../../lib/api.js';
 import { useYouTubeStore } from '../../stores/youtube_store.js';
 import { mockContentData } from '../../utils/mock-data.js';
+import { useAuthAndChannelInfoInitializer } from '../../hooks/use_auth_and_channel_info.js';
 
 function ContentListView({
   selectedPlatform,
@@ -23,12 +26,18 @@ function ContentListView({
 
   const sortDropdownRef = useRef(null);
   const { channelId } = useYouTubeStore();
+  const { loading: authLoading } = useAuthAndChannelInfoInitializer();
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
     const fetchContent = async () => {
       setLoading(true);
       setError(null);
+
+      if (authLoading) {
+        setLoading(false);
+        return;
+      }
       
       try {
         let allData = [];
@@ -37,8 +46,9 @@ function ContentListView({
           if (channelId) {
             const ytData = await getYouTubeVideosByChannelId(channelId, {
               sortBy: sortOrder,
+              // No pagination here, fetch all and paginate after merge
             });
-            const formattedYtData = ytData.videos.map(v => ({...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId}));
+            const formattedYtData = ytData.videos.map(v => ({...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount}));
             allData.push(...formattedYtData);
           } else if (selectedPlatform === 'youtube') {
              setError('YouTube 채널이 연결되지 않았습니다.');
@@ -77,7 +87,7 @@ function ContentListView({
     };
 
     fetchContent();
-  }, [selectedPlatform, sortOrder, currentPage, channelId]);
+  }, [selectedPlatform, sortOrder, currentPage, channelId, authLoading]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -143,6 +153,41 @@ function ContentListView({
     return (
       <div className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${bgColor} ${textColor}`}>
         {platform}
+      </div>
+    );
+  };
+
+  const ContentStats = ({ content }) => {
+    const isYoutube = content.platform.toLowerCase() === 'youtube';
+    return (
+      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+        {isYoutube ? (
+          <>
+            <div className="flex items-center gap-1">
+              <Eye className="w-4 h-4" />
+              <span>{content.views?.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <ThumbsUp className="w-4 h-4" />
+              <span>{content.likes?.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageSquare className="w-4 h-4" />
+              <span>{content.comments?.toLocaleString()}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-1">
+              <ArrowBigUp className="w-4 h-4" />
+              <span>{content.upvotes?.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageSquare className="w-4 h-4" />
+              <span>{content.comments?.toLocaleString()}</span>
+            </div>
+          </>
+        )}
       </div>
     );
   };
@@ -219,7 +264,11 @@ function ContentListView({
       </div>
 
       {/* Content Grid */}
-      {loading ? (
+      {authLoading ? (
+        <div className="flex justify-center items-center min-h-[500px]">
+          <p className="text-gray-500 dark:text-gray-400">인증 정보 로드 중...</p>
+        </div>
+      ) : loading ? (
         <div className="flex justify-center items-center min-h-[500px]">
           <p className="text-gray-500 dark:text-gray-400">콘텐츠를 불러오는 중...</p>
         </div>
@@ -254,16 +303,19 @@ function ContentListView({
                     />
                   </div>
                   <div className="p-4 flex flex-col flex-grow">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="mb-3">
                       <PlatformBadge platform={content.platform} />
+                    </div>
+                    <h3 className="font-medium text-gray-800 dark:text-white mb-2 line-clamp-2 leading-tight flex-grow">
+                      {content.title}
+                    </h3>
+                    <div className="flex items-center justify-between mt-4">
+                      <ContentStats content={content} />
                       <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                         <Clock className="w-4 h-4" />
                         <span>{formatDate(content.uploadDate)}</span>
                       </div>
                     </div>
-                    <h3 className="font-medium text-gray-800 dark:text-white mb-2 line-clamp-2 leading-tight flex-grow">
-                      {content.title}
-                    </h3>
                   </div>
                 </motion.div>
               </motion.div>

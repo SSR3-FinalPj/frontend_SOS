@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiFetch as api } from "../../lib/api.js";
 import { Button } from "./button.jsx";
 import { useYouTubeStore } from "../../stores/youtube_store.js";
+import { useAuthAndChannelInfoInitializer } from "../../hooks/use_auth_and_channel_info.js";
 
 export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);
@@ -11,43 +12,9 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const timeoutRef = useRef(null);
 
   // ✅ store 값 가져오기
-  const { channelId, setChannelInfo } = useYouTubeStore();
+  const { refetch } = useAuthAndChannelInfoInitializer();
 
-  const fetchStatus = async () => {
-    try {
-      const r = await api("/api/google/status", { method: "GET" });
-      if (!r.ok) {
-        if (r.status === 403) {
-          setError("로그인이 필요합니다.");
-        }
-        throw new Error(`HTTP ${r.status}`);
-      }
-
-      const data = await r.json().catch(() => ({}));
-      const mapped = {
-        connected: data.connected ?? data.linked ?? false,
-      };
-
-      // ✅ 연결된 경우 + 아직 store에 채널 ID 없음 → 채널 정보 요청
-      if (mapped.connected && !channelId) {
-        try {
-          const res = await api("/api/youtube/channelId", { method: "GET" });
-          if (res.ok) {
-            const ch = await res.json();
-            setChannelInfo(ch); // { channelId, channelTitle }
-          }
-        } catch (err) {
-          console.error("채널 정보 조회 실패:", err);
-        }
-      }
-
-      onDone && onDone(mapped);
-    } catch (e) {
-      console.error(e);
-      setError(e.message);
-      onDone && onDone({ connected: false });
-    }
-  };
+  
 
   const startOAuth = async () => {
     setLoading(true);
@@ -88,9 +55,9 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
     }
   };
 
-  useEffect(() => {
-    fetchStatus();
+  
 
+  useEffect(() => {
     const onMsg = (e) => {
       if (oauthOrigin && e.origin !== oauthOrigin) return;
       if (e.data?.type === "google-oauth-complete") {
@@ -98,7 +65,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         setLoading(false);
         // Add a delay for backend processing
         setTimeout(() => {
-          fetchStatus();
+          refetch();
         }, 1000);
       }
     };
@@ -108,7 +75,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
       window.removeEventListener("message", onMsg);
       clearTimers();
     };
-  }, []);
+  }, [oauthOrigin, refetch]);
 
   const clearTimers = () => {
     if (popupTimerRef.current) {

@@ -4,12 +4,26 @@ import { GlassCard } from '../ui/glass-card.jsx';
 import ConnectYouTubeButton from '../ui/ConnectYouTubeButton.jsx';
 import ConnectRedditButton from '../ui/ConnectRedditButton.jsx'; // Reddit 버튼 import
 import { useState, useEffect } from 'react';
+import { useYouTubeStore } from '../../stores/youtube_store.js';
+import { useAuthAndChannelInfoInitializer } from '../../hooks/use_auth_and_channel_info.js';
 
 function ConnectionManagementCard({ platformData }) {
-  const [platforms, setPlatforms] = useState(
-    // 모든 플랫폼의 초기 상태를 null로 설정
-    platformData.map((platform) => ({ ...platform, status: null }))
-  );
+  const { channelId, channelTitle } = useYouTubeStore();
+  const { loading: authLoading } = useAuthAndChannelInfoInitializer();
+  const [platforms, setPlatforms] = useState(() => {
+    const initialPlatforms = platformData.map((platform) => {
+      if (platform.name === 'YouTube') {
+        return {
+          ...platform,
+          status: channelId
+            ? { connected: true, channelTitle: channelTitle }
+            : { connected: false, channelTitle: null },
+        };
+      }
+      return { ...platform, status: null };
+    });
+    return initialPlatforms;
+  });
 
   const handleStatusChange = (platformName, status) => {
     setPlatforms((prevPlatforms) =>
@@ -18,6 +32,24 @@ function ConnectionManagementCard({ platformData }) {
       )
     );
   };
+
+  useEffect(() => {
+    if (!authLoading) {
+      setPlatforms((prevPlatforms) =>
+        prevPlatforms.map((p) => {
+          if (p.name === 'YouTube') {
+            return {
+              ...p,
+              status: channelId
+                ? { connected: true, channelTitle: channelTitle }
+                : { connected: false, channelTitle: null },
+            };
+          }
+          return p;
+        })
+      );
+    }
+  }, [authLoading, channelId, channelTitle]);
 
   return (
     <motion.div
