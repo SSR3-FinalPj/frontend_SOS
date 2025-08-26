@@ -1,6 +1,6 @@
 /**
  * 알림 상태 관리 Zustand Store
- * 실시간 알림 데이터 및 상태를 관리
+ * 실시간 알림 데이터 및 상태를 관리하고 다른 스토어와 연동
  */
 
 import { create } from 'zustand';
@@ -108,7 +108,7 @@ export const useNotificationStore = create((set, get) => ({
     });
   },
   
-  // SSE 전용 알림 추가 메서드
+  // SSE 전용 알림 추가 메서드 (다른 스토어와 연동)
   add_sse_notification: (sse_data) => {
     const new_notification = {
       id: Date.now().toString(),
@@ -119,10 +119,44 @@ export const useNotificationStore = create((set, get) => ({
       timestamp: sse_data.timestamp || new Date().toISOString(),
     };
     
+    // 알림을 스토어에 추가
     set((state) => ({
       notifications: [new_notification, ...state.notifications],
       unread_count: state.unread_count + 1,
     }));
+    
+    // video-ready 이벤트의 경우 use_content_launch 스토어와 연동
+    if (sse_data.type === 'video_completed' || sse_data.type === 'video_ready') {
+      get().handle_video_ready_event(sse_data);
+    }
+  },
+  
+  // video-ready 이벤트 전용 처리 (use_content_launch 스토어와 연동)
+  handle_video_ready_event: (sse_data) => {
+    try {
+      // use_content_launch 스토어를 dynamic import로 가져와서 순환 참조 방지
+      import('../hooks/use_content_launch.jsx').then(({ use_content_launch }) => {
+        // video_id가 있으면 해당 영상을 ready 상태로 전환
+        if (sse_data.video_id || sse_data.data?.video_id) {
+          const video_id = sse_data.video_id || sse_data.data.video_id;
+          console.log('SSE 이벤트로 영상 상태 전환:', video_id);
+          use_content_launch.getState().transition_to_ready(video_id);
+        }
+        
+        // temp_id가 있는 경우에도 처리
+        if (sse_data.temp_id || sse_data.data?.temp_id) {
+          const temp_id = sse_data.temp_id || sse_data.data.temp_id;
+          console.log('SSE 이벤트로 임시 영상 상태 전환:', temp_id);
+          use_content_launch.getState().transition_to_ready(temp_id);
+        }
+        
+        console.log('video-ready 이벤트 처리 완료:', sse_data);
+      }).catch(error => {
+        console.error('use_content_launch 스토어 연동 실패:', error);
+      });
+    } catch (error) {
+      console.error('video-ready 이벤트 처리 중 오류:', error);
+    }
   },
   
   // SSE 영상 생성 완료 전용 처리
