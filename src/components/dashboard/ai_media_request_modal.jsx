@@ -131,7 +131,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
             <Button
               onClick={handle_submit}
               disabled={!is_form_valid}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 text-white font-semibold"
+              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
             >
               {is_submitting ? '요청 중...' : '제작 요청하기'}
             </Button>
