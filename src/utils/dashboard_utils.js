@@ -108,7 +108,7 @@ export const get_platform_data = (youtubeData) => {
   if (youtubeData && Array.isArray(youtubeData.daily)) {
     youtubeData.daily.forEach(dayData => {
       processedChartData.push({
-        day: dayData.date, // Assuming 'date' is available and can be used as 'day'
+        day: dayData.date ? dayData.date.substring(5) : '', // 'YYYY-MM-DD' -> 'MM-DD'
         views: dayData.view_count || 0,
         likes: dayData.like_count || 0,
       });

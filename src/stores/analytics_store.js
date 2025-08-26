@@ -31,8 +31,6 @@ export const useAnalyticsStore = create((set, get) => ({
     const period_labels = {
       'last7Days': '최근 7일',
       'last30Days': '최근 30일',
-      'last3Months': '최근 3개월',
-      'thisYear': '올해',
       'custom': '직접 설정'
     };
     
