@@ -2,36 +2,48 @@ import {
   getAccessToken, setAccessToken, clearAccessToken
 } from './token.js';
 
-let isRefreshing = false;
-let waitQueue = []; // { resolve, reject }
+//  토큰 갱신 상태 관리 변수
+let currentRefreshPromise = null; // 현재 진행 중인 토큰 갱신 Promise
 
 /* ------------------ 토큰 갱신 ------------------ */
-async function refreshAccessToken() {
-  if (isRefreshing) {
-    return new Promise((resolve, reject) => waitQueue.push({ resolve, reject }));
+// 모든 토큰 갱신 요청을 이 함수로 통합하여 경쟁 상태를 방지합니다.
+export async function refreshAccessToken() {
+  // 이미 진행 중인 갱신 요청이 있다면 해당 Promise를 반환
+  if (currentRefreshPromise) {
+    //console.log(' Token refresh already in progress, returning existing promise.');
+    return currentRefreshPromise;
   }
-  isRefreshing = true;
-  try {
-    const res = await fetch('/api/auth/refresh', {
-      method: 'POST',
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error(`Refresh failed: ${res.status}`);
 
-    const { accessToken } = await res.json();
-    setAccessToken(accessToken);
+  // 새로운 갱신 Promise 생성 및 저장
+  currentRefreshPromise = (async () => {
+    try {
+      //console.log(' Attempting to refresh token...');
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: "include",
+      });
 
-    waitQueue.forEach(p => p.resolve(accessToken));
-    waitQueue = [];
-    return accessToken;
-  } catch (e) {
-    waitQueue.forEach(p => p.reject(e));
-    waitQueue = [];
-    clearAccessToken();
-    throw e;
-  } finally {
-    isRefreshing = false;
-  }
+      if (!res.ok) {
+        const errorText = await res.text();
+        //console.error(` Refresh failed: ${res.status} - ${errorText}`);
+        clearAccessToken(); // 갱신 실패 시 액세스 토큰 제거
+        throw new Error(`Refresh failed: ${res.status} - ${errorText}`);
+      }
+
+      const { accessToken } = await res.json();
+      setAccessToken(accessToken);
+      //console.log(' Token refreshed successfully.');
+      return accessToken;
+    } catch (e) {
+      //console.error(' Token refresh failed:', e.message);
+      clearAccessToken(); // 갱신 실패 시 액세스 토큰 제거
+      throw e; // 에러를 다시 throw하여 호출자에게 전달
+    } finally {
+      currentRefreshPromise = null; // 갱신 완료(성공/실패) 후 Promise 초기화
+    }
+  })();
+
+  return currentRefreshPromise;
 }
 
 /* ------------------ 공통 API Fetch ------------------ */
@@ -40,18 +52,29 @@ export async function apiFetch(input, init = {}) {
   const at = getAccessToken();
   if (at) headers.set('Authorization', `Bearer ${at}`);
 
-  let res = await fetch(input, { ...init, headers, credentials: "include" });
-  if (res.status !== 401) return res;
+  let response = await fetch(input, { ...init, headers, credentials: "include" });
 
-  // 401 발생 → 리프레시 시도 후 1회 재시도
-  try {
-    const newAT = await refreshAccessToken();
-    const retryHeaders = new Headers(init.headers || {});
-    if (newAT) retryHeaders.set('Authorization', `Bearer ${newAT}`);
-    return await fetch(input, { ...init, headers: retryHeaders, credentials: "include" });
-  } catch {
-    return res; // 리프레시 실패 → 로그인 필요
+  // 401 발생 → 통합 토큰 갱신 함수 호출
+  if (response.status === 401) {
+    //console.log('401 detected, attempting token refresh...');
+    try {
+      const newAccessToken = await refreshAccessToken(); // 갱신된 토큰으로 재시도
+      const retryHeaders = new Headers(init.headers || {});
+      if (newAccessToken) {
+        retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
+      }
+      //console.log('Retrying API request with new token...');
+      // 재시도 시에는 원래 요청의 input과 init을 그대로 사용
+      response = await fetch(input, { ...init, headers: retryHeaders, credentials: 'include' });
+      return response;
+    } catch (refreshError) {
+      //console.error('Token refresh failed in apiFetch:', refreshError.message);
+      // 갱신 실패 시 원래 401 응답 반환 (로그인 페이지로 리다이렉트됨)
+      return response;
+    }
   }
+
+  return response;
 }
 
 /* ------------------ 대시보드 데이터 조회 ------------------ */
