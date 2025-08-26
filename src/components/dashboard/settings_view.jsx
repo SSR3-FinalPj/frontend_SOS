@@ -6,7 +6,6 @@
 import React from 'react';
 import ConnectionManagementCard from "./connection-management-card.jsx";
 import { DataExportCard } from "./data-export-card.jsx";
-import VisualEffectsCard from "./visual-effects-card.jsx";
 import { get_platform_data } from '../../utils/dashboard_utils.js';
 
 /**
@@ -22,7 +21,6 @@ const SettingsView = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ConnectionManagementCard platformData={platform_data} />
         <DataExportCard />
-        <VisualEffectsCard />
       </div>
     </div>
   );

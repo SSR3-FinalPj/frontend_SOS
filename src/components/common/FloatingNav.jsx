@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
 import { usePageStore } from '../../stores/page_store.js';
-import { useBlurEffect } from '../../hooks/useBlurEffect.js';
 
 /**
  * 플로팅 네비게이션 컴포넌트
@@ -11,7 +10,6 @@ import { useBlurEffect } from '../../hooks/useBlurEffect.js';
 export default function FloatingNav() {
   const [is_scrolled, set_is_scrolled] = useState(false);
   const { isDarkMode: is_dark_mode, setIsDarkMode: set_is_dark_mode } = usePageStore();
-  const { getBlur } = useBlurEffect();
 
   // 쓰로틀링을 위한 함수
   const throttle = useCallback((func, delay) => {
@@ -68,8 +66,8 @@ export default function FloatingNav() {
         <motion.div 
           className={`transition-all duration-500 ease-out px-6 lg:px-8 py-4 ${
             is_scrolled 
-              ? `${getBlur('3xl')} bg-white/30 dark:bg-gray-900/30 border-b border-white/50 dark:border-gray-700/50 shadow-lg` 
-              : `${getBlur('xl')} bg-white/10 dark:bg-white/5 border-b border-white/20 dark:border-white/10 shadow-sm`
+              ? 'backdrop-blur-3xl bg-white/30 dark:bg-gray-900/30 border-b border-white/50 dark:border-gray-700/50 shadow-lg' 
+              : 'backdrop-blur-xl bg-white/10 dark:bg-white/5 border-b border-white/20 dark:border-white/10 shadow-sm'
           }`}
           whileHover={{ 
             scale: 1.01,

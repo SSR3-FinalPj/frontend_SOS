@@ -2,13 +2,11 @@ import { motion } from 'framer-motion';
 import { BarChart3, Rocket, Target } from 'lucide-react';
 import { IMAGE_PATHS } from '../../utils/image_paths.js';
 import Section from '../common/Section.jsx';
-import { useBlurEffect } from '../../hooks/useBlurEffect.js';
 
 /**
  * 변화 소개 섹션 컴포넌트
  */
 export default function TransformSection() {
-  const { getBlur } = useBlurEffect();
   const benefits = [
     {
       title: "깊이 있는 인사이트",
@@ -95,7 +93,7 @@ export default function TransformSection() {
                   }}
                 />
                 <motion.div 
-                  className={`absolute top-6 left-6 w-12 h-12 ${getBlur('xl')} bg-white/30 border border-white/40 rounded-2xl flex items-center justify-center`}
+                  className="absolute top-6 left-6 w-12 h-12 backdrop-blur-xl bg-white/30 border border-white/40 rounded-2xl flex items-center justify-center"
                   whileHover={{ 
                     scale: 1.1, 
                     rotate: 5,

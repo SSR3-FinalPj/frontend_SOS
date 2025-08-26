@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { useBlurEffect } from '../../hooks/useBlurEffect.js';
 
 /**
  * 글래스 스타일 기능 카드 컴포넌트
@@ -15,7 +14,6 @@ export default function GlassFeatureCard({
   description, 
   index 
 }) {
-  const { getBlur } = useBlurEffect();
   return (
     <motion.div
       initial={{ opacity: 0, y: 80 }}
@@ -36,9 +34,9 @@ export default function GlassFeatureCard({
       }}
       className="group"
     >
-      <div className={`${getBlur('xl')} bg-white/30 dark:bg-white/10 border border-white/30 dark:border-white/10 rounded-3xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-500`}>
+      <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-3xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-500">
         <motion.div 
-          className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 ${getBlur('sm')} border border-white/40 dark:border-white/20 flex items-center justify-center mb-6`}
+          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center mb-6"
           whileHover={{ 
             scale: 1.15, 
             rotate: 5,
