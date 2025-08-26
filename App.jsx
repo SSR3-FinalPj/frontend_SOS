@@ -4,12 +4,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 // ✅ alias(@) 사용
 import { tryRefreshOnBoot } from '@/lib/auth_bootstrap';
 import { usePageStore } from '@/stores/page_store';
+import { useAuthAndChannelInfoInitializer } from '@/hooks/use_auth_and_channel_info';
 import Router from '@/Router';
 import ConnectYouTubeButton from '@/components/ui/ConnectYouTubeButton';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 
 export default function App() {
   const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
+  const { loading: authLoading } = useAuthAndChannelInfoInitializer();
   const [bootDone, setBootDone] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,12 +60,9 @@ export default function App() {
     localStorage.setItem('contentboost-dark-mode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
-  // 언어 설정 저장
-  useEffect(() => {
-    localStorage.setItem('contentboost-language', language);
-  }, [language]);
 
-  if (!bootDone) {
+
+  if (!bootDone || authLoading) {
     return <div />; // 로딩 화면
   }
 
