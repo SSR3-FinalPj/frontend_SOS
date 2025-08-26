@@ -104,7 +104,8 @@ export const audience_demo_data = [
 
 export const traffic_source_data = [
   { name: "검색", value: 400 },
-  { name: "추천 영상", value: 300 },
-  { name: "외부 유입", value: 200 },
+  { name: "추천/탐색", value: 300 },
+  { name: "채널/구독/재생목록", value: 200 },
+  { name: "외부ㆍ직접/임베드", value: 150 },
   { name: "기타", value: 100 }
 ];
