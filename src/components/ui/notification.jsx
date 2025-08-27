@@ -76,9 +76,8 @@ const Notification = () => {
 
   // UTC 타임스탬프를 KST '오전/오후 HH:MM' 형식으로 변환
   const formatToKST = useCallback((utcTimestamp) => {
-    const date = new Date(utcTimestamp);
-    const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-    return kstDate.toLocaleString('ko-KR', {
+    return new Date(utcTimestamp).toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
       hour12: true,
       hour: '2-digit',
       minute: '2-digit'

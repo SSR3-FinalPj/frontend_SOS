@@ -4,8 +4,11 @@
  */
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-export const useNotificationStore = create((set, get) => ({
+export const useNotificationStore = create(
+  persist(
+    (set, get) => ({
   // 알림 목록
   notifications: [],
   
@@ -15,7 +18,7 @@ export const useNotificationStore = create((set, get) => ({
   // 웹소켓 연결 상태
   is_connected: false,
   
-  // 새로운 알림 추가
+  // 새로운 알림 추가 (자동 정리 포함)
   add_notification: (notification) => {
     const new_notification = {
       id: notification.id || Date.now().toString(),
@@ -30,6 +33,9 @@ export const useNotificationStore = create((set, get) => ({
       notifications: [new_notification, ...state.notifications],
       unread_count: state.unread_count + 1,
     }));
+    
+    // 새 알림 추가 시 오래된 알림 자동 정리
+    setTimeout(() => get().cleanup_old_notifications(), 1000);
   },
   
   // 알림을 읽음 상태로 변경
@@ -170,4 +176,53 @@ export const useNotificationStore = create((set, get) => ({
     });
   },
 
-}));
+  // 오래된 알림 정리 (읽은 알림 7일 후 삭제, 모든 알림 30일 후 삭제)
+  cleanup_old_notifications: () => {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+
+    set((state) => {
+      const cleaned_notifications = state.notifications.filter((notification) => {
+        const notificationDate = new Date(notification.timestamp);
+        
+        // 읽은 알림은 7일 후 삭제
+        if (notification.read && notificationDate < sevenDaysAgo) {
+          return false;
+        }
+        
+        // 모든 알림은 30일 후 삭제
+        if (notificationDate < thirtyDaysAgo) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      const unread_count = cleaned_notifications.filter(n => !n.read).length;
+      
+      return {
+        notifications: cleaned_notifications,
+        unread_count,
+      };
+    });
+  },
+
+    }),
+    {
+      name: 'sos-notifications-storage',
+      partialize: (state) => ({
+        // 읽지 않은 알림만 로컬스토리지에 저장
+        notifications: state.notifications.filter(n => !n.read && n.timestamp),
+        unread_count: state.unread_count
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // 복원 후 오래된 알림 정리
+          state.cleanup_old_notifications();
+          console.log('알림 데이터 복원 완료:', state.notifications.length, '개');
+        }
+      },
+    }
+  )
+);
