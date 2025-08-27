@@ -8,7 +8,6 @@ export function setAccessToken(token) {
 }
 
 export function getAccessToken() {
-    console.log("성공:", accessTokenInMemory);
   return accessTokenInMemory;
 }
 
