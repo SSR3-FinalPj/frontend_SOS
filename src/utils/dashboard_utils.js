@@ -11,7 +11,7 @@ import {
   BarChart3, 
   Star 
 } from 'lucide-react';
-import { youtube_chart_data, reddit_chart_data } from './dashboard_constants.js';
+import { reddit_chart_data } from './dashboard_constants.js';
 
 /**
  * 날짜를 한국어 형식으로 포맷팅
@@ -138,7 +138,7 @@ export const get_platform_data = (youtubeData) => {
       period: "지난 7일",
       isPositive: true // This would need actual growth data to determine
     },
-    chartData: processedChartData.length > 0 ? processedChartData : youtube_chart_data, // Use processed data if available, else fallback
+    chartData: processedChartData.length > 0 ? processedChartData : [], // Use processed data if available, else fallback
     chartMetrics: {
       primary: { key: "views", label: "조회수", color: "#dc2626" },
       secondary: { key: "likes", label: "좋아요", color: "#7c3aed" }

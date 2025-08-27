@@ -3,16 +3,7 @@
  */
 
 
-// Mock chart data for 7 days - YouTube와 Reddit에 맞는 데이터
-export const youtube_chart_data = [
-  { day: 1, views: 3200, likes: 280 },
-  { day: 2, views: 2800, likes: 250 },
-  { day: 3, views: 4100, likes: 320 },
-  { day: 4, views: 3900, likes: 310 },
-  { day: 5, views: 5200, likes: 420 },
-  { day: 6, views: 4800, likes: 380 },
-  { day: 7, views: 4200, likes: 350 }
-];
+
 
 export const reddit_chart_data = [
   { day: 1, upvotes: 280, comments: 45 },
@@ -56,6 +47,159 @@ export const latest_content_data = [
     comments: 145
   },
   {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
+    rank: 2,
+    title: "호기심이 뭔지 쾌락적 카피라이팅",
+    uploadDate: "2024-12-14",
+    thumbnail: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
+    views: 15200,
+    likes: 520,
+    comments: 145
+  },
+  {
     rank: 3,
     title: "소셜미디어 마케팅 전략",
     uploadDate: "2024-12-13",
@@ -73,6 +217,187 @@ export const latest_content_data = [
     likes: 340,
     comments: 83
   },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+
   {
     rank: 5,
     title: "커뮤니티 참여도를 높이는 5가지 방법",
@@ -104,7 +429,8 @@ export const audience_demo_data = [
 
 export const traffic_source_data = [
   { name: "검색", value: 400 },
-  { name: "추천 영상", value: 300 },
-  { name: "외부 유입", value: 200 },
+  { name: "추천/탐색", value: 300 },
+  { name: "채널/구독/재생목록", value: 200 },
+  { name: "외부ㆍ직접/임베드", value: 150 },
   { name: "기타", value: 100 }
 ];

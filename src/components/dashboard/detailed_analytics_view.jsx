@@ -8,13 +8,9 @@ import { motion } from 'framer-motion';
 import { 
   Sun, 
   Moon, 
-  Eye,
-  Heart,
-  MessageSquare,
   TrendingUp,
-  Star
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+
 import { usePageStore } from '../../stores/page_store.js';
 import { Calendar as CalendarComponent } from "../../components/ui/calendar.jsx";
 import { useAnalyticsStore } from '../../stores/analytics_store.js';
@@ -130,12 +126,14 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
             </div>
 
             {/* Audience Demographics Chart */}
-            <AudienceDemographicsChart />
+            <UploadedContentList startDate={date_range?.from} endDate={date_range?.to} />
+            
 
             {/* Bottom Row - Content and Traffic */}
             <div className="grid grid-cols-2 gap-8">
               {/* Latest Content */}
-              <UploadedContentList />
+              <AudienceDemographicsChart />
+              
 
               {/* Traffic Source Chart */}
               <TrafficSourceChart />

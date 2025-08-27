@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link, Unlink } from 'lucide-react';
-import { GlassCard } from '../ui/glass-card.jsx';
+import GlassCard from '../ui/glass-card.jsx';
 import ConnectYouTubeButton from '../ui/ConnectYouTubeButton.jsx';
 import ConnectRedditButton from '../ui/ConnectRedditButton.jsx'; // Reddit 버튼 import
 import { useState, useEffect } from 'react';
