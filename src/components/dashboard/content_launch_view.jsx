@@ -13,6 +13,7 @@ import { Button } from '../ui/button.jsx';
 import { use_content_launch } from '../../hooks/use_content_launch.jsx';
 import { use_content_modals } from '../../hooks/use_content_modals.jsx';
 import ConfirmationModal from '../ui/confirmation_modal.jsx';
+import SuccessModal from '../ui/success_modal.jsx';
 
 /**
  * ContentLaunchView 컴포넌트
@@ -27,6 +28,10 @@ const ContentLaunchView = ({ dark_mode }) => {
   // 우선순위 확인 모달 상태
   const [is_priority_confirm_modal_open, set_is_priority_confirm_modal_open] = useState(false);
   const [is_priority_mode, set_is_priority_mode] = useState(false);
+  
+  // 성공 모달 및 예약 비디오 데이터 상태
+  const [is_success_modal_open, set_is_success_modal_open] = useState(false);
+  const [pending_video_data, set_pending_video_data] = useState(null);
 
   // 커스텀 훅 사용
   const {
@@ -63,6 +68,28 @@ const ContentLaunchView = ({ dark_mode }) => {
   useEffect(() => {
     fetch_folders();
   }, [fetch_folders]);
+
+  // 요청 성공 핸들러
+  const handleRequestSuccess = (requestData) => {
+    set_pending_video_data(requestData);
+    set_is_success_modal_open(true);
+  };
+  
+  // 성공 모달 닫기 핸들러 - 실제 비디오 카드 추가
+  const handleSuccessModalClose = () => {
+    if (pending_video_data) {
+      const { video_data, creation_date, isPriority } = pending_video_data;
+      
+      if (isPriority) {
+        replace_processing_video(video_data, creation_date);
+      } else {
+        add_pending_video(video_data, creation_date);
+      }
+      
+      set_pending_video_data(null);
+    }
+    set_is_success_modal_open(false);
+  };
 
   /**
    * 게시 완료 핸들러
@@ -266,6 +293,7 @@ const ContentLaunchView = ({ dark_mode }) => {
         on_close={() => set_is_request_modal_open(false)}
         isPriority={is_priority_mode}
         selectedVideoData={selected_video_data}
+        on_request_success={handleRequestSuccess}
       />
 
       {/* 우선순위 재생성 확인 모달 */}
@@ -280,6 +308,14 @@ const ContentLaunchView = ({ dark_mode }) => {
         }}
         title="영상 생성 작업 교체"
         message="현재 생성 중인 영상 생성이 중단되고 새롭게 생성을 시작합니다."
+      />
+      
+      {/* 성공 모달 */}
+      <SuccessModal
+        is_open={is_success_modal_open}
+        on_close={handleSuccessModalClose}
+        message="AI 미디어 제작 요청이 성공적으로 전송되었습니다!"
+        title="요청 완료"
       />
     </div>
   );
