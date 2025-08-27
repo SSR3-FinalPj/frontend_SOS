@@ -74,6 +74,17 @@ const Notification = () => {
   // 외부 클릭 감지
   useOnClickOutside(dropdownRef, closeDropdown);
 
+  // UTC 타임스탬프를 KST '오전/오후 HH:MM' 형식으로 변환
+  const formatToKST = useCallback((utcTimestamp) => {
+    const date = new Date(utcTimestamp);
+    const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+    return kstDate.toLocaleString('ko-KR', {
+      hour12: true,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }, []);
+
   // 알림 타입별 아이콘 매핑
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -94,10 +105,10 @@ const Notification = () => {
         onClick={toggleDropdown}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="group relative p-3 rounded-xl bg-gradient-to-br from-white/30 to-white/10 dark:from-white/20 dark:to-white/5 border border-white/40 dark:border-white/20 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-white/60 dark:hover:border-white/30"
+        className="group relative p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
         aria-label="알림 보기"
       >
-        <Bell className="w-5 h-5 text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
+        <Bell className="w-4 h-4 text-gray-700 dark:text-gray-300" />
         
         {/* Enhanced 읽지 않은 알림 배지 */}
         {unread_count > 0 && (
@@ -194,12 +205,7 @@ const Notification = () => {
                           
                           {/* 시간 표시 */}
                           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1.5 font-medium">
-                            {new Date(notification.timestamp).toLocaleString('ko-KR', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {formatToKST(notification.timestamp)}
                           </p>
                         </div>
 
