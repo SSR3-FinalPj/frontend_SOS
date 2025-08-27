@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image, MessageSquare, ThumbsUp, ArrowBigUp, Eye } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from "../ui/pagination.jsx";
-import { GlassCard } from '../ui/glass-card.jsx';
+import GlassCard from '../ui/glass-card.jsx';
 import { getYouTubeVideosByChannelId } from '../../lib/api.js';
 import { useYouTubeStore } from '../../stores/youtube_store.js';
 import { mockContentData } from '../../utils/mock-data.js';

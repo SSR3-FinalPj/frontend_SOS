@@ -2,7 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
 import { audience_demo_data } from '../../utils/dashboard_constants.js';
-import GlassCard from '../dashboard/glass_card.jsx';
+import GlassCard from './glass-card.jsx';
 
 const AudienceDemographicsChart = () => {
   return (

@@ -3,7 +3,7 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 import { PieChart as PieChartIcon } from 'lucide-react';
-import GlassCard from '../dashboard/glass_card.jsx';
+import GlassCard from './glass-card.jsx';
 import { traffic_source_data } from '../../utils/dashboard_constants.js';
 import { cn } from '../../utils/ui_utils.js';
 
