@@ -126,7 +126,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
             </div>
 
             {/* Audience Demographics Chart */}
-            <UploadedContentList />
+            <UploadedContentList startDate={date_range?.from} endDate={date_range?.to} />
             
 
             {/* Bottom Row - Content and Traffic */}
