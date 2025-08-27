@@ -12,8 +12,6 @@ import AIMediaRequestModal from './ai_media_request_modal.jsx';
 import { Button } from '../ui/button.jsx';
 import { use_content_launch } from '../../hooks/use_content_launch.jsx';
 import { use_content_modals } from '../../hooks/use_content_modals.jsx';
-import { useSSEConnection } from '../../hooks/use_sse_connection.js';
-import { useAccessTokenMemory } from '../../hooks/useAccessTokenMemory.js';
 import ConfirmationModal from '../ui/confirmation_modal.jsx';
 
 /**
@@ -60,20 +58,6 @@ const ContentLaunchView = ({ dark_mode }) => {
     update_publish_form
   } = use_content_modals();
 
-  // SSE 연결 (ContentLaunch 페이지에서만 활성화)
-  const token = useAccessTokenMemory();
-  const {
-    is_connected,
-    connection_error,
-    reconnect_attempts,
-    last_data,
-    last_event,
-  } = useSSEConnection({
-    token, 
-    baseUrl: '', 
-    enabled: !!token,
-    paramName: 'sse_token'
-  });
 
   // 컴포넌트 마운트 시 폴더 데이터 로딩
   useEffect(() => {
