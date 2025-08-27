@@ -3,7 +3,7 @@ import { format_date } from '../utils/dashboard_utils.js';
 
 export const useAnalyticsStore = create((set, get) => ({
   selected_platform: 'youtube',
-  selected_period: 'last30Days',
+  selected_period: 'last7Days',
   is_calendar_visible: false,
   date_range: {
     from: undefined,
