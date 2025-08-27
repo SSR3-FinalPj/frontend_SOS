@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotificationStore } from '../stores/notification_store.js';
+import { use_content_launch } from './use_content_launch.jsx';
 
 /**
  * @param {Object} opts
@@ -54,6 +55,21 @@ export const useSSEConnection = ({
           temp_id: data.temp_id,
           data: data, // 전체 데이터도 함께 전달
         });
+
+        // VIDEO_READY 이벤트 시 자동으로 상태 전환 처리
+        if (data.message === 'VIDEO_READY' && data.video_id) {
+          console.log('[SSE] VIDEO_READY 이벤트 감지 - 자동 상태 전환:', {
+            video_id: data.video_id,
+            temp_id: data.temp_id
+          });
+          
+          // use_content_launch 스토어의 transition_to_ready 함수 호출
+          const { transition_to_ready } = use_content_launch.getState();
+          transition_to_ready(data.video_id).catch(error => {
+            console.error('[SSE] 자동 상태 전환 실패:', error);
+          });
+        }
+
         set_last_event(eventType);
         set_last_data(raw);
       }

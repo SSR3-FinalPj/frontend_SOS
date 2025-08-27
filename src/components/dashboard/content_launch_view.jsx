@@ -44,7 +44,6 @@ const ContentLaunchView = ({ dark_mode }) => {
     toggle_folder,
     simulate_upload,
     fetch_folders,
-    transition_to_ready,
     transition_to_uploaded,
     add_pending_video,
     replace_processing_video,
@@ -202,21 +201,6 @@ const ContentLaunchView = ({ dark_mode }) => {
               {/* 테스트용 버튼들 */}
               {pending_videos.length > 0 && (
                 <div className="flex gap-2">
-                  <Button
-                    onClick={async () => {
-                      const first_pending_video = pending_videos.find(video => video.status === 'PROCESSING');
-                      if (first_pending_video) {
-                        // 첫 번째 영상만 '업로드 대기' 상태로 전환 및 다음 영상 자동 생성
-                        await transition_to_ready(first_pending_video.temp_id);
-                      }
-                    }}
-                    className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-lg"
-                    size="sm"
-                    title="영상을 완료 처리하고 다음 영상을 자동 생성합니다"
-                  >
-                    완료 처리 (자동생성)
-                  </Button>
-                  
                   <Button
                     onClick={() => {
                       const first_ready_video = pending_videos.find(video => video.status === 'ready');
