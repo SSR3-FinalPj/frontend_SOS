@@ -251,23 +251,17 @@ export async function get_traffic_source_summary(videoId) {
   }
 
   const url = `/api/youtube/traffic-source-summary/${videoId}`;
-  console.log(`🌐 API 요청: ${url}`);
-  console.log(`📝 Video ID: ${videoId}`);
 
   const res = await apiFetch(url, {
     method: 'POST'
   });
 
-  console.log(`📡 API 응답 상태: ${res.status} (${videoId})`);
-
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
-    console.error(`❌ API 오류 (${videoId}):`, errorData);
     throw new Error(`트래픽 소스 조회 실패: ${res.status} - ${errorData.message}`);
   }
   
   const responseData = await res.json();
-  console.log(`✅ API 응답 데이터 (${videoId}):`, responseData);
   
   return responseData;
 }

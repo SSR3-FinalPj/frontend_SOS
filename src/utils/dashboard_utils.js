@@ -51,15 +51,9 @@ export const format_number_korean = (num) => {
  * @returns {Array} KPI 데이터 배열
  */
 export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
-  console.log('🎯 KPI 데이터 생성:', { selectedPlatform, summaryData });
-  
   if (selectedPlatform === 'youtube' && summaryData) {
-    console.log('📋 summaryData 구조:', Object.keys(summaryData));
-    
     // total 객체에서 데이터 추출
     const totalData = summaryData.total || summaryData;
-    console.log('📊 totalData 내용:', totalData);
-    console.log('📊 totalData 구조:', Object.keys(totalData || {}));
     
     // 여러 가능한 필드명 패턴 시도 (total 객체에서)
     const totalViews = totalData?.total_view_count || 
@@ -89,7 +83,6 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
                          summaryData.commentCount || 
                          summaryData.comments || 0;
 
-    console.log('🔢 추출된 숫자들:', { totalViews, totalLikes, totalComments });
 
     return [
       {
@@ -116,7 +109,6 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
     ];
   }
   
-  console.log('⚠️ API 데이터 없음, Mock 데이터 사용');
   // Fallback to mock data for reddit or when no data available
   return get_kpi_mock_data(selectedPlatform);
 };
