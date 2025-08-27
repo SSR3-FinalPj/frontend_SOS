@@ -147,6 +147,7 @@ export const use_content_launch = create(
           title: video_data.title || '새로운 AI 영상',
           status: 'PROCESSING',
           start_time: new Date().toISOString(),
+          creationTime: new Date().toISOString(),
           image_url: video_data.image_url,
           creation_date: creation_date,
           ...video_data
@@ -201,6 +202,7 @@ export const use_content_launch = create(
           title: newVideoData.title || '새로운 AI 영상',
           status: 'PROCESSING',
           start_time: new Date().toISOString(),
+          creationTime: new Date().toISOString(),
           image_url: newVideoData.image_url,
           creation_date: creationDate,
           ...newVideoData

@@ -12,9 +12,10 @@ import { apiFetch } from '../lib/api.js';
  * @param {Function} on_close - 모달 닫기 함수
  * @param {boolean} isPriority - 우선순위 재생성 모드 여부
  * @param {Object|null} selectedVideoData - 선택된 영상 데이터 (자동 import용)
+ * @param {Function|null} on_request_success - 요청 성공 콜백 함수
  * @returns {Object} 폼 상태와 핸들러들
  */
-export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null) => {
+export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null) => {
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -159,13 +160,21 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
-      // Zustand 스토어에 '생성 중' 영상 추가 또는 교체
-      if (isPriority) {
-        // 우선순위 모드: 기존 PROCESSING 영상들을 교체
-        use_content_launch.getState().replace_processing_video(video_data, creation_date);
+      // on_request_success 콜백이 있으면 호출, 없으면 기존 로직 사용
+      if (on_request_success) {
+        // 새로운 방식: 성공 콜백으로 데이터 전달
+        on_request_success({
+          video_data,
+          creation_date,
+          isPriority
+        });
       } else {
-        // 일반 모드: 새 영상 추가
-        use_content_launch.getState().add_pending_video(video_data, creation_date);
+        // 기존 방식: 직접 Zustand 스토어 호출
+        if (isPriority) {
+          use_content_launch.getState().replace_processing_video(video_data, creation_date);
+        } else {
+          use_content_launch.getState().add_pending_video(video_data, creation_date);
+        }
       }
       
       // S3 Presigned URL을 이용한 2단계 업로드
@@ -224,7 +233,10 @@ if (!notifyRes.ok) {
 const confirmJson = await notifyRes.json().catch(() => ({}));
 
       // 성공 처리
-      set_is_success_modal_open(true);
+      if (!on_request_success) {
+        // 기존 방식: 직접 성공 모달 표시
+        set_is_success_modal_open(true);
+      }
       reset_form();
       
     } catch (error) {

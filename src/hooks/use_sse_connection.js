@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotificationStore } from '../stores/notification_store.js';
+import { use_content_launch } from './use_content_launch.jsx';
 
 /**
  * @param {Object} opts
@@ -54,6 +55,31 @@ export const useSSEConnection = ({
           temp_id: data.temp_id,
           data: data, // 전체 데이터도 함께 전달
         });
+
+        // VIDEO_READY 이벤트 시 자동으로 상태 전환 처리
+        if (data.message === 'VIDEO_READY') {
+          console.log('[SSE] VIDEO_READY 이벤트 감지 - 첫 번째 PROCESSING 영상 자동 완료 처리:', {
+            timestamp: data.timestamp
+          });
+          
+          // 현재 PROCESSING 상태인 첫 번째 영상 찾기
+          const { pending_videos, transition_to_ready } = use_content_launch.getState();
+          const first_processing_video = pending_videos.find(video => video.status === 'PROCESSING');
+          
+          if (first_processing_video) {
+            console.log('[SSE] PROCESSING 영상 발견, 상태 전환 시작:', {
+              temp_id: first_processing_video.temp_id,
+              title: first_processing_video.title
+            });
+            
+            transition_to_ready(first_processing_video.temp_id).catch(error => {
+              console.error('[SSE] 자동 상태 전환 실패:', error);
+            });
+          } else {
+            console.warn('[SSE] PROCESSING 상태인 영상을 찾을 수 없습니다');
+          }
+        }
+
         set_last_event(eventType);
         set_last_data(raw);
       }

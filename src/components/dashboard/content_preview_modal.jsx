@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Image, Upload, X as XIcon, AlertCircle } from 'lucide-react';
+import { Image, Upload, X as XIcon, AlertCircle, Clock } from 'lucide-react';
 import { get_platform_color, get_content_type_label } from '../../utils/content_launch_utils.jsx';
 import { getEmbeddableVideoUrl } from '../../utils/video_url_utils.js';
 
@@ -168,6 +168,18 @@ const ContentInfo = React.memo(({ item, dark_mode }) => {
   }
   // ▲▲▲▲▲ null 체크 추가 ▲▲▲▲▲
 
+  // creationTime 포매팅 함수 (content_item_card와 동일)
+  const formatCreationTime = (creationTime) => {
+    if (!creationTime) return '';
+    const date = new Date(creationTime);
+    return date.toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
   return (
     <div className="flex-1 space-y-4">
       <div>
@@ -180,6 +192,15 @@ const ContentInfo = React.memo(({ item, dark_mode }) => {
       </div>
 
       <div className="flex items-center gap-6 text-sm">
+        {/* 생성 시작 시간 표시 */}
+        {(item.creationTime || item.start_time || item.created_at) && (
+          <div className="flex items-center gap-1">
+            <Clock className={`h-4 w-4 ${dark_mode ? 'text-gray-400' : 'text-gray-500'}`} />
+            <span className={`${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+              생성 시작: {item.creationTime ? formatCreationTime(item.creationTime) : item.start_time ? formatCreationTime(item.start_time) : item.created_at}
+            </span>
+          </div>
+        )}
       </div>
       
       <DialogDescription asChild>
