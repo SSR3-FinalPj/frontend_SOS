@@ -20,9 +20,10 @@ import { useMediaRequestForm } from '../../hooks/use_media_request_form.js';
  * @param {boolean} props.is_open - 모달 열림 상태
  * @param {Function} props.on_close - 모달 닫기 함수
  * @param {boolean} props.isPriority - 우선순위 재생성 모드 여부
+ * @param {Function} props.on_request_success - 요청 성공 시 콜백 함수
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
-const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null }) => {
+const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null }) => {
   // 폼 상태 관리 커스텀 훅 사용
   const {
     selected_location,
@@ -36,7 +37,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     handle_prompt_change,
     handle_submit,
     handle_success_modal_close
-  } = useMediaRequestForm(on_close, isPriority, selectedVideoData);
+  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success);
 
   // 모달 닫기 핸들러
   const handle_close = useCallback(() => {

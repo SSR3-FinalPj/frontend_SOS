@@ -45,6 +45,18 @@ const ContentItemCard = ({
   // 선택 가능한 상태인지 확인 (업로드 완료된 영상만)
   const is_selectable = item.status === 'uploaded';
   
+  // creationTime 포매팅 함수
+  const formatCreationTime = (creationTime) => {
+    if (!creationTime) return '';
+    const date = new Date(creationTime);
+    return date.toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+  
   console.log('ContentItemCard render:', {
     title: item.title,
     video_id: item.video_id,
@@ -184,7 +196,7 @@ const ContentItemCard = ({
             <div className="flex items-center gap-1">
               <Clock className={`h-3 w-3 ${dark_mode ? 'text-gray-400' : 'text-gray-500'}`} />
               <span className={`${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {item.created_at}
+                {item.creationTime ? formatCreationTime(item.creationTime) : item.created_at}
               </span>
             </div>
             
