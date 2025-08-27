@@ -4,15 +4,15 @@
 
 
 // Mock chart data for 7 days - YouTube와 Reddit에 맞는 데이터
-export const youtube_chart_data = [
-  { day: 1, views: 3200, likes: 280 },
-  { day: 2, views: 2800, likes: 250 },
-  { day: 3, views: 4100, likes: 320 },
-  { day: 4, views: 3900, likes: 310 },
-  { day: 5, views: 5200, likes: 420 },
-  { day: 6, views: 4800, likes: 380 },
-  { day: 7, views: 4200, likes: 350 }
-];
+// export const youtube_chart_data = [
+//   { day: 1, views: 3200, likes: 280 },
+//   { day: 2, views: 2800, likes: 250 },
+//   { day: 3, views: 4100, likes: 320 },
+//   { day: 4, views: 3900, likes: 310 },
+//   { day: 5, views: 5200, likes: 420 },
+//   { day: 6, views: 4800, likes: 380 },
+//   { day: 7, views: 4200, likes: 350 }
+// ];
 
 export const reddit_chart_data = [
   { day: 1, upvotes: 280, comments: 45 },
@@ -73,6 +73,187 @@ export const latest_content_data = [
     likes: 340,
     comments: 83
   },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+  {
+    rank: 4,
+    title: "데이터 분석으로 콘텐츠 성과 개선하기",
+    uploadDate: "2024-12-12",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    views: 9600,
+    likes: 340,
+    comments: 83
+  },
+
   {
     rank: 5,
     title: "커뮤니티 참여도를 높이는 5가지 방법",
