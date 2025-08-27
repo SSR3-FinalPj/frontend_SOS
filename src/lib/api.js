@@ -198,3 +198,18 @@ export async function getYouTubeChannelId() {
     return null;
   }
 }
+
+/* ------------------ Analytics API 연동 ------------------ */
+/**
+ * 유튜브 범위별 요약 데이터 조회
+ * @param {string} startDate - 시작일 (YYYY-MM-DD)
+ * @param {string} endDate - 종료일 (YYYY-MM-DD)
+ * @returns {Promise} API 응답 데이터
+ */
+export async function get_youtube_range_summary(startDate, endDate) {
+  return getDashboardData({
+    type: 'range',
+    startDate,
+    endDate
+  });
+}

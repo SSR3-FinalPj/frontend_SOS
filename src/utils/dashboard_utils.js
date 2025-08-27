@@ -27,37 +27,126 @@ export const format_date = (date) => {
 };
 
 /**
- * 플랫폼별 KPI 데이터 생성
- * @param {string} selected_platform - 선택된 플랫폼 ('youtube' | 'reddit')
+ * 숫자를 한국어 단위로 포맷팅
+ * @param {number} num - 포맷팅할 숫자
+ * @returns {string} 포맷팅된 문자열
+ */
+export const format_number_korean = (num) => {
+  if (!num || isNaN(num)) return '0';
+  
+  if (num >= 100000000) {
+    return `${(num / 100000000).toFixed(1)}억`;
+  } else if (num >= 10000) {
+    return `${(num / 10000).toFixed(1)}만`;
+  } else if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
+  return num.toLocaleString();
+};
+
+/**
+ * API 데이터를 기반으로 KPI 데이터 생성
+ * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
+ * @param {Object} summaryData - API에서 받은 요약 데이터
  * @returns {Array} KPI 데이터 배열
  */
-export const get_kpi_data = (selected_platform) => {
-  if (selected_platform === 'youtube') {
+export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
+  console.log('🎯 KPI 데이터 생성:', { selectedPlatform, summaryData });
+  
+  if (selectedPlatform === 'youtube' && summaryData) {
+    console.log('📋 summaryData 구조:', Object.keys(summaryData));
+    
+    // total 객체에서 데이터 추출
+    const totalData = summaryData.total || summaryData;
+    console.log('📊 totalData 내용:', totalData);
+    console.log('📊 totalData 구조:', Object.keys(totalData || {}));
+    
+    // 여러 가능한 필드명 패턴 시도 (total 객체에서)
+    const totalViews = totalData?.total_view_count || 
+                      totalData?.totalViews || 
+                      totalData?.viewCount || 
+                      totalData?.views || 
+                      summaryData.total_view_count || 
+                      summaryData.totalViews || 
+                      summaryData.viewCount || 
+                      summaryData.views || 0;
+                      
+    const totalLikes = totalData?.total_like_count || 
+                      totalData?.totalLikes || 
+                      totalData?.likeCount || 
+                      totalData?.likes || 
+                      summaryData.total_like_count || 
+                      summaryData.totalLikes || 
+                      summaryData.likeCount || 
+                      summaryData.likes || 0;
+                      
+    const totalComments = totalData?.total_comment_count || 
+                         totalData?.totalComments || 
+                         totalData?.commentCount || 
+                         totalData?.comments || 
+                         summaryData.total_comment_count || 
+                         summaryData.totalComments || 
+                         summaryData.commentCount || 
+                         summaryData.comments || 0;
+
+    console.log('🔢 추출된 숫자들:', { totalViews, totalLikes, totalComments });
+
     return [
       {
         icon: Eye,
         label: "총 조회수",
-        value: "2.4M",
-        change: "+12.3%",
-        isPositive: true,
+        value: format_number_korean(totalViews),
         bgColor: "bg-blue-50/80 dark:bg-blue-950/20",
         iconBg: "bg-blue-100 dark:bg-blue-900/30"
       },
       {
         icon: Heart,
         label: "총 좋아요",
-        value: "156K",
-        change: "+8.7%",
-        isPositive: true,
+        value: format_number_korean(totalLikes),
         bgColor: "bg-red-50/80 dark:bg-red-950/20",
         iconBg: "bg-red-100 dark:bg-red-900/30"
       },
       {
         icon: MessageSquare,
         label: "총 댓글",
-        value: "12.3K",
-        change: "+15.1%",
-        isPositive: true,
+        value: format_number_korean(totalComments),
+        bgColor: "bg-green-50/80 dark:bg-green-950/20",
+        iconBg: "bg-green-100 dark:bg-green-900/30"
+      }
+    ];
+  }
+  
+  console.log('⚠️ API 데이터 없음, Mock 데이터 사용');
+  // Fallback to mock data for reddit or when no data available
+  return get_kpi_mock_data(selectedPlatform);
+};
+
+/**
+ * 플랫폼별 Mock KPI 데이터 생성 (Fallback)
+ * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
+ * @returns {Array} KPI 데이터 배열
+ */
+export const get_kpi_mock_data = (selectedPlatform) => {
+  if (selectedPlatform === 'youtube') {
+    return [
+      {
+        icon: Eye,
+        label: "총 조회수",
+        value: "데이터 없음",
+        bgColor: "bg-blue-50/80 dark:bg-blue-950/20",
+        iconBg: "bg-blue-100 dark:bg-blue-900/30"
+      },
+      {
+        icon: Heart,
+        label: "총 좋아요",
+        value: "데이터 없음",
+        bgColor: "bg-red-50/80 dark:bg-red-950/20",
+        iconBg: "bg-red-100 dark:bg-red-900/30"
+      },
+      {
+        icon: MessageSquare,
+        label: "총 댓글",
+        value: "데이터 없음",
         bgColor: "bg-green-50/80 dark:bg-green-950/20",
         iconBg: "bg-green-100 dark:bg-green-900/30"
       }
@@ -68,8 +157,6 @@ export const get_kpi_data = (selected_platform) => {
         icon: TrendingUp,
         label: "총 업보트",
         value: "89.2K",
-        change: "+18.4%",
-        isPositive: true,
         bgColor: "bg-orange-50/80 dark:bg-orange-950/20",
         iconBg: "bg-orange-100 dark:bg-orange-900/30"
       },
@@ -77,8 +164,6 @@ export const get_kpi_data = (selected_platform) => {
         icon: MessageSquare,
         label: "총 댓글",
         value: "23.1K",
-        change: "+9.2%",
-        isPositive: true,
         bgColor: "bg-green-50/80 dark:bg-green-950/20",
         iconBg: "bg-green-100 dark:bg-green-900/30"
       },
@@ -86,13 +171,20 @@ export const get_kpi_data = (selected_platform) => {
         icon: Star,
         label: "평균 점수",
         value: "847",
-        change: "+5.6%",
-        isPositive: true,
         bgColor: "bg-purple-50/80 dark:bg-purple-950/20",
         iconBg: "bg-purple-100 dark:bg-purple-900/30"
       }
     ];
   }
+};
+
+/**
+ * 플랫폼별 KPI 데이터 생성 (하위 호환성을 위한 기존 함수)
+ * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
+ * @returns {Array} KPI 데이터 배열
+ */
+export const get_kpi_data = (selectedPlatform) => {
+  return get_kpi_mock_data(selectedPlatform);
 };
 
 /**
