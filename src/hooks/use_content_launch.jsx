@@ -465,12 +465,15 @@ export const use_content_launch = create(
        * 백엔드 실제 API 구조(/api/dashboard/result_id)에 맞춘 로직
        */
       handle_video_completion: async () => {
+        console.log(`[🎬 SSE 처리] ===== handle_video_completion 함수 시작 =====`);
+        
         // 중복 업데이트 방지
         if (get().sse_update_in_progress) {
-          console.log('[SSE 업데이트] 이미 업데이트 진행 중 - 건너뜀');
+          console.log('[🎬 SSE 처리] ⏸️ 이미 업데이트 진행 중 - 건너뜀');
           return;
         }
 
+        console.log(`[🎬 SSE 처리] 📋 상태 업데이트 시작 - 진행 상태 true로 설정`);
         set({ 
           sse_update_in_progress: true, 
           sse_update_error: null,
@@ -478,35 +481,55 @@ export const use_content_launch = create(
         });
 
         try {
-          console.log(`[SSE 업데이트] 완성된 영상 확인 시작`);
+          console.log(`[🎬 SSE 처리] 🔍 API 호출 준비 - get_latest_completed_video()`);
           
           // API로 가장 최신 완성된 영상 조회 (List<JobResultDto>에서 최신 추출)
           const latestCompletedVideo = await get_latest_completed_video();
+          console.log(`[🎬 SSE 처리] 📊 API 호출 완료, 결과:`, latestCompletedVideo);
           
           if (!latestCompletedVideo) {
-            console.warn(`[SSE 업데이트] 완성된 영상이 없습니다`);
+            console.warn(`[🎬 SSE 처리] ⚠️ 완성된 영상이 없습니다 - 함수 종료`);
             return;
           }
           
-          console.log(`[SSE 업데이트] 최신 완성 영상:`, latestCompletedVideo);
+          console.log(`[🎬 SSE 처리] ✅ 최신 완성 영상 발견:`, {
+            resultId: latestCompletedVideo.resultId,
+            createdAt: latestCompletedVideo.createdAt,
+            fullData: latestCompletedVideo
+          });
           
           // 이미 처리된 영상인지 확인 (중복 처리 방지)
           const { folders } = get();
+          console.log(`[🎬 SSE 처리] 🔍 중복 처리 확인 - 현재 폴더 수: ${folders.length}`);
+          
           const alreadyExists = folders.some(folder => 
             folder.items.some(item => item.resultId === latestCompletedVideo.resultId)
           );
           
           if (alreadyExists) {
-            console.log(`[SSE 업데이트] 이미 처리된 영상입니다: ${latestCompletedVideo.resultId}`);
+            console.log(`[🎬 SSE 처리] ⚠️ 이미 처리된 영상입니다: ${latestCompletedVideo.resultId} - 함수 종료`);
             return;
           }
           
+          console.log(`[🎬 SSE 처리] ✅ 새로운 영상 확인됨 - 처리 계속`);
+          
           // pending_videos에서 PROCESSING 상태인 첫 번째 영상 찾기
           const { pending_videos } = get();
+          console.log(`[🎬 SSE 처리] 🔍 PROCESSING 영상 찾기 - 대기 중인 영상 수: ${pending_videos.length}`);
+          console.log(`[🎬 SSE 처리] 📋 현재 pending_videos:`, pending_videos.map(v => ({
+            temp_id: v.temp_id,
+            status: v.status,
+            title: v.title
+          })));
+          
           const processingVideo = pending_videos.find(video => video.status === 'PROCESSING');
           
           if (processingVideo) {
-            console.log(`[SSE 업데이트] PROCESSING 영상을 완성 영상으로 교체: ${processingVideo.temp_id}`);
+            console.log(`[🎬 SSE 처리] 🎯 PROCESSING 영상 발견! 교체 시작:`, {
+              temp_id: processingVideo.temp_id,
+              title: processingVideo.title,
+              target_resultId: latestCompletedVideo.resultId
+            });
             
             // pending_videos에서 해당 영상 제거
             set((state) => ({
@@ -539,24 +562,54 @@ export const use_content_launch = create(
             // 해당 날짜 폴더에 영상 추가 또는 새 폴더 생성
             get().add_completed_video_to_folder(completedVideo, creationDate);
             
-            console.log(`[SSE 업데이트] 영상 완성 처리 완료: ${processingVideo.temp_id} → ${latestCompletedVideo.resultId}`);
+            console.log(`[🎬 SSE 처리] 🎉 영상 완성 처리 성공!`, {
+              originalTempId: processingVideo.temp_id,
+              newResultId: latestCompletedVideo.resultId,
+              title: processingVideo.title
+            });
           } else {
-            console.warn(`[SSE 업데이트] PROCESSING 상태인 영상을 찾을 수 없습니다 - 전체 폴더 갱신`);
+            console.warn(`[🎬 SSE 처리] ⚠️ PROCESSING 상태인 영상을 찾을 수 없습니다 - 전체 폴더 갱신`);
             
             // PROCESSING 영상이 없는 경우 전체 폴더 목록 갱신
             get().fetch_folders();
           }
           
         } catch (error) {
-          console.error(`[SSE 업데이트] 완성된 영상 처리 실패:`, error);
+          console.error(`[🎬 SSE 처리] ❌ 완성된 영상 처리 실패:`, error);
           
           set({ sse_update_error: error.message });
           
           // 실패 시 전체 폴더 목록 갱신
           get().fetch_folders();
         } finally {
+          console.log(`[🎬 SSE 처리] 🔄 처리 완료 - 진행 상태 false로 설정`);
           set({ sse_update_in_progress: false });
         }
+      },
+
+      /**
+       * 🧪 개발자 도구에서 수동 테스트용 함수
+       */
+      test_handle_video_completion: async () => {
+        console.log(`[🧪 테스트] 수동으로 handle_video_completion 호출`);
+        await get().handle_video_completion();
+      },
+
+      /**
+       * 🧪 현재 스토어 상태 출력 (디버깅용)
+       */
+      debug_store_state: () => {
+        const state = get();
+        console.log(`[🧪 디버그] 현재 스토어 상태:`, {
+          pending_videos_count: state.pending_videos.length,
+          pending_videos: state.pending_videos,
+          folders_count: state.folders.length,
+          folders: state.folders,
+          sse_update_in_progress: state.sse_update_in_progress,
+          sse_update_error: state.sse_update_error,
+          last_sse_update_time: state.last_sse_update_time
+        });
+        return state;
       },
 
       /**
@@ -566,28 +619,81 @@ export const use_content_launch = create(
         const { pending_videos, last_sse_update_time } = get();
         const processingVideos = pending_videos.filter(video => video.status === 'PROCESSING');
         
+        console.log(`[🔄 폴백] 누락된 완성 영상 확인 시작 - PROCESSING 영상 수: ${processingVideos.length}`);
+        
         if (processingVideos.length === 0) {
+          console.log(`[🔄 폴백] PROCESSING 영상이 없어 체크 건너뜀`);
           return; // PROCESSING 영상이 없으면 체크 불필요
         }
         
         try {
-          console.log('[폴백] 누락된 완성 영상 확인 중...');
+          console.log('[🔄 폴백] 📊 완성된 영상 목록 확인 중...');
           
           // 마지막 SSE 업데이트 시간 이후 완성된 영상들 찾기
           const checkAfterTime = last_sse_update_time || 
-            new Date(Date.now() - 5 * 60 * 1000).toISOString(); // 5분 전
+            new Date(Date.now() - 10 * 60 * 1000).toISOString(); // 10분 전
+          
+          console.log(`[🔄 폴백] 검색 기준 시간: ${checkAfterTime}`);
           
           const newCompletedVideos = await get_videos_completed_after(checkAfterTime);
           
           if (newCompletedVideos.length > 0) {
-            console.log(`[폴백] ${newCompletedVideos.length}개의 누락된 완성 영상 발견`);
+            console.log(`[🔄 폴백] 🎉 ${newCompletedVideos.length}개의 누락된 완성 영상 발견!`);
+            console.log(`[🔄 폴백] 발견된 영상들:`, newCompletedVideos);
             
             // 가장 최신 완성 영상으로 업데이트
             await get().handle_video_completion();
+          } else {
+            console.log(`[🔄 폴백] 새로 완성된 영상이 없음`);
           }
           
         } catch (error) {
-          console.error('[폴백] 누락된 완성 영상 확인 실패:', error);
+          console.error('[🔄 폴백] ❌ 누락된 완성 영상 확인 실패:', error);
+        }
+      },
+
+      /**
+       * 🚀 페이지 로드 시 초기 체크 및 주기적 폴백 활성화
+       */
+      initialize_fallback_system: () => {
+        console.log(`[🚀 초기화] 폴백 시스템 활성화 시작`);
+        
+        // 즉시 한 번 체크
+        setTimeout(() => {
+          console.log(`[🚀 초기화] 초기 완성 영상 체크 실행`);
+          get().check_for_missed_completions();
+        }, 2000); // 2초 후 실행 (앱 초기화 완료 대기)
+        
+        // 30초마다 주기적 체크
+        const fallbackInterval = setInterval(() => {
+          const { pending_videos } = get();
+          const processingCount = pending_videos.filter(v => v.status === 'PROCESSING').length;
+          
+          if (processingCount > 0) {
+            console.log(`[⏰ 주기적 폴백] PROCESSING 영상 ${processingCount}개 - 완성 체크 실행`);
+            get().check_for_missed_completions();
+          }
+        }, 30000); // 30초마다
+        
+        // 전역 접근을 위해 window에 등록
+        if (typeof window !== 'undefined') {
+          window.videoCompletionFallbackInterval = fallbackInterval;
+          console.log(`[🚀 초기화] 폴백 시스템 등록 완료 - 30초 주기로 동작`);
+        }
+      },
+
+      /**
+       * 🧪 개발자 도구용 테스트 API 함수
+       */
+      test_api_call: async () => {
+        console.log(`[🧪 API 테스트] get_latest_completed_video() 직접 호출`);
+        try {
+          const result = await get_latest_completed_video();
+          console.log(`[🧪 API 테스트] ✅ 결과:`, result);
+          return result;
+        } catch (error) {
+          console.error(`[🧪 API 테스트] ❌ 실패:`, error);
+          throw error;
         }
       },
 

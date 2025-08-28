@@ -37,10 +37,22 @@ export const useSSEConnection = ({
   })();
 
   const handlePayload = useCallback((raw, eventType = 'video-ready') => {
+    console.log(`[SSE 디버그] handlePayload 호출됨:`, {
+      raw: raw,
+      eventType: eventType,
+      rawLength: raw?.length
+    });
+
     try {
       const data = JSON.parse(raw);
+      console.log(`[SSE 디버그] JSON 파싱 성공:`, data);
+      
       const ts = data.timestamp ?? data.tm;
+      console.log(`[SSE 디버그] 타임스탬프 확인:`, { ts, hasMessage: !!data.message });
+      
       if (data.message && ts) {
+        console.log(`[SSE 디버그] 메시지와 타임스탬프 모두 존재 - 처리 시작`);
+        
         // VIDEO_READY 메시지인 경우 토스트 알림을 위한 특별한 메시지 설정
         const displayMessage = data.message === 'VIDEO_READY' 
           ? '영상이 생성되었습니다!' 
@@ -55,28 +67,50 @@ export const useSSEConnection = ({
           temp_id: data.temp_id,
           data: data, // 전체 데이터도 함께 전달
         });
+        
+        console.log(`[SSE 디버그] 알림 스토어에 데이터 전달 완료`);
 
         // VIDEO_READY 이벤트 시 실시간 UI 업데이트 처리
         if (data.message === 'VIDEO_READY') {
-          console.log('[SSE] VIDEO_READY 이벤트 감지 - 실시간 UI 업데이트:', {
+          console.log('[SSE] 🎯 VIDEO_READY 이벤트 감지! - 실시간 UI 업데이트 시작:', {
             message: data.message,
-            timestamp: data.timestamp
+            timestamp: data.timestamp,
+            fullData: data
           });
           
           // 백엔드에서 전송하는 실제 SSE 데이터 구조: SimpleMsg(message, timestamp)
           // resultId나 video_id는 포함되지 않으므로, 완성된 영상 목록을 조회하여 최신 영상 처리
-          console.log('[SSE] 완성된 영상 목록 조회하여 최신 영상 확인 시작');
+          console.log('[SSE] 🚀 완성된 영상 목록 조회하여 최신 영상 확인 시작');
           
-          const { handle_video_completion } = use_content_launch.getState();
-          handle_video_completion().catch(error => {
-            console.error('[SSE] 영상 완성 처리 실패:', error);
-          });
+          try {
+            const { handle_video_completion } = use_content_launch.getState();
+            console.log('[SSE] 🎬 handle_video_completion 함수 호출 시작');
+            
+            handle_video_completion().catch(error => {
+              console.error('[SSE] ❌ 영상 완성 처리 실패:', error);
+            });
+          } catch (storeError) {
+            console.error('[SSE] ❌ 스토어 접근 실패:', storeError);
+          }
+        } else {
+          console.log(`[SSE 디버그] VIDEO_READY가 아닌 메시지: ${data.message}`);
         }
 
         set_last_event(eventType);
         set_last_data(raw);
+      } else {
+        console.log(`[SSE 디버그] 메시지 또는 타임스탬프 누락:`, {
+          hasMessage: !!data.message,
+          message: data.message,
+          hasTimestamp: !!ts,
+          timestamp: ts
+        });
       }
-    } catch {
+    } catch (parseError) {
+      console.log(`[SSE 디버그] JSON 파싱 실패 (정상 - init/ping):`, {
+        error: parseError.message,
+        raw: raw
+      });
       // init/ping 같은 non-JSON은 무시
     }
   }, [add_sse_notification]);
