@@ -1,55 +1,21 @@
+
 import { motion } from 'framer-motion';
 import { Link, Unlink } from 'lucide-react';
 import GlassCard from '../ui/glass-card.jsx';
 import ConnectYouTubeButton from '../ui/ConnectYouTubeButton.jsx';
-import ConnectRedditButton from '../ui/ConnectRedditButton.jsx'; // Reddit 버튼 import
-import { useState, useEffect } from 'react';
+import ConnectRedditButton from '../ui/ConnectRedditButton.jsx';
+import { usePlatformStore } from '../../stores/platform_store.js';
 import { useYouTubeStore } from '../../stores/youtube_store.js';
-import { useAuthAndChannelInfoInitializer } from '../../hooks/use_auth_and_channel_info.js';
+import { useYouTubeChannelInfo } from '../../hooks/useYouTubeChannelInfo.js';
 
 function ConnectionManagementCard({ platformData }) {
+  const { platforms, setPlatformStatus } = usePlatformStore();
   const { channelId, channelTitle } = useYouTubeStore();
-  const { loading: authLoading } = useAuthAndChannelInfoInitializer();
-  const [platforms, setPlatforms] = useState(() => {
-    const initialPlatforms = platformData.map((platform) => {
-      if (platform.name === 'YouTube') {
-        return {
-          ...platform,
-          status: channelId
-            ? { connected: true, channelTitle: channelTitle }
-            : { connected: false, channelTitle: null },
-        };
-      }
-      return { ...platform, status: null };
-    });
-    return initialPlatforms;
-  });
+  useYouTubeChannelInfo(); // Fetches channel info if Google is connected
 
   const handleStatusChange = (platformName, status) => {
-    setPlatforms((prevPlatforms) =>
-      prevPlatforms.map((p) =>
-        p.name === platformName ? { ...p, status: status } : p
-      )
-    );
+    setPlatformStatus(platformName.toLowerCase(), status);
   };
-
-  useEffect(() => {
-    if (!authLoading) {
-      setPlatforms((prevPlatforms) =>
-        prevPlatforms.map((p) => {
-          if (p.name === 'YouTube') {
-            return {
-              ...p,
-              status: channelId
-                ? { connected: true, channelTitle: channelTitle }
-                : { connected: false, channelTitle: null },
-            };
-          }
-          return p;
-        })
-      );
-    }
-  }, [authLoading, channelId, channelTitle]);
 
   return (
     <motion.div
@@ -69,9 +35,12 @@ function ConnectionManagementCard({ platformData }) {
         </div>
 
         <div className="space-y-4 mb-6">
-          {platforms.map((platform, index) => {
+          {platformData.map((platform, index) => {
             const Icon = platform.icon;
-            const status = platform.status;
+            const platformNameLower = platform.name.toLowerCase();
+            const status = platformNameLower === 'youtube' 
+              ? { connected: platforms.google.connected, channelTitle: channelTitle }
+              : platforms[platformNameLower];
 
             const renderConnectButton = () => {
               switch (platform.name) {

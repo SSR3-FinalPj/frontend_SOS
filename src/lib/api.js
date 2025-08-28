@@ -170,7 +170,7 @@ export async function getYouTubeVideosByChannelId(channelId, { sortBy = 'latest'
   return await res.json();
 }
 
-/* ------------------ Google 및 YouTube 채널 정보 조회 ------------------ */
+/* ------------------ Platform 및 채널 정보 조회 ------------------ */
 export async function getGoogleStatus() {
   try {
     const res = await apiFetch("/api/google/status", { method: "GET" });
@@ -182,6 +182,21 @@ export async function getGoogleStatus() {
   } catch (error) {
     console.error("Error fetching Google status:", error);
     return { connected: false, linked: false };
+  }
+}
+
+export async function getRedditStatus() {
+  try {
+    const res = await apiFetch("/api/reddit/status", { method: "GET" });
+    if (!res.ok) {
+      console.error("Failed to fetch Reddit status:", res.status);
+      return { connected: false };
+    }
+    const data = await res.json();
+    return { connected: data.connected ?? data.linked ?? false };
+  } catch (error) {
+    console.error("Error fetching Reddit status:", error);
+    return { connected: false };
   }
 }
 

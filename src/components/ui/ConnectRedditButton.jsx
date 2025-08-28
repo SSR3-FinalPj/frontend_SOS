@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiFetch as api } from "../../lib/api.js";
 import { Button } from "./button.jsx";
 import RedditIcon from "../../assets/images/button/Reddit_Icon.svg";
+import { getRedditStatus } from "../../lib/api.js";
 
 export default function ConnectRedditButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);
@@ -12,20 +13,8 @@ export default function ConnectRedditButton({ onDone, oauthOrigin }) {
 
   const fetchStatus = async () => {
     try {
-      // TODO: Replace with Reddit API status endpoint
-      const r = await api("/api/reddit/status", { method: "GET" });
-      if (!r.ok) {
-        if (r.status === 403) {
-          setError("로그인이 필요합니다.");
-        }
-        throw new Error(`HTTP ${r.status}`);
-      }
-      const data = await r.json().catch(() => ({}));
-      const mapped = {
-        connected: data.connected ?? data.linked ?? false,
-        // Add any other relevant info from Reddit status
-      }
-      onDone && onDone(mapped);
+      const status = await getRedditStatus();
+      onDone && onDone(status);
     } catch (e) {
       console.error(e);
       setError(e.message);
@@ -38,7 +27,6 @@ export default function ConnectRedditButton({ onDone, oauthOrigin }) {
     setError(null);
     clearTimers();
     try {
-      // TODO: Replace with Reddit API login URL endpoint
       const res = await api("/api/reddit/login-url", { method: "GET" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const url = await res.text();
@@ -70,8 +58,6 @@ export default function ConnectRedditButton({ onDone, oauthOrigin }) {
   };
 
   useEffect(() => {
-    fetchStatus();
-
     const onMsg = (e) => {
       if (oauthOrigin && e.origin !== oauthOrigin) return;
 
