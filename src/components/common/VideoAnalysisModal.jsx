@@ -25,11 +25,6 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
         setTopComments(commentData.top3 || []);
         setAtmosphereSummary(commentData.atmosphere || '분석 결과 없음');
 
-        // 트래픽 소스 요약 API
-        // const trafficResponse = await apiFetch(`/api/youtube/traffic-source-summary/${videoId}`);
-        // if (!trafficResponse.ok) throw new Error(`Failed to fetch traffic data: ${trafficResponse.status}`);
-        // const trafficResult = await trafficResponse.json();
-        // setTrafficData(trafficResult.data || []); // Assuming apiFetch returns { data: [...] }
 
       } catch (err) {
         setError(String(err));
