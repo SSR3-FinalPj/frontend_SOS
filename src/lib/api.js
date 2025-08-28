@@ -52,6 +52,12 @@ export async function apiFetch(input, init = {}) {
   const at = getAccessToken();
   if (at) headers.set('Authorization', `Bearer ${at}`);
 
+  // Automatically set Content-Type for POST/PUT if not already set
+  const method = init.method ? init.method.toUpperCase() : 'GET';
+  if ((method === 'POST' || method === 'PUT') && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   let response = await fetch(input, { ...init, headers, credentials: "include" });
 
   // 401 발생 → 통합 토큰 갱신 함수 호출
@@ -279,5 +285,33 @@ export async function get_traffic_source_summary(videoId) {
   
   const responseData = await res.json();
   
+  return responseData;
+}
+
+/**
+ * 특정 영상의 댓글 분석 결과 조회
+ * @param {string} videoId - 유튜브 영상 ID
+ * @returns {Promise} 댓글 분석 데이터 (top3, atmosphere)
+ */
+export async function getCommentAnalysis(videoId) {
+  if (!videoId) {
+    throw new Error('Video ID가 필요합니다.');
+  }
+
+  const url = '/api/youtube/commentAnalystic';
+
+  const res = await apiFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ videoId }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`댓글 분석 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  const responseData = await res.json();
+
   return responseData;
 }
