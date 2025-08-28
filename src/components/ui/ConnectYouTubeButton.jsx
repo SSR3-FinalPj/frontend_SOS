@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch as api } from "../../lib/api.js";
 import { Button } from "./button.jsx";
-import { useYouTubeStore } from "../../stores/youtube_store.js";
-import { useAuthAndChannelInfoInitializer } from "../../hooks/use_auth_and_channel_info.js";
+import { usePlatformStore } from "../../stores/platform_store.js";
+import { getGoogleStatus } from "../../lib/api.js";
 
 export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);
@@ -10,11 +10,13 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const popupRef = useRef(null);
   const popupTimerRef = useRef(null);
   const timeoutRef = useRef(null);
+  const { setPlatformStatus } = usePlatformStore();
 
-  // ✅ store 값 가져오기
-  const { refetch } = useAuthAndChannelInfoInitializer();
-
-  
+  const fetchStatus = async () => {
+    const status = await getGoogleStatus();
+    setPlatformStatus('google', status);
+    onDone && onDone(status);
+  };
 
   const startOAuth = async () => {
     setLoading(true);
@@ -27,23 +29,19 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
 
       popupRef.current = openOAuthPopup(url, "GoogleOAuth", 520, 700);
 
-      // 팝업 차단 fallback
       if (!popupRef.current) {
         window.location.href = url;
         return;
       }
 
-      // Poll for popup close
       popupTimerRef.current = setInterval(() => {
         const w = popupRef.current;
         if (w && w.closed) {
           clearTimers();
-          // failsafe
           window.postMessage({ type: "google-oauth-complete", ok: true }, "*");
         }
       }, 600);
 
-      // Safety timeout (3분)
       timeoutRef.current = setTimeout(() => {
         clearTimers();
         setLoading(false);
@@ -55,17 +53,14 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
     }
   };
 
-  
-
   useEffect(() => {
     const onMsg = (e) => {
       if (oauthOrigin && e.origin !== oauthOrigin) return;
       if (e.data?.type === "google-oauth-complete") {
         clearTimers();
         setLoading(false);
-        // Add a delay for backend processing
         setTimeout(() => {
-          refetch();
+          fetchStatus();
         }, 1000);
       }
     };
@@ -75,7 +70,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
       window.removeEventListener("message", onMsg);
       clearTimers();
     };
-  }, [oauthOrigin, refetch]);
+  }, [oauthOrigin]);
 
   const clearTimers = () => {
     if (popupTimerRef.current) {
@@ -95,7 +90,6 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         <div className="gsi-material-button-state"></div>
         <div className="gsi-material-button-content-wrapper flex items-center gap-2">
           <div className="gsi-material-button-icon">
-            {/* Google 로고 */}
             <svg
               version="1.1"
               xmlns="http://www.w3.org/2000/svg"
