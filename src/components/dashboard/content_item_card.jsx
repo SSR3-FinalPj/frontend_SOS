@@ -57,15 +57,15 @@ const ContentItemCard = ({
     });
   };
   
-  console.log('ContentItemCard render:', {
-    title: item.title,
-    video_id: item.video_id,
-    temp_id: item.temp_id,
-    id: item.id,
-    final_item_id: item_id,
-    is_uploading,
-    uploading_items
-  });
+  // console.log('ContentItemCard render:', {
+  //   title: item.title,
+  //   video_id: item.video_id,
+  //   temp_id: item.temp_id,
+  //   id: item.id,
+  //   final_item_id: item_id,
+  //   is_uploading,
+  //   uploading_items
+  // });
 
   // 선택 클릭 핸들러
   const handle_select = (e) => {

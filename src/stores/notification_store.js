@@ -6,6 +6,40 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+/**
+ * 날짜를 yy-mm-dd hh:mm 형식으로 포맷팅하는 함수
+ * @param {string|Date} dateString - ISO 문자열 또는 Date 객체
+ * @returns {string} yy-mm-dd hh:mm 형식의 날짜 문자열
+ */
+function format_date_time(dateString) {
+  try {
+    const date = new Date(dateString);
+    
+    // 유효한 날짜인지 확인
+    if (isNaN(date.getTime())) {
+      return new Date().toLocaleDateString('ko-KR', {
+        year: '2-digit',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace(/\./g, '-').replace(' ', ' ');
+    }
+    
+    // yy-mm-dd hh:mm 형식으로 포맷팅
+    const year = String(date.getFullYear()).slice(-2);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  } catch (error) {
+    console.error('날짜 포맷팅 실패:', error);
+    return format_date_time(new Date()); // 현재 시간으로 대체
+  }
+}
+
 export const useNotificationStore = create(
   persist(
     (set, get) => ({
@@ -20,13 +54,16 @@ export const useNotificationStore = create(
   
   // 새로운 알림 추가 (자동 정리 포함)
   add_notification: (notification) => {
+    const timestamp = notification.timestamp || new Date().toISOString();
+    
     const new_notification = {
       id: notification.id || Date.now().toString(),
       type: notification.type || 'general',
       message: notification.message,
       data: notification.data || {},
       read: false,
-      timestamp: notification.timestamp || new Date().toISOString(),
+      timestamp: format_date_time(timestamp), // 포맷팅된 시간으로 저장
+      raw_timestamp: timestamp, // 원본 타임스탬프 보존
     };
     
     set((state) => ({
@@ -102,6 +139,7 @@ export const useNotificationStore = create(
       type: 'video_completed',
       message: `영상 제작이 완료되었습니다: ${video_data.title || '새 영상'}`,
       data: video_data,
+      timestamp: video_data.timestamp || new Date().toISOString(),
     });
   },
   
@@ -111,18 +149,23 @@ export const useNotificationStore = create(
       type: 'video_list_updated',
       message: '영상 리스트가 업데이트되었습니다.',
       data: list_data,
+      timestamp: list_data.timestamp || new Date().toISOString(),
     });
   },
   
   // SSE 전용 알림 추가 메서드 (다른 스토어와 연동)
   add_sse_notification: (sse_data) => {
+    // 서버로부터 받은 timestamp를 yy-mm-dd hh:mm 형식으로 포맷팅
+    const formatted_timestamp = format_date_time(sse_data.timestamp || new Date().toISOString());
+    
     const new_notification = {
       id: Date.now().toString(),
       type: sse_data.type || 'sse_notification',
       message: sse_data.message,
       data: sse_data.data || {},
       read: false,
-      timestamp: sse_data.timestamp || new Date().toISOString(),
+      timestamp: formatted_timestamp, // 포맷팅된 시간으로 저장
+      raw_timestamp: sse_data.timestamp || new Date().toISOString(), // 원본 타임스탬프도 보존
     };
     
     // 일반 알림을 스토어에 추가 (드롭다운용)
@@ -146,18 +189,18 @@ export const useNotificationStore = create(
         // video_id가 있으면 해당 영상을 ready 상태로 전환
         if (sse_data.video_id || sse_data.data?.video_id) {
           const video_id = sse_data.video_id || sse_data.data.video_id;
-          console.log('SSE 이벤트로 영상 상태 전환:', video_id);
+          //console.log('SSE 이벤트로 영상 상태 전환:', video_id);
           use_content_launch.getState().transition_to_ready(video_id);
         }
         
         // temp_id가 있는 경우에도 처리
         if (sse_data.temp_id || sse_data.data?.temp_id) {
           const temp_id = sse_data.temp_id || sse_data.data.temp_id;
-          console.log('SSE 이벤트로 임시 영상 상태 전환:', temp_id);
+          //console.log('SSE 이벤트로 임시 영상 상태 전환:', temp_id);
           use_content_launch.getState().transition_to_ready(temp_id);
         }
         
-        console.log('video-ready 이벤트 처리 완료:', sse_data);
+        //console.log('video-ready 이벤트 처리 완료:', sse_data);
       }).catch(error => {
         console.error('use_content_launch 스토어 연동 실패:', error);
       });
@@ -171,7 +214,7 @@ export const useNotificationStore = create(
     get().add_sse_notification({
       type: 'video_completed_sse',
       message: message,
-      timestamp: timestamp,
+      timestamp: timestamp, // format_date_time은 add_sse_notification에서 처리
       data: { source: 'sse' },
     });
   },
@@ -184,7 +227,14 @@ export const useNotificationStore = create(
 
     set((state) => {
       const cleaned_notifications = state.notifications.filter((notification) => {
-        const notificationDate = new Date(notification.timestamp);
+        // raw_timestamp 또는 timestamp를 사용하여 날짜 비교
+        const dateString = notification.raw_timestamp || notification.timestamp;
+        const notificationDate = new Date(dateString);
+        
+        // 유효하지 않은 날짜는 보존 (삭제하지 않음)
+        if (isNaN(notificationDate.getTime())) {
+          return true;
+        }
         
         // 읽은 알림은 7일 후 삭제
         if (notification.read && notificationDate < sevenDaysAgo) {
@@ -220,7 +270,7 @@ export const useNotificationStore = create(
         if (state) {
           // 복원 후 오래된 알림 정리
           state.cleanup_old_notifications();
-          console.log('알림 데이터 복원 완료:', state.notifications.length, '개');
+          //console.log('알림 데이터 복원 완료:', state.notifications.length, '개');
         }
       },
     }

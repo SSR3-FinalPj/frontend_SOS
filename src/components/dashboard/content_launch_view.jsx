@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, TestTube, Code } from 'lucide-react';
 import ContentFolderCard from './content_folder_card';
 import ContentPreviewModal from './content_preview_modal';
 import ContentPublishModal from './content_publish_modal';
@@ -62,7 +62,6 @@ const ContentLaunchView = ({ dark_mode }) => {
     update_publish_form
   } = use_content_modals();
 
-
   // 컴포넌트 마운트 시 폴더 데이터 로딩
   useEffect(() => {
     fetch_folders();
@@ -99,16 +98,8 @@ const ContentLaunchView = ({ dark_mode }) => {
     // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
     const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
     
-    console.log('게시 시작:', {
-      item: publish_modal.item,
-      final_item_id: item_id,
-      publish_form
-    });
-    
     close_publish_modal();
     await simulate_upload(item_id);
-    
-    console.log('게시 완료:', publish_form);
   };
 
   return (
@@ -172,7 +163,7 @@ const ContentLaunchView = ({ dark_mode }) => {
             
             {/* 통계 정보 */}
             <div className="flex items-center gap-4">
-              <div className={`${
+              <div className={`${ 
               dark_mode 
                 ? 'bg-gray-800 border-gray-700' 
                 : 'bg-white border-gray-200'
@@ -198,23 +189,9 @@ const ContentLaunchView = ({ dark_mode }) => {
                 </div>
               </div>
               
-              {/* 테스트용 버튼들 */}
+              {/* 데이터 초기화 버튼 */}
               {pending_videos.length > 0 && (
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      const first_ready_video = pending_videos.find(video => video.status === 'ready');
-                      if (first_ready_video) {
-                        // 첫 번째 '업로드 대기' 영상을 '완료' 상태로 전환
-                        transition_to_uploaded(first_ready_video.temp_id);
-                      }
-                    }}
-                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded-lg"
-                    size="sm"
-                  >
-                    업로드 완료 처리
-                  </Button>
-                  
                   <Button
                     onClick={() => {
                       // localStorage 데이터 초기화
@@ -231,7 +208,7 @@ const ContentLaunchView = ({ dark_mode }) => {
               )}
             </div>
           </div>
-
+          
           {/* 폴더 카드들 */}
           {folders.map((folder) => (
             <ContentFolderCard
@@ -264,6 +241,7 @@ const ContentLaunchView = ({ dark_mode }) => {
         is_open={publish_modal.open}
         item={publish_modal.item}
         publish_form={publish_form}
+
         dark_mode={dark_mode}
         on_close={close_publish_modal}
         on_publish={handle_final_publish}

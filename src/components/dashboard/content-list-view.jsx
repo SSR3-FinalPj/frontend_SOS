@@ -7,6 +7,9 @@ import { getYouTubeVideosByChannelId } from '../../lib/api.js';
 import { useYouTubeStore } from '../../stores/youtube_store.js';
 import { usePlatformStore } from '../../stores/platform_store.js';
 import { mockContentData } from '../../utils/mock-data.js';
+import { use_content_modals } from '../../hooks/use_content_modals.jsx';
+import ContentPreviewModal from './content_preview_modal.jsx';
+import { usePageStore } from '../../stores/page_store.js';
 
 function ContentListView({
   selectedPlatform,
@@ -25,6 +28,8 @@ function ContentListView({
   const sortDropdownRef = useRef(null);
   const { channelId } = useYouTubeStore();
   const { platforms } = usePlatformStore();
+  const { isDarkMode } = usePageStore();
+  const { preview_modal, open_preview_modal, close_preview_modal } = use_content_modals();
   const authLoading = platforms.google.loading;
   const ITEMS_PER_PAGE = 6;
 
@@ -289,10 +294,11 @@ function ContentListView({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
+                onClick={() => open_preview_modal(content)}
               >
                 <motion.div
                   whileHover={{ y: -8, scale: 1.02 }}
-                  className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col"
+                  className="cursor-pointer backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col"
                 >
                   <div className="aspect-video overflow-hidden bg-gray-200 dark:bg-gray-700">
                     <img
@@ -407,6 +413,12 @@ function ContentListView({
           </div>
         </motion.div>
       )}
+      <ContentPreviewModal
+        is_open={preview_modal.open}
+        item={preview_modal.item}
+        dark_mode={isDarkMode}
+        on_close={close_preview_modal}
+      />
     </div>
   );
 }

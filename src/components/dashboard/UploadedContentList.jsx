@@ -4,7 +4,7 @@ import { Calendar, Eye, Heart, MessageSquare, VideoOff } from 'lucide-react';
 import { getYouTubeChannelId, getYouTubeVideosByChannelId } from '../../lib/api.js';
 import GlassCard from '../ui/glass-card.jsx';
 
-const UploadedContentList = ({ startDate, endDate }) => {
+const UploadedContentList = ({ startDate, endDate, onVideoCardClick }) => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,7 +75,8 @@ const UploadedContentList = ({ startDate, endDate }) => {
         {videos.map((content, index) => (
           <div 
             key={content.videoId || index} // key를 videoId로 수정
-            className="flex items-center gap-4 p-3 bg-white/20 dark:bg-white/5 rounded-xl"
+            className="flex items-center gap-4 p-3 bg-white/20 dark:bg-white/5 rounded-xl cursor-pointer hover:bg-white/30 dark:hover:bg-white/10 transition-colors duration-200"
+            onClick={() => onVideoCardClick(content.videoId, content.title)}
           >
             <div className="flex-shrink-0">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">

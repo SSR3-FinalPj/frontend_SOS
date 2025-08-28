@@ -52,10 +52,16 @@ export async function apiFetch(input, init = {}) {
   const at = getAccessToken();
   if (at) headers.set('Authorization', `Bearer ${at}`);
 
+  // Automatically set Content-Type for POST/PUT if not already set
+  const method = init.method ? init.method.toUpperCase() : 'GET';
+  if ((method === 'POST' || method === 'PUT') && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   let response = await fetch(input, { ...init, headers, credentials: "include" });
 
-  // 401 발생 → 통합 토큰 갱신 함수 호출
-  if (response.status === 401) {
+  // 401 또는 403 발생 → 통합 토큰 갱신 함수 호출
+  if (response.status === 401 || response.status === 403) {
     //console.log('401 detected, attempting token refresh...');
     try {
       const newAccessToken = await refreshAccessToken(); // 갱신된 토큰으로 재시도
@@ -178,7 +184,8 @@ export async function getGoogleStatus() {
       console.error("Failed to fetch Google status:", res.status);
       return { connected: false, linked: false };
     }
-    return await res.json();
+    const data = await res.json();
+    return { ...data, connected: data.connected ?? data.linked ?? false };
   } catch (error) {
     console.error("Error fetching Google status:", error);
     return { connected: false, linked: false };
@@ -278,5 +285,111 @@ export async function get_traffic_source_summary(videoId) {
   
   const responseData = await res.json();
   
+  return responseData;
+}
+
+/* ------------------ 영상 데이터 조회 (SSE 사전 로딩용) ------------------ */
+/**
+ * 완료된 영상의 실제 데이터를 조회하는 함수
+ * SSE video_ready 이벤트 수신 시 사전 로딩에 사용
+ * @returns {Promise} 영상 결과 데이터 (resultId, createdAt 포함)
+ */
+export async function getVideoResultId() {
+  const res = await apiFetch('/api/dashboard/result_id', {
+    method: 'GET'
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`영상 데이터 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}
+
+/* ------------------ 완성된 영상 결과 배열 처리 (SSE 연동용) ------------------ */
+/**
+ * 완성된 영상 결과 목록에서 가장 최신 영상을 찾는 함수
+ * SSE video_ready 이벤트 수신 시 실시간 업데이트에 사용
+ * @returns {Promise} 최신 완성 영상 데이터 또는 null
+ */
+export async function get_latest_completed_video() {
+  try {
+    const videoResults = await getVideoResultId(); // List<JobResultDto> 반환
+    
+    if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
+      console.log('[API] 완성된 영상 결과가 없음');
+      return null;
+    }
+
+    // 가장 최신 결과를 createdAt 기준으로 찾기
+    const latestVideo = videoResults.reduce((latest, current) => {
+      const latestTime = new Date(latest.createdAt).getTime();
+      const currentTime = new Date(current.createdAt).getTime();
+      return currentTime > latestTime ? current : latest;
+    });
+
+    console.log('[API] 가장 최신 완성 영상:', latestVideo);
+    return latestVideo;
+    
+  } catch (error) {
+    console.error('[API] 최신 완성 영상 조회 실패:', error);
+    throw error;
+  }
+}
+
+/**
+ * 특정 시간 이후에 완성된 영상들을 찾는 함수  
+ * @param {string} afterTimestamp - 이 시간 이후의 영상들을 찾음 (ISO string)
+ * @returns {Promise} 해당 시간 이후 완성된 영상 배열
+ */
+export async function get_videos_completed_after(afterTimestamp) {
+  try {
+    const videoResults = await getVideoResultId();
+    
+    if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
+      return [];
+    }
+
+    const afterTime = new Date(afterTimestamp).getTime();
+    const newCompletedVideos = videoResults.filter(video => {
+      const videoTime = new Date(video.createdAt).getTime();
+      return videoTime > afterTime;
+    });
+
+    console.log(`[API] ${afterTimestamp} 이후 완성된 영상 ${newCompletedVideos.length}개 발견`);
+    return newCompletedVideos;
+    
+  } catch (error) {
+    console.error('[API] 시간 기준 영상 조회 실패:', error);
+    throw error;
+  }
+}
+
+/**
+ * 특정 영상의 댓글 분석 결과 조회
+ * @param {string} videoId - 유튜브 영상 ID
+ * @returns {Promise} 댓글 분석 데이터 (top3, atmosphere)
+ */
+export async function getCommentAnalysis(videoId) {
+  if (!videoId) {
+    throw new Error('Video ID가 필요합니다.');
+  }
+
+  const url = '/api/youtube/commentAnalystic';
+
+  const res = await apiFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ videoId }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`댓글 분석 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  const responseData = await res.json();
+
   return responseData;
 }

@@ -1,11 +1,10 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { usePlatformStore } from '../stores/platform_store';
 import { getGoogleStatus, getRedditStatus } from '../lib/api';
 
 export const usePlatformInitializer = () => {
   const { setPlatformStatus } = usePlatformStore();
-  const [loading, setLoading] = useState(true);
 
   const initializePlatforms = useCallback(async () => {
     try {
@@ -17,8 +16,9 @@ export const usePlatformInitializer = () => {
       setPlatformStatus('reddit', redditStatus);
     } catch (error) {
       console.error("Error initializing platforms:", error);
-    } finally {
-      setLoading(false);
+      // On error, still set loading to false to unblock UI
+      setPlatformStatus('google', { connected: false, linked: false, loading: false });
+      setPlatformStatus('reddit', { connected: false, linked: false, loading: false });
     }
   }, [setPlatformStatus]);
 
@@ -26,5 +26,5 @@ export const usePlatformInitializer = () => {
     initializePlatforms();
   }, [initializePlatforms]);
 
-  return { loading };
+  // This hook no longer returns a loading state, as it's now managed in the store.
 };
