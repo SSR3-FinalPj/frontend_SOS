@@ -14,7 +14,7 @@ import {
   get_platform_icon, 
   get_platform_list 
 } from '../../utils/content_launch_utils.jsx';
-import { usePageStore } from '../../stores/page_store';
+import { usePlatformStore } from '../../stores/platform_store.js';
 
 const ContentPublishModal = ({ 
   is_open, 
@@ -28,8 +28,13 @@ const ContentPublishModal = ({
 }) => {
   if (!item) return null;
 
-  const { platformConnectionStatus } = usePageStore();
+  const { platforms } = usePlatformStore();
   const platform_list = get_platform_list();
+
+  const isPlatformConnected = (platform) => {
+    const storeKey = platform === 'youtube' ? 'google' : platform;
+    return platforms[storeKey]?.connected;
+  };
 
   return (
     <Dialog open={is_open} onOpenChange={(open) => !open && on_close()}>
@@ -77,7 +82,7 @@ const ContentPublishModal = ({
               {platform_list.map((platform) => (
                 <Button
                   key={platform}
-                  disabled={!platformConnectionStatus[platform]}
+                  disabled={!isPlatformConnected(platform)}
                   variant={publish_form.platforms.includes(platform) ? "default" : "outline"}
                   onClick={() => on_toggle_platform(platform)}
                   className={`rounded-2xl px-4 py-3 flex items-center gap-2 transition-opacity ${

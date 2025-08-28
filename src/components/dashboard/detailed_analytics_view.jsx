@@ -28,7 +28,7 @@ import UploadedContentList from './UploadedContentList.jsx';
  * @param {Function} props.set_current_view - 뷰 변경 함수
  * @returns {JSX.Element} Detailed Analytics View 컴포넌트
  */
-const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
+const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClick }) => {
   const { isDarkMode, setIsDarkMode } = usePageStore();
   
   const {
@@ -143,7 +143,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
             </div>
 
             {/* Audience Demographics Chart */}
-            <UploadedContentList startDate={date_range?.from} endDate={date_range?.to} />
+            <UploadedContentList startDate={date_range?.from} endDate={date_range?.to} onVideoCardClick={onVideoCardClick} />
             
 
             {/* Bottom Row - Content and Traffic */}

@@ -52,10 +52,16 @@ export async function apiFetch(input, init = {}) {
   const at = getAccessToken();
   if (at) headers.set('Authorization', `Bearer ${at}`);
 
+  // Automatically set Content-Type for POST/PUT if not already set
+  const method = init.method ? init.method.toUpperCase() : 'GET';
+  if ((method === 'POST' || method === 'PUT') && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   let response = await fetch(input, { ...init, headers, credentials: "include" });
 
-  // 401 발생 → 통합 토큰 갱신 함수 호출
-  if (response.status === 401) {
+  // 401 또는 403 발생 → 통합 토큰 갱신 함수 호출
+  if (response.status === 401 || response.status === 403) {
     //console.log('401 detected, attempting token refresh...');
     try {
       const newAccessToken = await refreshAccessToken(); // 갱신된 토큰으로 재시도
@@ -178,7 +184,8 @@ export async function getGoogleStatus() {
       console.error("Failed to fetch Google status:", res.status);
       return { connected: false, linked: false };
     }
-    return await res.json();
+    const data = await res.json();
+    return { ...data, connected: data.connected ?? data.linked ?? false };
   } catch (error) {
     console.error("Error fetching Google status:", error);
     return { connected: false, linked: false };
@@ -357,4 +364,32 @@ export async function get_videos_completed_after(afterTimestamp) {
     console.error('[API] 시간 기준 영상 조회 실패:', error);
     throw error;
   }
+}
+
+/**
+ * 특정 영상의 댓글 분석 결과 조회
+ * @param {string} videoId - 유튜브 영상 ID
+ * @returns {Promise} 댓글 분석 데이터 (top3, atmosphere)
+ */
+export async function getCommentAnalysis(videoId) {
+  if (!videoId) {
+    throw new Error('Video ID가 필요합니다.');
+  }
+
+  const url = '/api/youtube/commentAnalystic';
+
+  const res = await apiFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ videoId }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`댓글 분석 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  const responseData = await res.json();
+
+  return responseData;
 }

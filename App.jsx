@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import { tryRefreshOnBoot } from '@/lib/auth_bootstrap';
 import { usePageStore } from '@/stores/page_store';
+import { usePlatformStore } from '@/stores/platform_store';
 import { usePlatformInitializer } from '@/hooks/usePlatformInitializer';
 import Router from '@/Router'; 
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
@@ -11,7 +12,9 @@ import SSEProvider from '@/components/common/SSEProvider';
 
 export default function App() {
   const { isDarkMode, setIsDarkMode } = usePageStore();
-  const { loading: platformLoading } = usePlatformInitializer();
+  const { platforms } = usePlatformStore();
+  usePlatformInitializer();
+
   const [bootDone, setBootDone] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,7 +61,7 @@ export default function App() {
 
 
 
-  if (!bootDone || platformLoading) {
+  if (!bootDone || platforms.google.loading || platforms.reddit.loading) {
     return <div />; // 로딩 화면
   }
 
