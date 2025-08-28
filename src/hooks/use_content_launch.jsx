@@ -33,6 +33,12 @@ export const use_content_launch = create(
       last_sse_update_time: null,
       sse_update_error: null,
 
+      // 🔄 Enhanced Smart Polling 상태 관리
+      smart_polling_active: false,        // 스마트 폴링 활성화 상태
+      smart_polling_interval: 5000,       // 현재 폴링 주기 (ms) - 5초 시작
+      smart_polling_attempts: 0,          // 연속 실패 횟수
+      smart_polling_timeout_id: null,     // setTimeout ID
+
       /**
        * 폴더 열기/닫기 토글
        * @param {string} date - 날짜 문자열
@@ -194,7 +200,14 @@ export const use_content_launch = create(
           pending_videos: [...state.pending_videos, new_pending_video]
         }));
         
-        // SSE 기반으로 전환됨 - 폴링 불필요
+        // 🚀 새로운 PROCESSING 영상 추가 시 스마트 폴링 자동 시작
+        const { smart_polling_active } = get();
+        if (!smart_polling_active) {
+          console.log(`[🚀 Auto Start] 새 PROCESSING 영상 추가됨 - 스마트 폴링 시작: ${new_pending_video.title}`);
+          get().start_smart_polling();
+        } else {
+          console.log(`[🚀 Auto Start] 스마트 폴링 이미 활성화 중 - 새 영상 추가: ${new_pending_video.title}`);
+        }
       },
       
       /**
@@ -567,6 +580,20 @@ export const use_content_launch = create(
               newResultId: latestCompletedVideo.resultId,
               title: processingVideo.title
             });
+            
+            // 완성 후 남은 PROCESSING 영상이 있는지 확인
+            const remainingProcessingVideos = get().pending_videos.filter(v => v.status === 'PROCESSING');
+            if (remainingProcessingVideos.length === 0) {
+              console.log(`[🎬 SSE 처리] 🏁 모든 영상 완성됨 - 스마트 폴링 중지`);
+              get().stop_smart_polling();
+            } else {
+              console.log(`[🎬 SSE 처리] 🔄 남은 PROCESSING 영상: ${remainingProcessingVideos.length}개 - 스마트 폴링 계속`);
+              // 성공적인 완성 시 폴링 주기 초기화
+              set({ 
+                smart_polling_interval: 5000,
+                smart_polling_attempts: 0 
+              });
+            }
           } else {
             console.warn(`[🎬 SSE 처리] ⚠️ PROCESSING 상태인 영상을 찾을 수 없습니다 - 전체 폴더 갱신`);
             
@@ -613,77 +640,165 @@ export const use_content_launch = create(
       },
 
       /**
-       * 폴백 메커니즘: SSE 이벤트가 누락되었을 때 수동으로 완성된 영상 확인
+       * 🔄 Enhanced Polling: 지능형 exponential backoff 폴링 시스템 
        */
       check_for_missed_completions: async () => {
-        const { pending_videos, last_sse_update_time } = get();
+        const { pending_videos } = get();
         const processingVideos = pending_videos.filter(video => video.status === 'PROCESSING');
         
-        console.log(`[🔄 폴백] 누락된 완성 영상 확인 시작 - PROCESSING 영상 수: ${processingVideos.length}`);
+        console.log(`[🔄 Enhanced Polling] 완성 영상 확인 시작 - PROCESSING 영상 수: ${processingVideos.length}`);
         
         if (processingVideos.length === 0) {
-          console.log(`[🔄 폴백] PROCESSING 영상이 없어 체크 건너뜀`);
-          return; // PROCESSING 영상이 없으면 체크 불필요
+          console.log(`[🔄 Enhanced Polling] PROCESSING 영상이 없어 스마트 폴링 비활성화`);
+          get().stop_smart_polling(); // 스마트 폴링 중지
+          return;
         }
         
         try {
-          console.log('[🔄 폴백] 📊 완성된 영상 목록 확인 중...');
+          console.log('[🔄 Enhanced Polling] 📊 완성된 영상 목록 확인 중...');
           
-          // 마지막 SSE 업데이트 시간 이후 완성된 영상들 찾기
-          const checkAfterTime = last_sse_update_time || 
-            new Date(Date.now() - 10 * 60 * 1000).toISOString(); // 10분 전
+          // 처리 중인 영상의 가장 오래된 시작 시간을 기준으로 확인
+          const oldestProcessingTime = Math.min(...processingVideos.map(v => new Date(v.created_at).getTime()));
+          const checkAfterTime = new Date(oldestProcessingTime - 60000).toISOString(); // 1분 여유
           
-          console.log(`[🔄 폴백] 검색 기준 시간: ${checkAfterTime}`);
+          console.log(`[🔄 Enhanced Polling] 검색 기준 시간: ${checkAfterTime}`);
           
           const newCompletedVideos = await get_videos_completed_after(checkAfterTime);
           
           if (newCompletedVideos.length > 0) {
-            console.log(`[🔄 폴백] 🎉 ${newCompletedVideos.length}개의 누락된 완성 영상 발견!`);
-            console.log(`[🔄 폴백] 발견된 영상들:`, newCompletedVideos);
+            console.log(`[🔄 Enhanced Polling] 🎉 ${newCompletedVideos.length}개의 완성된 영상 발견!`);
+            console.log(`[🔄 Enhanced Polling] 발견된 영상들:`, newCompletedVideos);
             
-            // 가장 최신 완성 영상으로 업데이트
+            // 완성된 영상 즉시 처리
             await get().handle_video_completion();
+            
+            // 성공 시 폴링 주기 초기화
+            set({ 
+              smart_polling_interval: 5000,
+              smart_polling_attempts: 0 
+            });
           } else {
-            console.log(`[🔄 폴백] 새로 완성된 영상이 없음`);
+            console.log(`[🔄 Enhanced Polling] 아직 완성된 영상 없음 - 폴링 주기 증가`);
+            // 실패 시 exponential backoff 적용
+            get().increase_polling_interval();
           }
           
         } catch (error) {
-          console.error('[🔄 폴백] ❌ 누락된 완성 영상 확인 실패:', error);
+          console.error('[🔄 Enhanced Polling] ❌ 완성 영상 확인 실패:', error);
+          get().increase_polling_interval(); // 에러 시에도 주기 증가
         }
       },
 
       /**
-       * 🚀 페이지 로드 시 초기 체크 및 주기적 폴백 활성화
+       * 🚀 Smart Polling 관리: Exponential backoff 적용
+       */
+      start_smart_polling: () => {
+        const state = get();
+        if (state.smart_polling_active) {
+          console.log(`[🚀 Smart Polling] 이미 활성화됨 - 건너뜀`);
+          return;
+        }
+
+        console.log(`[🚀 Smart Polling] 시작 - 초기 주기: ${state.smart_polling_interval}ms`);
+        set({ smart_polling_active: true });
+        
+        get().schedule_next_polling();
+      },
+
+      stop_smart_polling: () => {
+        const { smart_polling_timeout_id } = get();
+        if (smart_polling_timeout_id) {
+          clearTimeout(smart_polling_timeout_id);
+        }
+        
+        set({ 
+          smart_polling_active: false,
+          smart_polling_timeout_id: null,
+          smart_polling_interval: 5000, // 초기값으로 리셋
+          smart_polling_attempts: 0
+        });
+        
+        console.log(`[🚀 Smart Polling] 중지됨`);
+      },
+
+      schedule_next_polling: () => {
+        const { smart_polling_active, smart_polling_interval } = get();
+        if (!smart_polling_active) return;
+
+        const timeout_id = setTimeout(() => {
+          console.log(`[⏰ Smart Polling] 폴링 실행 - 주기: ${smart_polling_interval}ms`);
+          get().check_for_missed_completions();
+          get().schedule_next_polling(); // 다음 폴링 예약
+        }, smart_polling_interval);
+
+        set({ smart_polling_timeout_id: timeout_id });
+      },
+
+      increase_polling_interval: () => {
+        const { smart_polling_interval, smart_polling_attempts } = get();
+        const new_attempts = smart_polling_attempts + 1;
+        
+        // Exponential backoff: 5s → 10s → 15s → 30s → 30s (최대)
+        let new_interval = smart_polling_interval;
+        if (new_attempts <= 1) new_interval = 10000; // 10초
+        else if (new_attempts <= 2) new_interval = 15000; // 15초
+        else new_interval = 30000; // 30초 (최대)
+
+        set({ 
+          smart_polling_interval: new_interval,
+          smart_polling_attempts: new_attempts 
+        });
+
+        console.log(`[⏰ Smart Polling] 폴링 주기 증가: ${new_interval}ms (시도 횟수: ${new_attempts})`);
+      },
+
+      /**
+       * 🚀 페이지 로드 시 초기 체크 및 하이브리드 폴링 시스템 활성화
        */
       initialize_fallback_system: () => {
-        console.log(`[🚀 초기화] 폴백 시스템 활성화 시작`);
+        console.log(`[🚀 초기화] 하이브리드 폴링 시스템 활성화 시작`);
         
-        // 즉시 한 번 체크
+        // 즉시 한 번 체크하고 스마트 폴링 시작
         setTimeout(() => {
-          console.log(`[🚀 초기화] 초기 완성 영상 체크 실행`);
-          get().check_for_missed_completions();
-        }, 2000); // 2초 후 실행 (앱 초기화 완료 대기)
-        
-        // 30초마다 주기적 체크
-        const fallbackInterval = setInterval(() => {
+          console.log(`[🚀 초기화] 초기 완성 영상 체크 및 스마트 폴링 시작`);
           const { pending_videos } = get();
           const processingCount = pending_videos.filter(v => v.status === 'PROCESSING').length;
           
           if (processingCount > 0) {
-            console.log(`[⏰ 주기적 폴백] PROCESSING 영상 ${processingCount}개 - 완성 체크 실행`);
-            get().check_for_missed_completions();
+            console.log(`[🚀 초기화] PROCESSING 영상 ${processingCount}개 감지 - 스마트 폴링 활성화`);
+            get().start_smart_polling(); // 스마트 폴링 시작
+          } else {
+            console.log(`[🚀 초기화] PROCESSING 영상 없음 - 스마트 폴링 비활성화`);
           }
-        }, 30000); // 30초마다
+        }, 2000); // 2초 후 실행 (앱 초기화 완료 대기)
+        
+        // 60초마다 백업 체크 (스마트 폴링과 별개)
+        const backupInterval = setInterval(() => {
+          const { pending_videos, smart_polling_active } = get();
+          const processingCount = pending_videos.filter(v => v.status === 'PROCESSING').length;
+          
+          if (processingCount > 0) {
+            if (!smart_polling_active) {
+              console.log(`[🔧 백업 체크] 스마트 폴링이 비활성화되어 있지만 PROCESSING 영상 발견 - 재시작`);
+              get().start_smart_polling();
+            } else {
+              console.log(`[🔧 백업 체크] 스마트 폴링 정상 동작 중 (${processingCount}개 처리 중)`);
+            }
+          } else if (smart_polling_active) {
+            console.log(`[🔧 백업 체크] PROCESSING 영상 없음 - 스마트 폴링 중지`);
+            get().stop_smart_polling();
+          }
+        }, 60000); // 1분마다
         
         // 전역 접근을 위해 window에 등록
         if (typeof window !== 'undefined') {
-          window.videoCompletionFallbackInterval = fallbackInterval;
-          console.log(`[🚀 초기화] 폴백 시스템 등록 완료 - 30초 주기로 동작`);
+          window.videoCompletionBackupInterval = backupInterval;
+          console.log(`[🚀 초기화] 하이브리드 폴링 시스템 등록 완료`);
         }
       },
 
       /**
-       * 🧪 개발자 도구용 테스트 API 함수
+       * 🧪 개발자 도구: Enhanced Diagnostic Functions
        */
       test_api_call: async () => {
         console.log(`[🧪 API 테스트] get_latest_completed_video() 직접 호출`);
@@ -694,6 +809,190 @@ export const use_content_launch = create(
         } catch (error) {
           console.error(`[🧪 API 테스트] ❌ 실패:`, error);
           throw error;
+        }
+      },
+
+      /**
+       * 🔍 스마트 폴링 상태 디버깅
+       */
+      debug_smart_polling: () => {
+        const state = get();
+        console.log(`[🔍 Smart Polling Debug] ===== 스마트 폴링 상태 =====`, {
+          smart_polling_active: state.smart_polling_active,
+          smart_polling_interval: state.smart_polling_interval,
+          smart_polling_attempts: state.smart_polling_attempts,
+          smart_polling_timeout_id: state.smart_polling_timeout_id,
+          processing_videos_count: state.pending_videos.filter(v => v.status === 'PROCESSING').length,
+          processing_videos: state.pending_videos.filter(v => v.status === 'PROCESSING').map(v => ({
+            temp_id: v.temp_id,
+            title: v.title,
+            created_at: v.created_at
+          }))
+        });
+        return state;
+      },
+
+      /**
+       * 🎯 수동으로 스마트 폴링 강제 실행
+       */
+      force_smart_polling_check: async () => {
+        console.log(`[🎯 Force Check] 스마트 폴링 강제 실행`);
+        await get().check_for_missed_completions();
+      },
+
+      /**
+       * 🔄 스마트 폴링 수동 토글
+       */
+      toggle_smart_polling: () => {
+        const { smart_polling_active } = get();
+        if (smart_polling_active) {
+          console.log(`[🔄 Toggle] 스마트 폴링 중지`);
+          get().stop_smart_polling();
+        } else {
+          console.log(`[🔄 Toggle] 스마트 폴링 시작`);
+          get().start_smart_polling();
+        }
+      },
+
+      /**
+       * 📊 종합 진단 보고서
+       */
+      generate_diagnostic_report: () => {
+        const state = get();
+        const processingVideos = state.pending_videos.filter(v => v.status === 'PROCESSING');
+        
+        const report = {
+          timestamp: new Date().toISOString(),
+          system_status: {
+            smart_polling_active: state.smart_polling_active,
+            smart_polling_interval: state.smart_polling_interval,
+            smart_polling_attempts: state.smart_polling_attempts,
+            sse_update_in_progress: state.sse_update_in_progress,
+            sse_update_error: state.sse_update_error,
+            last_sse_update_time: state.last_sse_update_time
+          },
+          video_counts: {
+            total_pending_videos: state.pending_videos.length,
+            processing_videos: processingVideos.length,
+            total_folders: state.folders.length,
+            total_folder_items: state.folders.reduce((sum, folder) => sum + folder.item_count, 0)
+          },
+          processing_videos: processingVideos.map(v => ({
+            temp_id: v.temp_id,
+            title: v.title,
+            created_at: v.created_at,
+            duration_minutes: Math.round((new Date() - new Date(v.created_at)) / (1000 * 60))
+          })),
+          recommendations: []
+        };
+
+        // 자동 추천 생성
+        if (processingVideos.length > 0 && !state.smart_polling_active) {
+          report.recommendations.push("⚠️ PROCESSING 영상이 있지만 스마트 폴링이 비활성화되어 있습니다. window.toggleSmartPolling() 실행을 권장합니다.");
+        }
+        
+        if (state.smart_polling_attempts > 5) {
+          report.recommendations.push("🔄 폴링 시도 횟수가 많습니다. 백엔드 상태를 확인해보세요.");
+        }
+        
+        if (processingVideos.length === 0 && state.smart_polling_active) {
+          report.recommendations.push("✅ PROCESSING 영상이 없으므로 스마트 폴링이 자동으로 중지될 예정입니다.");
+        }
+
+        console.log(`[📊 Diagnostic Report] ===== 종합 진단 보고서 =====`, report);
+        return report;
+      },
+
+      /**
+       * 🧪 가짜 VIDEO_READY 이벤트 시뮬레이션 (테스트용)
+       */
+      simulate_video_ready_event: () => {
+        console.log(`[🧪 Simulation] 가짜 VIDEO_READY 이벤트 시뮬레이션 시작`);
+        try {
+          get().handle_video_completion();
+          console.log(`[🧪 Simulation] ✅ 시뮬레이션 완료`);
+        } catch (error) {
+          console.error(`[🧪 Simulation] ❌ 시뮬레이션 실패:`, error);
+        }
+      },
+
+      /**
+       * 🔄 수동 새로고침 - 사용자용 백업 옵션
+       */
+      manual_refresh_videos: async () => {
+        console.log(`[🔄 Manual Refresh] 수동 새로고침 시작`);
+        
+        try {
+          // 1. 스마트 폴링 강제 체크
+          await get().force_smart_polling_check();
+          
+          // 2. 전체 폴더 목록 갱신 (백업용)
+          await get().fetch_folders();
+          
+          console.log(`[🔄 Manual Refresh] ✅ 수동 새로고침 완료`);
+          
+          // 사용자에게 피드백 (선택적)
+          return {
+            success: true,
+            message: "영상 목록이 새로고침되었습니다.",
+            timestamp: new Date().toISOString()
+          };
+          
+        } catch (error) {
+          console.error(`[🔄 Manual Refresh] ❌ 수동 새로고침 실패:`, error);
+          
+          return {
+            success: false,
+            message: "새로고침 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+            error: error.message,
+            timestamp: new Date().toISOString()
+          };
+        }
+      },
+
+      /**
+       * ⚡ 응급 복구 - 모든 시스템 재시작
+       */
+      emergency_recovery: async () => {
+        console.log(`[⚡ Emergency] 응급 복구 시작 - 모든 시스템 재시작`);
+        
+        try {
+          // 1. 스마트 폴링 중지
+          get().stop_smart_polling();
+          
+          // 2. 잠깐 대기
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // 3. 전체 폴더 재로드
+          await get().fetch_folders();
+          
+          // 4. PROCESSING 영상 체크 및 스마트 폴링 재시작
+          const { pending_videos } = get();
+          const processingCount = pending_videos.filter(v => v.status === 'PROCESSING').length;
+          
+          if (processingCount > 0) {
+            console.log(`[⚡ Emergency] PROCESSING 영상 ${processingCount}개 발견 - 스마트 폴링 재시작`);
+            get().start_smart_polling();
+          }
+          
+          console.log(`[⚡ Emergency] ✅ 응급 복구 완료`);
+          
+          return {
+            success: true,
+            message: "시스템이 성공적으로 복구되었습니다.",
+            processing_videos_found: processingCount,
+            timestamp: new Date().toISOString()
+          };
+          
+        } catch (error) {
+          console.error(`[⚡ Emergency] ❌ 응급 복구 실패:`, error);
+          
+          return {
+            success: false,
+            message: "응급 복구 중 오류가 발생했습니다.",
+            error: error.message,
+            timestamp: new Date().toISOString()
+          };
         }
       },
 
