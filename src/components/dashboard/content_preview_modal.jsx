@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } fr
 import { Button } from '../ui/button';
 import { Image, Upload, X as XIcon, AlertCircle, Clock } from 'lucide-react';
 import { get_content_type_label } from '../../utils/content_launch_utils.jsx';
-import { apiFetch, getVideoResultId } from '../../lib/api.js';
+import { apiFetch } from '../../lib/api.js';
 
 /**
  * 비디오/이미지 콘텐츠를 렌더링하는 컴포넌트
@@ -215,89 +215,30 @@ const ContentPreviewModal = ({
   item, 
   dark_mode, 
   on_close, 
-  on_publish,
-  testMode = false  // 테스트 모드 활성화 prop
+  on_publish
 }) => {
   // 동적 비디오 URL 관리를 위한 상태
   const [videoUrl, setVideoUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  // 테스트 모드를 위한 동적 item 상태
-  const [dynamicItem, setDynamicItem] = useState(null);
 
   /**
    * 모달이 열리고 item이 존재할 때 백엔드에서 Presigned URL을 가져오는 useEffect
-   * testMode가 활성화되면 완성된 영상 목록에서 최신 영상을 자동으로 선택
    */
   useEffect(() => {
     const fetchVideoUrl = async () => {
-      // 모달이 닫혀있으면 실행하지 않음
-      if (!is_open) {
+      // 모달이 닫혀있거나 item이 없으면 실행하지 않음
+      if (!is_open || !item) {
         return;
-      }
-
-      let targetItem = item;
-      let resultId = null;
-
-      // 🧪 테스트 모드: item이 없거나 resultId가 없을 때 동적으로 완성된 영상 조회
-      if (testMode && (!item || !(item.video_id || item.id))) {
-        try {
-          console.log('🧪 [테스트 모드] 완성된 영상 목록 조회 중...');
-          const videoResults = await getVideoResultId();
-          
-          if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
-            throw new Error('완성된 영상이 없습니다');
-          }
-
-          // 가장 최신 영상 선택 (첫 번째 항목)
-          const latestVideo = videoResults[0];
-          if (!latestVideo?.resultId) {
-            throw new Error('완성된 영상에서 resultId를 찾을 수 없습니다');
-          }
-
-          // 테스트용 item 객체 생성
-          targetItem = {
-            id: latestVideo.resultId,
-            video_id: latestVideo.resultId,
-            resultId: latestVideo.resultId,
-            title: `테스트 영상 ${latestVideo.resultId}`,
-            description: `동적으로 로드된 테스트 영상입니다. ResultId: ${latestVideo.resultId}`,
-            type: 'video',
-            status: 'ready',
-            createdAt: latestVideo.createdAt,
-            created_at: latestVideo.createdAt
-          };
-          
-          setDynamicItem(targetItem);
-          resultId = latestVideo.resultId;
-          
-          console.log('🧪 [테스트 모드] 선택된 영상:', {
-            resultId: latestVideo.resultId,
-            createdAt: latestVideo.createdAt,
-            title: targetItem.title
-          });
-          
-        } catch (err) {
-          console.error('🧪 [테스트 모드] 완성된 영상 조회 실패:', err);
-          setError(`테스트 모드 초기화 실패: ${err.message}`);
-          return;
-        }
-      } else {
-        // 일반 모드: 기존 로직
-        if (!targetItem) {
-          return;
-        }
-        
-        // resultId 확인 (video_id 또는 id 사용)
-        resultId = targetItem.video_id || targetItem.id;
       }
 
       // 비디오 타입이 아니면 API 호출하지 않음
-      if (targetItem.type !== 'video') {
+      if (item.type !== 'video') {
         return;
       }
 
+      // resultId 확인 (video_id 또는 id 사용)
+      const resultId = item.video_id || item.id;
       if (!resultId) {
         setError('비디오 ID를 찾을 수 없습니다.');
         return;
@@ -335,21 +276,14 @@ const ContentPreviewModal = ({
     };
 
     fetchVideoUrl();
-  }, [item, is_open, testMode]); // testMode 의존성 추가
+  }, [item, is_open]);
 
-  // ▼▼▼▼▼ 테스트 모드 및 null 체크 ▼▼▼▼▼
-  if (!is_open) {
+  // ▼▼▼▼▼ 더 안전한 null 체크 ▼▼▼▼▼
+  if (!is_open || !item) {
+    // 모달이 닫혀있거나 item이 null이면 렌더링하지 않음
     return null;
   }
-  
-  // 테스트 모드에서는 dynamicItem 사용, 일반 모드에서는 기존 item 사용
-  const currentItem = testMode && dynamicItem ? dynamicItem : item;
-  
-  if (!testMode && !item) {
-    // 일반 모드에서 item이 없으면 렌더링하지 않음
-    return null;
-  }
-  // ▲▲▲▲▲ 테스트 모드 및 null 체크 ▲▲▲▲▲
+  // ▲▲▲▲▲ 더 안전한 null 체크 ▲▲▲▲▲
 
   const handle_publish_click = () => {
     on_close();

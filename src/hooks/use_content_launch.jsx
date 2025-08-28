@@ -66,8 +66,6 @@ export const use_content_launch = create(
        * @param {string} item_id - 아이템 ID
        */
       finish_upload: (item_id) => {
-        console.log(`업로드 완료 처리 시작: ${item_id}`);
-        
         // 업로드 중 목록에서 제거
         set((state) => ({
           uploading_items: state.uploading_items.filter(id => id !== item_id)
@@ -85,8 +83,6 @@ export const use_content_launch = create(
         
         // 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
-        
-        console.log(`업로드 완료 처리 완료: ${item_id} → uploaded`);
       },
 
       /**
@@ -143,7 +139,7 @@ export const use_content_launch = create(
           
           set({ folders: merged_folders });
         } catch (error) {
-          console.error('폴더 목록 가져오기 실패:', error);
+          // console.error('폴더 목록 가져오기 실패:', error);
         }
       },
       
@@ -208,10 +204,7 @@ export const use_content_launch = create(
         // 🚀 새로운 PROCESSING 영상 추가 시 스마트 폴링 자동 시작
         const { smart_polling_active } = get();
         if (!smart_polling_active) {
-          console.log(`[🚀 Auto Start] 새 PROCESSING 영상 추가됨 - 스마트 폴링 시작: ${new_pending_video.title}`);
           get().start_smart_polling();
-        } else {
-          console.log(`[🚀 Auto Start] 스마트 폴링 이미 활성화 중 - 새 영상 추가: ${new_pending_video.title}`);
         }
       },
       
@@ -287,8 +280,6 @@ export const use_content_launch = create(
        * @param {string} temp_id - 임시 ID
        */
       transition_to_ready: async (temp_id) => {
-        console.log(`영상 ${temp_id}를 업로드 대기 상태로 전환 중...`);
-        
         // 1. 상태 업데이트
         set((state) => ({
           pending_videos: state.pending_videos.map(video => 
@@ -302,15 +293,11 @@ export const use_content_launch = create(
         try {
           await get().notify_completion_and_request_next(temp_id);
         } catch (error) {
-          console.error('백엔드 완료 알림 실패:', error);
+          // console.error('백엔드 완료 알림 실패:', error);
         }
         
         // 3. 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
-        
-        // SSE 기반으로 전환됨 - 폴링 불필요
-        
-        console.log(`영상 ${temp_id} 상태 변경 완료: ready`);
       },
       
       /**
@@ -318,8 +305,6 @@ export const use_content_launch = create(
        * @param {string} temp_id - 임시 ID
        */
       transition_to_uploaded: (temp_id) => {
-        console.log(`영상 ${temp_id}를 완료 상태로 전환 중...`);
-        
         set((state) => ({
           pending_videos: state.pending_videos.map(video => 
             video.temp_id === temp_id 
@@ -330,10 +315,6 @@ export const use_content_launch = create(
         
         // 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
-        
-        // SSE 기반으로 전환됨 - 폴링 불필요
-        
-        console.log(`영상 ${temp_id} 상태 변경 완료: uploaded`);
       },
       
       /**
@@ -347,8 +328,6 @@ export const use_content_launch = create(
           if (!completed_video) {
             throw new Error(`완료된 영상을 찾을 수 없음: ${temp_id}`);
           }
-          
-          console.log('백엔드에 완료 알림 전송 중...', completed_video);
           
           // 백엔드에 완료 알림
           const completion_response = await apiFetch('/api/videos/complete', {
@@ -371,19 +350,17 @@ export const use_content_launch = create(
           // 마지막 요청 정보 가져오기
           const last_request_data = localStorage.getItem('last_video_request');
           if (!last_request_data) {
-            console.log('마지막 요청 정보가 없어 자동 생성 건너뜀');
             return;
           }
           
           const last_request = JSON.parse(last_request_data);
-          console.log('마지막 요청 정보로 다음 영상 자동 생성 중...', last_request);
           
           // 다음 영상 자동 생성 (모의 로직 - 실제로는 백엔드에서 처리)
           await get().auto_generate_next_video(last_request);
           
         } catch (error) {
-          console.error('완료 알림 및 자동 생성 실패:', error);
-          console.log('백엔드 미연동으로 인한 오류입니다. 모의 자동 생성 로직을 실행합니다.');
+          // console.error('완료 알림 및 자동 생성 실패:', error);
+          // console.log('백엔드 미연동으로 인한 오류입니다. 모의 자동 생성 로직을 실행합니다.');
           // 백엔드 연동 실패 시 모의 로직으로 대체
           await get().mock_auto_generate_next_video();
         }
@@ -412,10 +389,9 @@ export const use_content_launch = create(
           }
           
           const result = await create_response.json();
-          console.log('백엔드에서 자동 영상 생성 시작:', result);
           
         } catch (error) {
-          console.error('자동 영상 생성 실패:', error);
+          // console.error('자동 영상 생성 실패:', error);
           throw error;
         }
       },
@@ -427,12 +403,10 @@ export const use_content_launch = create(
         try {
           const last_request_data = localStorage.getItem('last_video_request');
           if (!last_request_data) {
-            console.log('마지막 요청 정보가 없어 모의 자동 생성 건너뜀');
             return;
           }
           
           const last_request = JSON.parse(last_request_data);
-          console.log('모의 자동 영상 생성 시작...', last_request);
           
           // 1초 후 새 영상 추가 (백엔드 처리 시뮬레이션)
           setTimeout(() => {
@@ -447,11 +421,10 @@ export const use_content_launch = create(
             };
             
             get().add_pending_video(video_data, creation_date);
-            console.log('모의 자동 영상 생성 완료');
           }, 1000);
           
         } catch (error) {
-          console.error('모의 자동 영상 생성 실패:', error);
+          // console.error('모의 자동 영상 생성 실패:', error);
         }
       },
       
@@ -461,8 +434,6 @@ export const use_content_launch = create(
        * @param {string} video_id - 백엔드에서 제공한 실제 영상 ID
        */
       update_video_id: (temp_id, video_id) => {
-        console.log(`영상 ID 업데이트 시작: ${temp_id} → ${video_id}`);
-        
         set((state) => ({
           pending_videos: state.pending_videos.map(video => 
             video.temp_id === temp_id 
@@ -473,8 +444,6 @@ export const use_content_launch = create(
         
         // 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
-        
-        console.log(`영상 ID 업데이트 완료: ${temp_id} → ${video_id}`);
       },
 
 
@@ -483,11 +452,8 @@ export const use_content_launch = create(
        * 백엔드 실제 API 구조(/api/dashboard/result_id)에 맞춘 로직
        */
       handle_video_completion: async () => {
-        console.log(`[🎬 SSE 처리] ===== handle_video_completion 함수 시작 =====`);
-        
         // 중복 업데이트 방지
         if (get().sse_update_in_progress) {
-          console.log('[🎬 SSE 처리] ⏸️ 이미 업데이트 진행 중 - 건너뜀');
           return;
         }
 
@@ -498,7 +464,6 @@ export const use_content_launch = create(
           const completedVideos = await getVideoResultId();
           
           if (!completedVideos || completedVideos.length === 0) {
-            console.warn(`[🎬 SSE 처리] ⚠️ 완성된 영상이 없습니다 - 함수 종료`);
             return;
           }
           
@@ -509,7 +474,6 @@ export const use_content_launch = create(
           const newCompletedVideos = completedVideos.filter(cv => !allKnownResultIds.has(cv.resultId));
 
           if (newCompletedVideos.length === 0) {
-            console.log(`[🎬 SSE 처리] ✅ 새로운 완성 영상 없음 - 종료`);
             return;
           }
 
@@ -519,7 +483,6 @@ export const use_content_launch = create(
             .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
           if (processingVideos.length === 0) {
-            console.warn(`[🎬 SSE 처리] ⚠️ PROCESSING 상태인 영상을 찾을 수 없지만, 새로운 완성 영상이 있습니다.`, newCompletedVideos);
             return;
           }
 
@@ -531,15 +494,11 @@ export const use_content_launch = create(
             new Date(a.createdAt) - new Date(b.createdAt)
           );
           
-          console.log(`[🎬 SSE 처리] 📝 매칭 시작: 처리중 ${processingVideos.length}개, 완성됨 ${sortedCompletedVideos.length}개`);
-
           for (const completedVideoData of sortedCompletedVideos) {
             // 가장 오래된 '처리 중' 영상과 매칭
             const matchingProcessingVideo = processingVideos.shift();
             
             if (!matchingProcessingVideo) {
-              console.warn(`[🎬 SSE 처리] ⚠️ 완성된 영상(${completedVideoData.resultId})이 있지만 매칭할 '처리 중' 영상이 없습니다.`);
-              
               // 매칭 실패한 완성 영상을 새 아이템으로 생성하여 추가
               const orphanedVideo = {
                 temp_id: `completed-${completedVideoData.resultId}-${Date.now()}`,
@@ -555,16 +514,8 @@ export const use_content_launch = create(
               };
               
               updates.set(orphanedVideo.temp_id, orphanedVideo);
-              console.log(`[🎬 SSE 처리] 🆕 매칭 실패한 영상을 새 아이템으로 추가: ${completedVideoData.resultId}`);
               continue; // break 대신 continue로 다른 완성 영상도 처리
             }
-
-            console.log(`[🎬 SSE 처리] 🎯 영상 매칭 성공!`, {
-              processingTitle: matchingProcessingVideo.title,
-              processingCreatedAt: matchingProcessingVideo.created_at,
-              completedId: completedVideoData.resultId,
-              completedCreatedAt: completedVideoData.createdAt
-            });
 
             const updatedVideo = {
               ...matchingProcessingVideo,
@@ -594,8 +545,6 @@ export const use_content_launch = create(
                 }
               }
               
-              console.log(`[🎬 SSE 처리] 📊 상태 업데이트: 기존 ${updatedExistingVideos.length}개, 새 영상 ${newOrphanedVideos.length}개`);
-              
               return {
                 pending_videos: [...updatedExistingVideos, ...newOrphanedVideos]
               };
@@ -607,12 +556,11 @@ export const use_content_launch = create(
 
           // 7. 남은 '처리 중' 영상이 없으면 폴링을 중지합니다.
           if (get().pending_videos.filter(v => v.status === 'PROCESSING').length === 0) {
-            console.log(`[🎬 SSE 처리] 🏁 모든 영상 완성됨 - 스마트 폴링 중지`);
             get().stop_smart_polling();
           }
           
         } catch (error) {
-          console.error(`[🎬 SSE 처리] ❌ 완성된 영상 처리 실패:`, error);
+          // console.error(`[🎬 SSE 처리] ❌ 완성된 영상 처리 실패:`, error);
           set({ sse_update_error: error.message });
         } finally {
           set({ sse_update_in_progress: false });
@@ -651,17 +599,12 @@ export const use_content_launch = create(
         const { pending_videos } = get();
         const processingVideos = pending_videos.filter(video => video.status === 'PROCESSING');
         
-        console.log(`[🔄 Enhanced Polling] 완성 영상 확인 시작 - PROCESSING 영상 수: ${processingVideos.length}`);
-        
         if (processingVideos.length === 0) {
-          console.log(`[🔄 Enhanced Polling] PROCESSING 영상이 없어 스마트 폴링 비활성화`);
           get().stop_smart_polling(); // 스마트 폴링 중지
           return;
         }
         
         try {
-          console.log('[🔄 Enhanced Polling] 📊 완성된 영상 목록 확인 중...');
-
           // 1. 유효한 타임스탬프만 안전하게 추출합니다.
           const validTimestamps = processingVideos
             .map(v => new Date(v.created_at).getTime())
@@ -669,7 +612,6 @@ export const use_content_launch = create(
 
           // 2. 처리할 영상이 있는지 확인합니다.
           if (validTimestamps.length === 0) {
-            console.log('[🔄 Enhanced Polling] 유효한 타임스탬프를 가진 PROCESSING 영상이 없어 확인을 건너뜁니다.');
             // 처리할 영상이 없으므로, 불필요하게 폴링 주기를 늘리지 않고 여기서 실행을 중단합니다.
             return;
           }
@@ -678,14 +620,9 @@ export const use_content_launch = create(
           const oldestProcessingTime = Math.min(...validTimestamps);
           const checkAfterTime = new Date(oldestProcessingTime - 60000).toISOString(); // 1분 여유
 
-          console.log(`[🔄 Enhanced Polling] 검색 기준 시간: ${checkAfterTime}`);
-
           const newCompletedVideos = await get_videos_completed_after(checkAfterTime);
 
           if (newCompletedVideos.length > 0) {
-            console.log(`[🔄 Enhanced Polling] 🎉 ${newCompletedVideos.length}개의 완성된 영상 발견!`);
-            console.log(`[🔄 Enhanced Polling] 발견된 영상들:`, newCompletedVideos);
-
             // 완성된 영상 즉시 처리
             await get().handle_video_completion();
 
@@ -695,12 +632,11 @@ export const use_content_launch = create(
               smart_polling_attempts: 0
             });
           } else {
-            console.log(`[🔄 Enhanced Polling] 아직 완성된 영상 없음 - 폴링 주기 증가`);
             // 실패 시 exponential backoff 적용
             get().increase_polling_interval();
           }
         } catch (error) {
-          console.error('[🔄 Enhanced Polling] ❌ 완성 영상 확인 실패:', error);
+          // console.error('[🔄 Enhanced Polling] ❌ 완성 영상 확인 실패:', error);
           get().increase_polling_interval(); // 에러 시에도 주기 증가
         }
       },
@@ -711,11 +647,9 @@ export const use_content_launch = create(
       start_smart_polling: () => {
         const state = get();
         if (state.smart_polling_active) {
-          console.log(`[🚀 Smart Polling] 이미 활성화됨 - 건너뜀`);
           return;
         }
 
-        console.log(`[🚀 Smart Polling] 시작 - 초기 주기: ${state.smart_polling_interval}ms`);
         set({ smart_polling_active: true });
         
         get().schedule_next_polling();
@@ -733,8 +667,6 @@ export const use_content_launch = create(
           smart_polling_interval: 5000, // 초기값으로 리셋
           smart_polling_attempts: 0
         });
-        
-        console.log(`[🚀 Smart Polling] 중지됨`);
       },
 
       schedule_next_polling: () => {
@@ -742,7 +674,6 @@ export const use_content_launch = create(
         if (!smart_polling_active) return;
 
         const timeout_id = setTimeout(() => {
-          console.log(`[⏰ Smart Polling] 폴링 실행 - 주기: ${smart_polling_interval}ms`);
           get().check_for_missed_completions();
           get().schedule_next_polling(); // 다음 폴링 예약
         }, smart_polling_interval);
@@ -764,27 +695,19 @@ export const use_content_launch = create(
           smart_polling_interval: new_interval,
           smart_polling_attempts: new_attempts 
         });
-
-        console.log(`[⏰ Smart Polling] 폴링 주기 증가: ${new_interval}ms (시도 횟수: ${new_attempts})`);
       },
 
       /**
        * 🚀 페이지 로드 시 초기 체크 및 하이브리드 폴링 시스템 활성화
        */
       initialize_fallback_system: () => {
-        console.log(`[🚀 초기화] 하이브리드 폴링 시스템 활성화 시작`);
-        
         // 즉시 한 번 체크하고 스마트 폴링 시작
         setTimeout(() => {
-          console.log(`[🚀 초기화] 초기 완성 영상 체크 및 스마트 폴링 시작`);
           const { pending_videos } = get();
           const processingCount = pending_videos.filter(v => v.status === 'PROCESSING').length;
           
           if (processingCount > 0) {
-            console.log(`[🚀 초기화] PROCESSING 영상 ${processingCount}개 감지 - 스마트 폴링 활성화`);
             get().start_smart_polling(); // 스마트 폴링 시작
-          } else {
-            console.log(`[🚀 초기화] PROCESSING 영상 없음 - 스마트 폴링 비활성화`);
           }
         }, 2000); // 2초 후 실행 (앱 초기화 완료 대기)
         
@@ -795,13 +718,9 @@ export const use_content_launch = create(
           
           if (processingCount > 0) {
             if (!smart_polling_active) {
-              console.log(`[🔧 백업 체크] 스마트 폴링이 비활성화되어 있지만 PROCESSING 영상 발견 - 재시작`);
               get().start_smart_polling();
-            } else {
-              console.log(`[🔧 백업 체크] 스마트 폴링 정상 동작 중 (${processingCount}개 처리 중)`);
             }
           } else if (smart_polling_active) {
-            console.log(`[🔧 백업 체크] PROCESSING 영상 없음 - 스마트 폴링 중지`);
             get().stop_smart_polling();
           }
         }, 60000); // 1분마다
@@ -809,7 +728,6 @@ export const use_content_launch = create(
         // 전역 접근을 위해 window에 등록
         if (typeof window !== 'undefined') {
           window.videoCompletionBackupInterval = backupInterval;
-          console.log(`[🚀 초기화] 하이브리드 폴링 시스템 등록 완료`);
         }
       },
 
@@ -992,16 +910,12 @@ export const use_content_launch = create(
        * 🔄 수동 새로고침 - 사용자용 백업 옵션
        */
       manual_refresh_videos: async () => {
-        console.log(`[🔄 Manual Refresh] 수동 새로고침 시작`);
-        
         try {
           // 1. 스마트 폴링 강제 체크
           await get().force_smart_polling_check();
           
           // 2. 전체 폴더 목록 갱신 (백업용)
           await get().fetch_folders();
-          
-          console.log(`[🔄 Manual Refresh] ✅ 수동 새로고침 완료`);
           
           // 사용자에게 피드백 (선택적)
           return {
@@ -1011,7 +925,7 @@ export const use_content_launch = create(
           };
           
         } catch (error) {
-          console.error(`[🔄 Manual Refresh] ❌ 수동 새로고침 실패:`, error);
+          // console.error(`[🔄 Manual Refresh] ❌ 수동 새로고침 실패:`, error);
           
           return {
             success: false,
@@ -1026,8 +940,6 @@ export const use_content_launch = create(
        * ⚡ 응급 복구 - 모든 시스템 재시작
        */
       emergency_recovery: async () => {
-        console.log(`[⚡ Emergency] 응급 복구 시작 - 모든 시스템 재시작`);
-        
         try {
           // 1. 스마트 폴링 중지
           get().stop_smart_polling();
@@ -1043,11 +955,8 @@ export const use_content_launch = create(
           const processingCount = pending_videos.filter(v => v.status === 'PROCESSING').length;
           
           if (processingCount > 0) {
-            console.log(`[⚡ Emergency] PROCESSING 영상 ${processingCount}개 발견 - 스마트 폴링 재시작`);
             get().start_smart_polling();
           }
-          
-          console.log(`[⚡ Emergency] ✅ 응급 복구 완료`);
           
           return {
             success: true,
@@ -1057,7 +966,7 @@ export const use_content_launch = create(
           };
           
         } catch (error) {
-          console.error(`[⚡ Emergency] ❌ 응급 복구 실패:`, error);
+          // console.error(`[⚡ Emergency] ❌ 응급 복구 실패:`, error);
           
           return {
             success: false,
@@ -1124,14 +1033,12 @@ export const use_content_launch = create(
             selected_video_id: null,
             selected_video_data: null
           });
-          console.log(`영상 선택 해제: ${video_id}`);
         } else {
           // 새로운 영상 선택
           set({
             selected_video_id: video_id,
             selected_video_data: video
           });
-          console.log(`영상 선택: ${video_id}`, video);
         }
       },
 
@@ -1143,7 +1050,6 @@ export const use_content_launch = create(
           selected_video_id: null,
           selected_video_data: null
         });
-        console.log('영상 선택 해제됨');
       },
 
     }),
