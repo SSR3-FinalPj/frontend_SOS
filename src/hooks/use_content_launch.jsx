@@ -656,33 +656,44 @@ export const use_content_launch = create(
         
         try {
           console.log('[🔄 Enhanced Polling] 📊 완성된 영상 목록 확인 중...');
-          
-          // 처리 중인 영상의 가장 오래된 시작 시간을 기준으로 확인
-          const oldestProcessingTime = Math.min(...processingVideos.map(v => new Date(v.created_at).getTime()));
+
+          // 1. 유효한 타임스탬프만 안전하게 추출합니다.
+          const validTimestamps = processingVideos
+            .map(v => new Date(v.created_at).getTime())
+            .filter(t => !isNaN(t)); // NaN 값을 제거하여 유효한 시간만 남깁니다.
+
+          // 2. 처리할 영상이 있는지 확인합니다.
+          if (validTimestamps.length === 0) {
+            console.log('[🔄 Enhanced Polling] 유효한 타임스탬프를 가진 PROCESSING 영상이 없어 확인을 건너뜁니다.');
+            // 처리할 영상이 없으므로, 불필요하게 폴링 주기를 늘리지 않고 여기서 실행을 중단합니다.
+            return;
+          }
+
+          // 3. 유효한 타임스탬프 중에서 가장 오래된 시간을 찾습니다.
+          const oldestProcessingTime = Math.min(...validTimestamps);
           const checkAfterTime = new Date(oldestProcessingTime - 60000).toISOString(); // 1분 여유
-          
+
           console.log(`[🔄 Enhanced Polling] 검색 기준 시간: ${checkAfterTime}`);
-          
+
           const newCompletedVideos = await get_videos_completed_after(checkAfterTime);
-          
+
           if (newCompletedVideos.length > 0) {
             console.log(`[🔄 Enhanced Polling] 🎉 ${newCompletedVideos.length}개의 완성된 영상 발견!`);
             console.log(`[🔄 Enhanced Polling] 발견된 영상들:`, newCompletedVideos);
-            
+
             // 완성된 영상 즉시 처리
             await get().handle_video_completion();
-            
+
             // 성공 시 폴링 주기 초기화
-            set({ 
+            set({
               smart_polling_interval: 5000,
-              smart_polling_attempts: 0 
+              smart_polling_attempts: 0
             });
           } else {
             console.log(`[🔄 Enhanced Polling] 아직 완성된 영상 없음 - 폴링 주기 증가`);
             // 실패 시 exponential backoff 적용
             get().increase_polling_interval();
           }
-          
         } catch (error) {
           console.error('[🔄 Enhanced Polling] ❌ 완성 영상 확인 실패:', error);
           get().increase_polling_interval(); // 에러 시에도 주기 증가
