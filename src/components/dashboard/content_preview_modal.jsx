@@ -16,9 +16,9 @@ const ContentPreviewModal = ({
     return null;
   }
 
-  const handleAnalyzeClick = () => {
-    on_close();
+  const handleViewAnalytics = () => {
     navigate(`/analytics?videoId=${item.videoId}`);
+    on_close();
   };
 
   const formatDate = (dateStr) => {
@@ -67,7 +67,7 @@ const ContentPreviewModal = ({
           </div>
           <div className="flex flex-col gap-3 w-40 flex-shrink-0">
             <Button 
-              onClick={handleAnalyzeClick}
+              onClick={handleViewAnalytics}
               className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
             >
               <BarChart2 className="h-5 w-5 mr-2" />
@@ -75,6 +75,7 @@ const ContentPreviewModal = ({
             </Button>
           </div>
         </div>
+        
       </DialogContent>
     </Dialog>
   );
