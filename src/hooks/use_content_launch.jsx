@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch, get_latest_completed_video, get_videos_completed_after } from '../lib/api.js';
+import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '../lib/api.js';
 
 /**
  * 콘텐츠 론칭 관련 상태와 액션을 제공하는 Zustand 스토어
@@ -491,130 +491,88 @@ export const use_content_launch = create(
           return;
         }
 
-        console.log(`[🎬 SSE 처리] 📋 상태 업데이트 시작 - 진행 상태 true로 설정`);
-        set({ 
-          sse_update_in_progress: true, 
-          sse_update_error: null,
-          last_sse_update_time: new Date().toISOString()
-        });
+        set({ sse_update_in_progress: true, sse_update_error: null });
 
         try {
-          console.log(`[🎬 SSE 처리] 🔍 API 호출 준비 - get_latest_completed_video()`);
+          // 1. API를 통해 모든 '완성된' 영상 목록을 가져옵니다.
+          const completedVideos = await getVideoResultId();
           
-          // API로 가장 최신 완성된 영상 조회 (List<JobResultDto>에서 최신 추출)
-          const latestCompletedVideo = await get_latest_completed_video();
-          console.log(`[🎬 SSE 처리] 📊 API 호출 완료, 결과:`, latestCompletedVideo);
-          
-          if (!latestCompletedVideo) {
+          if (!completedVideos || completedVideos.length === 0) {
             console.warn(`[🎬 SSE 처리] ⚠️ 완성된 영상이 없습니다 - 함수 종료`);
             return;
           }
           
-          console.log(`[🎬 SSE 처리] ✅ 최신 완성 영상 발견:`, {
-            resultId: latestCompletedVideo.resultId,
-            createdAt: latestCompletedVideo.createdAt,
-            fullData: latestCompletedVideo
-          });
+          const { pending_videos } = get();
           
-          // 이미 처리된 영상인지 확인 (중복 처리 방지)
-          const { folders } = get();
-          console.log(`[🎬 SSE 처리] 🔍 중복 처리 확인 - 현재 폴더 수: ${folders.length}`);
-          
-          const alreadyExists = folders.some(folder => 
-            folder.items.some(item => item.resultId === latestCompletedVideo.resultId)
-          );
-          
-          if (alreadyExists) {
-            console.log(`[🎬 SSE 처리] ⚠️ 이미 처리된 영상입니다: ${latestCompletedVideo.resultId} - 함수 종료`);
+          // 2. 아직 UI에 반영되지 않은 '완성된' 영상만 필터링합니다.
+          const allKnownResultIds = new Set(pending_videos.map(v => v.resultId).filter(Boolean));
+          const newCompletedVideos = completedVideos.filter(cv => !allKnownResultIds.has(cv.resultId));
+
+          if (newCompletedVideos.length === 0) {
+            console.log(`[🎬 SSE 처리] ✅ 새로운 완성 영상 없음 - 종료`);
             return;
           }
-          
-          console.log(`[🎬 SSE 처리] ✅ 새로운 영상 확인됨 - 처리 계속`);
-          
-          // pending_videos에서 PROCESSING 상태인 첫 번째 영상 찾기
-          const { pending_videos } = get();
-          console.log(`[🎬 SSE 처리] 🔍 PROCESSING 영상 찾기 - 대기 중인 영상 수: ${pending_videos.length}`);
-          console.log(`[🎬 SSE 처리] 📋 현재 pending_videos:`, pending_videos.map(v => ({
-            temp_id: v.temp_id,
-            status: v.status,
-            title: v.title
-          })));
-          
-          const processingVideo = pending_videos.find(video => video.status === 'PROCESSING');
-          
-          if (processingVideo) {
-            console.log(`[🎬 SSE 처리] 🎯 PROCESSING 영상 발견! 교체 시작:`, {
-              temp_id: processingVideo.temp_id,
-              title: processingVideo.title,
-              target_resultId: latestCompletedVideo.resultId
-            });
+
+          // 3. '처리 중'인 영상 목록을 가져옵니다 (오래된 순서 보장).
+          const processingVideos = pending_videos
+            .filter(v => v.status === 'PROCESSING')
+            .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+          if (processingVideos.length === 0) {
+            console.warn(`[🎬 SSE 처리] ⚠️ PROCESSING 상태인 영상을 찾을 수 없지만, 새로운 완성 영상이 있습니다.`, newCompletedVideos);
+            return;
+          }
+
+          // 4. '처리 중' 영상과 '새로 완성된' 영상을 매칭하고 업데이트할 내용을 준비합니다.
+          const updates = new Map(); // temp_id -> updatedVideoObject
+
+          for (const completedVideoData of newCompletedVideos) {
+            const matchingProcessingVideo = processingVideos.shift();
             
-            // pending_videos에서 해당 영상 제거
-            set((state) => ({
-              pending_videos: state.pending_videos.filter(video => video.temp_id !== processingVideo.temp_id)
+            if (!matchingProcessingVideo) {
+              console.warn(`[🎬 SSE 처리] ⚠️ 완성된 영상(${completedVideoData.resultId})이 있지만 매칭할 '처리 중' 영상이 없습니다.`);
+              break;
+            }
+
+            console.log(`[🎬 SSE 처리] 🎯 영상 매칭 성공!`, {
+              processingTitle: matchingProcessingVideo.title,
+              completedId: completedVideoData.resultId
+            });
+
+            const updatedVideo = {
+              ...matchingProcessingVideo,
+              id: completedVideoData.resultId,
+              video_id: completedVideoData.resultId,
+              resultId: completedVideoData.resultId,
+              status: 'completed',
+              createdAt: completedVideoData.createdAt,
+              completion_time: new Date().toISOString(),
+            };
+            updates.set(matchingProcessingVideo.temp_id, updatedVideo);
+          }
+
+          // 5. 상태를 한번에 업데이트합니다.
+          if (updates.size > 0) {
+            set(state => ({
+              pending_videos: state.pending_videos.map(video => 
+                updates.has(video.temp_id) ? updates.get(video.temp_id) : video
+              )
             }));
             
-            // JobResultDto 구조를 UI 표시용 객체로 변환
-            const creationDate = latestCompletedVideo.createdAt ? 
-              new Date(latestCompletedVideo.createdAt).toISOString().split('T')[0] : 
-              new Date().toISOString().split('T')[0];
-            
-            // 백엔드 JobResultDto 기반 완성된 영상 객체 생성
-            const completedVideo = {
-              id: latestCompletedVideo.resultId,
-              video_id: latestCompletedVideo.resultId,
-              resultId: latestCompletedVideo.resultId,
-              title: processingVideo.title || '완성된 AI 영상', // 원래 제목 유지
-              status: 'completed',
-              creation_date: creationDate,
-              createdAt: latestCompletedVideo.createdAt,
-              completion_time: new Date().toISOString(),
-              original_temp_id: processingVideo.temp_id,
-              // 원래 영상 정보 유지
-              location_name: processingVideo.location_name,
-              location_id: processingVideo.location_id,
-              image_url: processingVideo.image_url,
-              user_request: processingVideo.user_request
-            };
-            
-            // 해당 날짜 폴더에 영상 추가 또는 새 폴더 생성
-            get().add_completed_video_to_folder(completedVideo, creationDate);
-            
-            console.log(`[🎬 SSE 처리] 🎉 영상 완성 처리 성공!`, {
-              originalTempId: processingVideo.temp_id,
-              newResultId: latestCompletedVideo.resultId,
-              title: processingVideo.title
-            });
-            
-            // 완성 후 남은 PROCESSING 영상이 있는지 확인
-            const remainingProcessingVideos = get().pending_videos.filter(v => v.status === 'PROCESSING');
-            if (remainingProcessingVideos.length === 0) {
-              console.log(`[🎬 SSE 처리] 🏁 모든 영상 완성됨 - 스마트 폴링 중지`);
-              get().stop_smart_polling();
-            } else {
-              console.log(`[🎬 SSE 처리] 🔄 남은 PROCESSING 영상: ${remainingProcessingVideos.length}개 - 스마트 폴링 계속`);
-              // 성공적인 완성 시 폴링 주기 초기화
-              set({ 
-                smart_polling_interval: 5000,
-                smart_polling_attempts: 0 
-              });
-            }
-          } else {
-            console.warn(`[🎬 SSE 처리] ⚠️ PROCESSING 상태인 영상을 찾을 수 없습니다 - 전체 폴더 갱신`);
-            
-            // PROCESSING 영상이 없는 경우 전체 폴더 목록 갱신
+            // 6. UI를 갱신합니다.
             get().fetch_folders();
+          }
+
+          // 7. 남은 '처리 중' 영상이 없으면 폴링을 중지합니다.
+          if (get().pending_videos.filter(v => v.status === 'PROCESSING').length === 0) {
+            console.log(`[🎬 SSE 처리] 🏁 모든 영상 완성됨 - 스마트 폴링 중지`);
+            get().stop_smart_polling();
           }
           
         } catch (error) {
           console.error(`[🎬 SSE 처리] ❌ 완성된 영상 처리 실패:`, error);
-          
           set({ sse_update_error: error.message });
-          
-          // 실패 시 전체 폴더 목록 갱신
-          get().fetch_folders();
         } finally {
-          console.log(`[🎬 SSE 처리] 🔄 처리 완료 - 진행 상태 false로 설정`);
           set({ sse_update_in_progress: false });
         }
       },
