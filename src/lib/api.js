@@ -299,3 +299,27 @@ export async function getVideoResultId() {
 
   return await res.json();
 }
+
+/* ------------------ 개별 영상 상세 데이터 조회 (SSE 연동용) ------------------ */
+/**
+ * resultId를 사용하여 특정 영상의 상세 데이터를 조회하는 함수
+ * SSE video_ready 이벤트 수신 시 실시간 업데이트에 사용
+ * @param {string|number} videoId - 영상 ID (resultId)
+ * @returns {Promise} 영상 상세 데이터
+ */
+export async function get_video_details_by_id(videoId) {
+  if (!videoId) {
+    throw new Error('Video ID가 필요합니다.');
+  }
+
+  const res = await apiFetch(`/api/dashboard/videos/${videoId}`, {
+    method: 'GET'
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`영상 상세 데이터 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}

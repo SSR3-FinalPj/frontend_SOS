@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch, getVideoResultId } from '../lib/api.js';
+import { apiFetch, get_video_details_by_id } from '../lib/api.js';
 
 /**
  * 콘텐츠 론칭 관련 상태와 액션을 제공하는 Zustand 스토어
@@ -28,14 +28,7 @@ export const use_content_launch = create(
       selected_video_id: null,
       selected_video_data: null,
 
-      // 폴링 상태 관리
-      is_polling: false,
-      polling_interval_id: null,
-      last_polling_time: null,
-      polling_error_count: 0,
-      
-      // API 호출 중복 방지
-      active_api_calls: new Set(), // 현재 진행 중인 API 호출 추적
+      // 폴링 관련 상태 제거됨 - SSE 기반으로 전환
 
       /**
        * 폴더 열기/닫기 토글
@@ -198,8 +191,7 @@ export const use_content_launch = create(
           pending_videos: [...state.pending_videos, new_pending_video]
         }));
         
-        // 새로운 PROCESSING 영상 추가 시 폴링 자동 시작
-        setTimeout(() => get().manage_polling(), 100);
+        // SSE 기반으로 전환됨 - 폴링 불필요
       },
       
       /**
@@ -267,9 +259,6 @@ export const use_content_launch = create(
         
         // 5. 폴더 목록 재갱신
         get().fetch_folders();
-        
-        // 6. 폴링 상태 자동 관리
-        setTimeout(() => get().manage_polling(), 100);
       },
       
       /**
@@ -298,8 +287,7 @@ export const use_content_launch = create(
         // 3. 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
         
-        // 4. 상태 변경 후 폴링 자동 관리
-        setTimeout(() => get().manage_polling(), 100);
+        // SSE 기반으로 전환됨 - 폴링 불필요
         
         console.log(`영상 ${temp_id} 상태 변경 완료: ready`);
       },
@@ -322,8 +310,7 @@ export const use_content_launch = create(
         // 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
         
-        // 상태 변경 후 폴링 자동 관리
-        setTimeout(() => get().manage_polling(), 100);
+        // SSE 기반으로 전환됨 - 폴링 불필요
         
         console.log(`영상 ${temp_id} 상태 변경 완료: uploaded`);
       },
@@ -469,86 +456,88 @@ export const use_content_launch = create(
         console.log(`영상 ID 업데이트 완료: ${temp_id} → ${video_id}`);
       },
 
-      /**
-       * 폴링 상태 초기화 (앱 시작 또는 리셋 시 사용)
-       */
-      reset_polling: () => {
-        const { polling_interval_id } = get();
-        
-        if (polling_interval_id) {
-          clearInterval(polling_interval_id);
-        }
-        
-        set({
-          is_polling: false,
-          polling_interval_id: null,
-          last_polling_time: null,
-          polling_error_count: 0
-        });
-        
-        console.log('[폴링] 상태 초기화 완료');
-      },
 
       /**
-       * SSE video_ready 이벤트 수신 시 영상 데이터를 사전 로딩하는 함수
-       * @param {string} temp_id - 임시 ID (또는 식별자)
+       * SSE video_ready 이벤트 수신 시 실시간으로 완성된 영상 데이터를 업데이트하는 함수
+       * @param {string|number} videoId - resultId (완성된 영상의 실제 ID)
        */
-      fetch_and_update_video_by_id: async (temp_id) => {
+      fetch_video_and_update_store: async (videoId) => {
         try {
-          console.log(`[사전로딩] 영상 데이터 조회 시작: ${temp_id}`);
+          console.log(`[SSE 업데이트] 영상 상세 데이터 조회 시작: ${videoId}`);
           
-          // API를 통해 실제 영상 데이터 조회
-          const videoData = await getVideoResultId();
-          console.log(`[사전로딩] API 응답:`, videoData);
+          // API로 완성된 영상의 상세 데이터 조회
+          const videoDetails = await get_video_details_by_id(videoId);
+          console.log(`[SSE 업데이트] API 응답:`, videoDetails);
           
-          if (videoData?.resultId && videoData?.createdAt) {
-            // pending_videos에서 해당 영상 찾아서 업데이트
+          // pending_videos에서 PROCESSING 상태인 첫 번째 영상 찾기
+          const { pending_videos } = get();
+          const targetVideo = pending_videos.find(video => video.status === 'PROCESSING');
+          
+          if (targetVideo) {
+            console.log(`[SSE 업데이트] 대상 영상 발견: ${targetVideo.temp_id}`);
+            
+            // pending_videos에서 해당 영상 제거
             set((state) => ({
-              pending_videos: state.pending_videos.map(video => {
-                // temp_id 또는 video_id가 일치하는 영상 찾기
-                const video_id = video.temp_id || video.video_id;
-                if (video_id === temp_id) {
-                  return {
-                    ...video,
-                    resultId: videoData.resultId,
-                    createdAt: videoData.createdAt,
-                    status: 'completed',
-                    video_id: videoData.resultId, // 실제 영상 ID로 업데이트
-                    completion_time: new Date().toISOString()
-                  };
-                }
-                return video;
-              })
+              pending_videos: state.pending_videos.filter(video => video.temp_id !== targetVideo.temp_id)
             }));
             
-            // 폴더 목록 갱신
-            get().fetch_folders();
+            // folders에 완성된 영상 데이터 추가
+            const creationDate = videoDetails.creation_date || new Date().toISOString().split('T')[0];
             
-            // 상태 변경 후 폴링 자동 관리
-            setTimeout(() => get().manage_polling(), 100);
+            // 새로운 완성된 영상 객체 생성
+            const completedVideo = {
+              ...videoDetails,
+              id: videoId,
+              video_id: videoId,
+              status: 'completed',
+              completion_time: new Date().toISOString(),
+              original_temp_id: targetVideo.temp_id // 원래 temp_id 보존
+            };
             
-            console.log(`[사전로딩] 영상 데이터 업데이트 완료: ${temp_id} → ${videoData.resultId}`);
+            // 해당 날짜 폴더에 영상 추가 또는 새 폴더 생성
+            const { folders } = get();
+            const existingFolderIndex = folders.findIndex(folder => folder.date === creationDate);
+            
+            if (existingFolderIndex !== -1) {
+              // 기존 폴더에 추가
+              const updatedFolders = [...folders];
+              updatedFolders[existingFolderIndex] = {
+                ...updatedFolders[existingFolderIndex],
+                items: [...updatedFolders[existingFolderIndex].items, completedVideo],
+                item_count: updatedFolders[existingFolderIndex].item_count + 1
+              };
+              set({ folders: updatedFolders });
+            } else {
+              // 새 폴더 생성
+              const newFolder = {
+                date: creationDate,
+                display_date: new Date(creationDate).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }),
+                item_count: 1,
+                items: [completedVideo],
+                is_pending: false
+              };
+              set((state) => ({
+                folders: [newFolder, ...state.folders]
+              }));
+            }
+            
+            console.log(`[SSE 업데이트] 영상 데이터 업데이트 완료: ${targetVideo.temp_id} → ${videoId}`);
           } else {
-            console.warn(`[사전로딩] 응답 데이터가 부족합니다:`, videoData);
+            console.warn(`[SSE 업데이트] PROCESSING 상태인 영상을 찾을 수 없습니다`);
+            
+            // 전체 폴더 목록 갱신으로 대체
+            get().fetch_folders();
           }
           
         } catch (error) {
-          console.error(`[사전로딩] 영상 데이터 조회 실패: ${temp_id}`, error);
+          console.error(`[SSE 업데이트] 영상 데이터 조회 실패: ${videoId}`, error);
           
-          // 실패 시에도 상태는 업데이트 (사용자 경험을 위해)
-          set((state) => ({
-            pending_videos: state.pending_videos.map(video => {
-              const video_id = video.temp_id || video.video_id;
-              return video_id === temp_id 
-                ? { ...video, status: 'ready', error: error.message }
-                : video;
-            })
-          }));
-          
+          // 실패 시 전체 폴더 목록 갱신
           get().fetch_folders();
-          
-          // 실패 시에도 폴링 상태 관리
-          setTimeout(() => get().manage_polling(), 100);
         }
       },
 
@@ -588,159 +577,11 @@ export const use_content_launch = create(
         console.log('영상 선택 해제됨');
       },
 
-      /**
-       * PROCESSING 상태 영상이 있는지 확인하는 함수
-       * @returns {boolean} PROCESSING 영상 존재 여부
-       */
-      has_processing_videos: () => {
-        const { pending_videos } = get();
-        return pending_videos.some(video => video.status === 'PROCESSING');
-      },
-
-      /**
-       * 폴링을 통한 영상 완료 체크 함수
-       */
-      check_video_completion: async () => {
-        const api_call_key = 'check_video_completion';
-        
-        // 중복 API 호출 방지
-        if (get().active_api_calls.has(api_call_key)) {
-          console.log('[폴링] API 호출 중복 방지 - 이미 진행 중');
-          return;
-        }
-        
-        try {
-          // API 호출 시작 표시
-          set((state) => {
-            const new_active_calls = new Set(state.active_api_calls);
-            new_active_calls.add(api_call_key);
-            return { active_api_calls: new_active_calls };
-          });
-          
-          console.log('[폴링] 영상 완료 상태 체크 중...');
-          
-          // 현재 PROCESSING 상태인 영상들 찾기
-          const { pending_videos } = get();
-          const processing_videos = pending_videos.filter(video => video.status === 'PROCESSING');
-          
-          if (processing_videos.length === 0) {
-            console.log('[폴링] PROCESSING 영상이 없어 폴링 중지');
-            get().stop_polling();
-            return;
-          }
-
-          // API 호출로 완료된 영상 확인
-          const video_data = await getVideoResultId();
-          console.log('[폴링] API 응답:', video_data);
-          
-          if (video_data?.resultId && video_data?.createdAt) {
-            // 첫 번째 PROCESSING 영상을 완료 상태로 업데이트
-            const first_processing_video = processing_videos[0];
-            console.log(`[폴링] 영상 완료 감지: ${first_processing_video.temp_id} → ${video_data.resultId}`);
-            
-            // 즉시 사전 로딩 실행
-            await get().fetch_and_update_video_by_id(first_processing_video.temp_id);
-            
-            // 에러 카운트 초기화
-            set({ polling_error_count: 0 });
-            
-          } else {
-            console.log('[폴링] 아직 완료되지 않음');
-          }
-          
-          set({ last_polling_time: new Date().toISOString() });
-          
-        } catch (error) {
-          console.error('[폴링] 영상 완료 체크 실패:', error);
-          
-          // 에러 카운트 증가
-          const { polling_error_count } = get();
-          const new_error_count = polling_error_count + 1;
-          
-          set({ polling_error_count: new_error_count });
-          
-          // 연속 5회 실패 시 폴링 중지
-          if (new_error_count >= 5) {
-            console.error('[폴링] 연속 5회 실패로 폴링 중지');
-            get().stop_polling();
-          }
-        } finally {
-          // API 호출 완료 표시
-          set((state) => {
-            const new_active_calls = new Set(state.active_api_calls);
-            new_active_calls.delete(api_call_key);
-            return { active_api_calls: new_active_calls };
-          });
-        }
-      },
-
-      /**
-       * 스마트 폴링 시작 함수
-       */
-      start_polling: () => {
-        const { is_polling, has_processing_videos } = get();
-        
-        // 이미 폴링 중이거나 PROCESSING 영상이 없으면 시작하지 않음
-        if (is_polling || !has_processing_videos()) {
-          console.log('[폴링] 시작 조건 미충족:', { is_polling, has_processing: has_processing_videos() });
-          return;
-        }
-
-        console.log('[폴링] 스마트 폴링 시작 (5초 간격)');
-        
-        // 즉시 한 번 체크
-        get().check_video_completion();
-        
-        // 5초마다 반복 실행
-        const interval_id = setInterval(() => {
-          get().check_video_completion();
-        }, 5000);
-        
-        set({
-          is_polling: true,
-          polling_interval_id: interval_id,
-          polling_error_count: 0,
-          last_polling_time: new Date().toISOString()
-        });
-      },
-
-      /**
-       * 폴링 중지 함수
-       */
-      stop_polling: () => {
-        const { polling_interval_id } = get();
-        
-        if (polling_interval_id) {
-          clearInterval(polling_interval_id);
-          console.log('[폴링] 폴링 중지됨');
-        }
-        
-        set({
-          is_polling: false,
-          polling_interval_id: null
-        });
-      },
-
-      /**
-       * 폴링 상태 자동 관리 (PROCESSING 영상 상태에 따라)
-       */
-      manage_polling: () => {
-        const { has_processing_videos, is_polling } = get();
-        
-        if (has_processing_videos() && !is_polling) {
-          console.log('[폴링] PROCESSING 영상 감지 → 폴링 시작');
-          get().start_polling();
-        } else if (!has_processing_videos() && is_polling) {
-          console.log('[폴링] PROCESSING 영상 없음 → 폴링 중지');
-          get().stop_polling();
-        }
-      }
     }),
     {
       name: 'content-launch-storage',
       partialize: (state) => ({ 
-        pending_videos: state.pending_videos 
-        // 폴링 상태는 localStorage에 저장하지 않음 (휘발성 상태)
+        pending_videos: state.pending_videos
       })
     }
   )
