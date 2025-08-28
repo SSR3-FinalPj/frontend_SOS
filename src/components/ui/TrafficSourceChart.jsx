@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
-import { PieChart as PieChartIcon } from 'lucide-react';
+import { PieChart as PieChartIcon, Loader2 } from 'lucide-react';
 import GlassCard from './glass-card.jsx';
 import { traffic_source_data } from '../../utils/dashboard_constants.js';
+import { useAnalyticsStore } from '../../stores/analytics_store.js';
 import { cn } from '../../utils/ui_utils.js';
 
 // 프로젝트 표준 그라데이션 색상 시스템 (5개 카테고리용)
@@ -17,11 +17,11 @@ const GRADIENT_COLORS = [
 ];
 
 // 커스텀 툴팁 컴포넌트
-const CustomTooltip = ({ active, payload }) => {
-  if (active && payload && payload.length) {
+const CustomTooltip = ({ active, payload, data }) => {
+  if (active && payload && payload.length && data) {
     // 실제 총합 계산
-    const total = traffic_source_data.reduce((sum, item) => sum + item.value, 0);
-    const percentage = ((payload[0].value / total) * 100).toFixed(1);
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+    const percentage = total > 0 ? ((payload[0].value / total) * 100).toFixed(1) : '0.0';
     
     return (
       <motion.div
@@ -39,7 +39,7 @@ const CustomTooltip = ({ active, payload }) => {
             style={{ backgroundColor: payload[0].payload.fill }}
           />
           <span className="text-sm text-gray-600 dark:text-gray-300">
-            {payload[0].value.toLocaleString()}명 ({percentage}%)
+            {payload[0].value.toLocaleString()}회 ({percentage}%)
           </span>
         </div>
       </motion.div>
@@ -77,7 +77,75 @@ const CustomLegend = ({ payload }) => (
   </motion.div>
 );
 
+// 로딩 스켈레톤 컴포넌트
+const LoadingSkeleton = () => (
+  <motion.div 
+    className="flex flex-col items-center justify-center h-80 sm:h-96"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.3 }}
+  >
+    <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+    <p className="text-sm text-gray-600 dark:text-gray-300">트래픽 소스 데이터 로딩 중...</p>
+  </motion.div>
+);
+
+// 데이터 없음 컴포넌트
+const NoDataMessage = () => (
+  <motion.div 
+    className="flex flex-col items-center justify-center h-80 sm:h-96"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <PieChartIcon className="w-12 h-12 text-gray-400 mb-4" />
+    <p className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
+      데이터가 없습니다
+    </p>
+    <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+      선택한 기간에 트래픽 소스 데이터가 없습니다
+    </p>
+  </motion.div>
+);
+
+// 에러 메시지 컴포넌트
+const ErrorMessage = ({ error }) => (
+  <motion.div 
+    className="flex flex-col items-center justify-center h-80 sm:h-96"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+      <PieChartIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+    </div>
+    <p className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
+      데이터 로딩 실패
+    </p>
+    <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm">
+      {error}
+    </p>
+  </motion.div>
+);
+
 const TrafficSourceChart = () => {
+  const { 
+    trafficSourceData, 
+    isTrafficLoading, 
+    trafficError,
+    fetchTrafficSourceData 
+  } = useAnalyticsStore();
+
+  // 초기 데이터 로딩
+  React.useEffect(() => {
+    fetchTrafficSourceData();
+  }, [fetchTrafficSourceData]);
+
+  // 사용할 데이터 결정 (API 데이터가 있으면 사용, 없으면 Mock 데이터)
+  const chartData = trafficSourceData && trafficSourceData.length > 0 
+    ? trafficSourceData 
+    : traffic_source_data;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -101,7 +169,9 @@ const TrafficSourceChart = () => {
               트래픽 소스 분석
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              유입 경로별 사용자 비율
+              {trafficSourceData && trafficSourceData.length > 0 
+                ? '실제 유입 경로별 조회수' 
+                : '유입 경로별 사용자 비율'}
             </p>
           </div>
         </motion.div>
@@ -118,35 +188,43 @@ const TrafficSourceChart = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={traffic_source_data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={window.innerWidth < 640 ? 60 : 90}
-                innerRadius={window.innerWidth < 640 ? 25 : 35}
-                fill="#8884d8"
-                dataKey="value"
-                nameKey="name"
-                animationBegin={500}
-                animationDuration={800}
-              >
-                {traffic_source_data.map((_, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={GRADIENT_COLORS[index % GRADIENT_COLORS.length]}
-                    stroke="rgba(255, 255, 255, 0.2)"
-                    strokeWidth={2}
-                  />
-                ))}
-              </Pie>
-              
-              <Tooltip content={<CustomTooltip />} />
-              <Legend content={<CustomLegend />} />
-            </PieChart>
-          </ResponsiveContainer>
+          {isTrafficLoading ? (
+            <LoadingSkeleton />
+          ) : trafficError ? (
+            <ErrorMessage error={trafficError} />
+          ) : chartData.length === 0 ? (
+            <NoDataMessage />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={window.innerWidth < 640 ? 60 : 90}
+                  innerRadius={window.innerWidth < 640 ? 25 : 35}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  animationBegin={500}
+                  animationDuration={800}
+                >
+                  {chartData.map((_, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={GRADIENT_COLORS[index % GRADIENT_COLORS.length]}
+                      stroke="rgba(255, 255, 255, 0.2)"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Pie>
+                
+                <Tooltip content={<CustomTooltip data={chartData} />} />
+                <Legend content={<CustomLegend />} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </motion.div>
       </GlassCard>
     </motion.div>

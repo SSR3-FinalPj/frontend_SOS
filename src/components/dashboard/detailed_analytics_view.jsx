@@ -8,13 +8,13 @@ import { motion } from 'framer-motion';
 import { 
   Sun, 
   Moon, 
-  TrendingUp,
+  Loader2
 } from 'lucide-react';
 
 import { usePageStore } from '../../stores/page_store.js';
 import { Calendar as CalendarComponent } from "../../components/ui/calendar.jsx";
 import { useAnalyticsStore } from '../../stores/analytics_store.js';
-import { get_kpi_data } from '../../utils/dashboard_utils.js';
+import { get_kpi_data_from_api } from '../../utils/dashboard_utils.js';
 import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
 import Notification from '../ui/notification.jsx';
 import AudienceDemographicsChart from '../ui/AudienceDemographicsChart.jsx';
@@ -35,14 +35,23 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
     selected_platform,
     is_calendar_visible,
     date_range,
+    summaryData,
+    isLoading,
+    error,
     get_selected_period_label,
     handle_apply_date_range,
     handle_calendar_cancel,
-    handle_calendar_range_select
+    handle_calendar_range_select,
+    fetchSummaryData
   } = useAnalyticsStore();
 
-  // KPI 데이터 가져오기
-  const kpi_data = get_kpi_data(selected_platform);
+  // 초기 데이터 로딩
+  React.useEffect(() => {
+    fetchSummaryData();
+  }, [fetchSummaryData]);
+
+  // KPI 데이터 가져오기 (API 데이터 또는 Mock 데이터)
+  const kpiData = get_kpi_data_from_api(selected_platform, summaryData);
 
   return (
     <div className="h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
@@ -95,7 +104,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
           <div className="space-y-8">
             {/* KPI Cards - 플랫폼별 3개 카드 */}
             <div className="grid grid-cols-3 gap-6">
-              {kpi_data.map((kpi, index) => {
+              {kpiData.map((kpi, index) => {
                 const Icon = kpi.icon;
                 return (
                   <motion.div
@@ -103,22 +112,30 @@ const DetailedAnalyticsView = ({ current_view, set_current_view }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}
+                    className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 relative`}
                   >
+                    {/* 로딩 오버레이 */}
+                    {isLoading && (
+                      <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                        <Loader2 className="w-6 h-6 animate-spin text-gray-600 dark:text-gray-300" />
+                      </div>
+                    )}
+                    
                     <div className="flex items-center justify-between mb-4">
                       <div className={`w-12 h-12 rounded-xl ${kpi.iconBg} flex items-center justify-center`}>
                         <Icon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
                       </div>
-                      <div className={`flex items-center gap-1 text-sm font-medium ${
-                        kpi.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        <TrendingUp className={`w-4 h-4 ${kpi.isPositive ? '' : 'rotate-180'}`} />
-                        {kpi.change}
-                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{kpi.label}</p>
-                      <p className="text-2xl font-semibold text-gray-800 dark:text-white">{kpi.value}</p>
+                      <p className="text-2xl font-semibold text-gray-800 dark:text-white">
+                        {isLoading ? "로딩 중..." : kpi.value}
+                      </p>
+                      {error && (
+                        <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                          데이터 로딩 실패
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 );

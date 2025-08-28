@@ -213,3 +213,70 @@ export async function getYouTubeChannelId() {
     return null;
   }
 }
+
+/* ------------------ Analytics API 연동 ------------------ */
+/**
+ * 유튜브 범위별 요약 데이터 조회
+ * @param {string} startDate - 시작일 (YYYY-MM-DD)
+ * @param {string} endDate - 종료일 (YYYY-MM-DD)
+ * @returns {Promise} API 응답 데이터
+ */
+export async function get_youtube_range_summary(startDate, endDate) {
+  return getDashboardData({
+    type: 'range',
+    startDate,
+    endDate
+  });
+}
+
+/**
+ * 전체 유튜브 영상 목록 조회
+ * @returns {Promise} 전체 영상 목록
+ */
+export async function get_all_videos() {
+  try {
+    // 먼저 채널 ID를 가져옵니다
+    const channelInfo = await getYouTubeChannelId();
+    if (!channelInfo?.channelId) {
+      throw new Error('채널 정보를 찾을 수 없습니다.');
+    }
+
+    // 대량의 데이터를 위해 큰 limit 설정하여 전체 영상 조회
+    const response = await getYouTubeVideosByChannelId(channelInfo.channelId, {
+      sortBy: 'latest',
+      page: 1,
+      limit: 1000  // 충분히 큰 수로 설정
+    });
+
+    return response;
+  } catch (error) {
+    console.error('전체 영상 목록 조회 실패:', error);
+    throw error;
+  }
+}
+
+/**
+ * 특정 영상의 트래픽 소스 요약 조회
+ * @param {string} videoId - 유튜브 영상 ID
+ * @returns {Promise} 트래픽 소스 데이터
+ */
+export async function get_traffic_source_summary(videoId) {
+  if (!videoId) {
+    throw new Error('Video ID가 필요합니다.');
+  }
+
+  const url = `/api/youtube/traffic-source-summary/${videoId}`;
+
+  const res = await apiFetch(url, {
+    method: 'POST'
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`트래픽 소스 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+  
+  const responseData = await res.json();
+  
+  return responseData;
+}
