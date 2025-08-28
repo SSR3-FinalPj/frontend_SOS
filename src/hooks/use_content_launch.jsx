@@ -157,8 +157,13 @@ export const use_content_launch = create(
           temp_id: `temp-${Date.now()}`,
           title: video_data.title || '새로운 AI 영상',
           status: 'PROCESSING',
+          
+          // ✨ 수정된 부분: 'created_at' 속성을 추가합니다.
+          // 폴링 시스템이 이 값을 기준으로 비디오를 찾습니다.
+          created_at: new Date().toISOString(), 
+          
           start_time: new Date().toISOString(),
-          creationTime: new Date().toISOString(),
+          creationTime: new Date().toISOString(), // 'creationTime'은 오타일 수 있으나 일단 유지합니다.
           image_url: video_data.image_url,
           creation_date: creation_date,
           ...video_data
