@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch } from '../lib/api.js';
+import { apiFetch, getVideoResultId } from '../lib/api.js';
 
 /**
  * 콘텐츠 론칭 관련 상태와 액션을 제공하는 Zustand 스토어
@@ -446,6 +446,63 @@ export const use_content_launch = create(
         get().fetch_folders();
         
         console.log(`영상 ID 업데이트 완료: ${temp_id} → ${video_id}`);
+      },
+
+      /**
+       * SSE video_ready 이벤트 수신 시 영상 데이터를 사전 로딩하는 함수
+       * @param {string} temp_id - 임시 ID (또는 식별자)
+       */
+      fetch_and_update_video_by_id: async (temp_id) => {
+        try {
+          console.log(`[사전로딩] 영상 데이터 조회 시작: ${temp_id}`);
+          
+          // API를 통해 실제 영상 데이터 조회
+          const videoData = await getVideoResultId();
+          console.log(`[사전로딩] API 응답:`, videoData);
+          
+          if (videoData?.resultId && videoData?.createdAt) {
+            // pending_videos에서 해당 영상 찾아서 업데이트
+            set((state) => ({
+              pending_videos: state.pending_videos.map(video => {
+                // temp_id 또는 video_id가 일치하는 영상 찾기
+                const video_id = video.temp_id || video.video_id;
+                if (video_id === temp_id) {
+                  return {
+                    ...video,
+                    resultId: videoData.resultId,
+                    createdAt: videoData.createdAt,
+                    status: 'completed',
+                    video_id: videoData.resultId, // 실제 영상 ID로 업데이트
+                    completion_time: new Date().toISOString()
+                  };
+                }
+                return video;
+              })
+            }));
+            
+            // 폴더 목록 갱신
+            get().fetch_folders();
+            
+            console.log(`[사전로딩] 영상 데이터 업데이트 완료: ${temp_id} → ${videoData.resultId}`);
+          } else {
+            console.warn(`[사전로딩] 응답 데이터가 부족합니다:`, videoData);
+          }
+          
+        } catch (error) {
+          console.error(`[사전로딩] 영상 데이터 조회 실패: ${temp_id}`, error);
+          
+          // 실패 시에도 상태는 업데이트 (사용자 경험을 위해)
+          set((state) => ({
+            pending_videos: state.pending_videos.map(video => {
+              const video_id = video.temp_id || video.video_id;
+              return video_id === temp_id 
+                ? { ...video, status: 'ready', error: error.message }
+                : video;
+            })
+          }));
+          
+          get().fetch_folders();
+        }
       },
 
       /**

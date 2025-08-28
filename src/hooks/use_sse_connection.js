@@ -56,27 +56,39 @@ export const useSSEConnection = ({
           data: data, // 전체 데이터도 함께 전달
         });
 
-        // VIDEO_READY 이벤트 시 자동으로 상태 전환 처리
+        // VIDEO_READY 이벤트 시 사전 로딩 및 상태 전환 처리
         if (data.message === 'VIDEO_READY') {
-          console.log('[SSE] VIDEO_READY 이벤트 감지 - 첫 번째 PROCESSING 영상 자동 완료 처리:', {
-            timestamp: data.timestamp
+          console.log('[SSE] VIDEO_READY 이벤트 감지 - 사전 로딩 및 상태 전환 처리:', {
+            timestamp: data.timestamp,
+            video_id: data.video_id,
+            temp_id: data.temp_id
           });
           
           // 현재 PROCESSING 상태인 첫 번째 영상 찾기
-          const { pending_videos, transition_to_ready } = use_content_launch.getState();
+          const { pending_videos, fetch_and_update_video_by_id } = use_content_launch.getState();
           const first_processing_video = pending_videos.find(video => video.status === 'PROCESSING');
           
           if (first_processing_video) {
-            console.log('[SSE] PROCESSING 영상 발견, 상태 전환 시작:', {
+            console.log('[SSE] PROCESSING 영상 발견, 사전 로딩 시작:', {
               temp_id: first_processing_video.temp_id,
               title: first_processing_video.title
             });
             
-            transition_to_ready(first_processing_video.temp_id).catch(error => {
-              console.error('[SSE] 자동 상태 전환 실패:', error);
+            // 백그라운드에서 영상 데이터 사전 로딩
+            fetch_and_update_video_by_id(first_processing_video.temp_id).catch(error => {
+              console.error('[SSE] 사전 로딩 실패:', error);
             });
           } else {
             console.warn('[SSE] PROCESSING 상태인 영상을 찾을 수 없습니다');
+            
+            // PROCESSING 영상이 없는 경우, 이벤트 데이터에서 식별자 확인
+            const identifier = data.temp_id || data.video_id;
+            if (identifier) {
+              console.log('[SSE] 이벤트 데이터의 식별자로 사전 로딩 시도:', identifier);
+              fetch_and_update_video_by_id(identifier).catch(error => {
+                console.error('[SSE] 식별자 기반 사전 로딩 실패:', error);
+              });
+            }
           }
         }
 
