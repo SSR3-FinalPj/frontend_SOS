@@ -60,8 +60,8 @@ export async function apiFetch(input, init = {}) {
 
   let response = await fetch(input, { ...init, headers, credentials: "include" });
 
-  // 401 발생 → 통합 토큰 갱신 함수 호출
-  if (response.status === 401) {
+  // 401 또는 403 발생 → 통합 토큰 갱신 함수 호출
+  if (response.status === 401 || response.status === 403) {
     //console.log('401 detected, attempting token refresh...');
     try {
       const newAccessToken = await refreshAccessToken(); // 갱신된 토큰으로 재시도
