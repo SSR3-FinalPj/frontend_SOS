@@ -178,7 +178,8 @@ export async function getGoogleStatus() {
       console.error("Failed to fetch Google status:", res.status);
       return { connected: false, linked: false };
     }
-    return await res.json();
+    const data = await res.json();
+    return { ...data, connected: data.connected ?? data.linked ?? false };
   } catch (error) {
     console.error("Error fetching Google status:", error);
     return { connected: false, linked: false };
