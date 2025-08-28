@@ -544,7 +544,7 @@ export const use_content_launch = create(
               id: completedVideoData.resultId,
               video_id: completedVideoData.resultId,
               resultId: completedVideoData.resultId,
-              status: 'completed',
+              status: 'ready',
               createdAt: completedVideoData.createdAt,
               completion_time: new Date().toISOString(),
             };
