@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch, get_video_details_by_id } from '../lib/api.js';
+import { apiFetch, get_latest_completed_video, get_videos_completed_after } from '../lib/api.js';
 
 /**
  * 콘텐츠 론칭 관련 상태와 액션을 제공하는 Zustand 스토어
@@ -28,7 +28,10 @@ export const use_content_launch = create(
       selected_video_id: null,
       selected_video_data: null,
 
-      // 폴링 관련 상태 제거됨 - SSE 기반으로 전환
+      // SSE 기반 실시간 업데이트 상태 관리
+      sse_update_in_progress: false,
+      last_sse_update_time: null,
+      sse_update_error: null,
 
       /**
        * 폴더 열기/닫기 토글
@@ -459,85 +462,174 @@ export const use_content_launch = create(
 
       /**
        * SSE video_ready 이벤트 수신 시 실시간으로 완성된 영상 데이터를 업데이트하는 함수
-       * @param {string|number} videoId - resultId (완성된 영상의 실제 ID)
+       * 백엔드 실제 API 구조(/api/dashboard/result_id)에 맞춘 로직
        */
-      fetch_video_and_update_store: async (videoId) => {
+      handle_video_completion: async () => {
+        // 중복 업데이트 방지
+        if (get().sse_update_in_progress) {
+          console.log('[SSE 업데이트] 이미 업데이트 진행 중 - 건너뜀');
+          return;
+        }
+
+        set({ 
+          sse_update_in_progress: true, 
+          sse_update_error: null,
+          last_sse_update_time: new Date().toISOString()
+        });
+
         try {
-          console.log(`[SSE 업데이트] 영상 상세 데이터 조회 시작: ${videoId}`);
+          console.log(`[SSE 업데이트] 완성된 영상 확인 시작`);
           
-          // API로 완성된 영상의 상세 데이터 조회
-          const videoDetails = await get_video_details_by_id(videoId);
-          console.log(`[SSE 업데이트] API 응답:`, videoDetails);
+          // API로 가장 최신 완성된 영상 조회 (List<JobResultDto>에서 최신 추출)
+          const latestCompletedVideo = await get_latest_completed_video();
+          
+          if (!latestCompletedVideo) {
+            console.warn(`[SSE 업데이트] 완성된 영상이 없습니다`);
+            return;
+          }
+          
+          console.log(`[SSE 업데이트] 최신 완성 영상:`, latestCompletedVideo);
+          
+          // 이미 처리된 영상인지 확인 (중복 처리 방지)
+          const { folders } = get();
+          const alreadyExists = folders.some(folder => 
+            folder.items.some(item => item.resultId === latestCompletedVideo.resultId)
+          );
+          
+          if (alreadyExists) {
+            console.log(`[SSE 업데이트] 이미 처리된 영상입니다: ${latestCompletedVideo.resultId}`);
+            return;
+          }
           
           // pending_videos에서 PROCESSING 상태인 첫 번째 영상 찾기
           const { pending_videos } = get();
-          const targetVideo = pending_videos.find(video => video.status === 'PROCESSING');
+          const processingVideo = pending_videos.find(video => video.status === 'PROCESSING');
           
-          if (targetVideo) {
-            console.log(`[SSE 업데이트] 대상 영상 발견: ${targetVideo.temp_id}`);
+          if (processingVideo) {
+            console.log(`[SSE 업데이트] PROCESSING 영상을 완성 영상으로 교체: ${processingVideo.temp_id}`);
             
             // pending_videos에서 해당 영상 제거
             set((state) => ({
-              pending_videos: state.pending_videos.filter(video => video.temp_id !== targetVideo.temp_id)
+              pending_videos: state.pending_videos.filter(video => video.temp_id !== processingVideo.temp_id)
             }));
             
-            // folders에 완성된 영상 데이터 추가
-            const creationDate = videoDetails.creation_date || new Date().toISOString().split('T')[0];
+            // JobResultDto 구조를 UI 표시용 객체로 변환
+            const creationDate = latestCompletedVideo.createdAt ? 
+              new Date(latestCompletedVideo.createdAt).toISOString().split('T')[0] : 
+              new Date().toISOString().split('T')[0];
             
-            // 새로운 완성된 영상 객체 생성
+            // 백엔드 JobResultDto 기반 완성된 영상 객체 생성
             const completedVideo = {
-              ...videoDetails,
-              id: videoId,
-              video_id: videoId,
+              id: latestCompletedVideo.resultId,
+              video_id: latestCompletedVideo.resultId,
+              resultId: latestCompletedVideo.resultId,
+              title: processingVideo.title || '완성된 AI 영상', // 원래 제목 유지
               status: 'completed',
+              creation_date: creationDate,
+              createdAt: latestCompletedVideo.createdAt,
               completion_time: new Date().toISOString(),
-              original_temp_id: targetVideo.temp_id // 원래 temp_id 보존
+              original_temp_id: processingVideo.temp_id,
+              // 원래 영상 정보 유지
+              location_name: processingVideo.location_name,
+              location_id: processingVideo.location_id,
+              image_url: processingVideo.image_url,
+              user_request: processingVideo.user_request
             };
             
             // 해당 날짜 폴더에 영상 추가 또는 새 폴더 생성
-            const { folders } = get();
-            const existingFolderIndex = folders.findIndex(folder => folder.date === creationDate);
+            get().add_completed_video_to_folder(completedVideo, creationDate);
             
-            if (existingFolderIndex !== -1) {
-              // 기존 폴더에 추가
-              const updatedFolders = [...folders];
-              updatedFolders[existingFolderIndex] = {
-                ...updatedFolders[existingFolderIndex],
-                items: [...updatedFolders[existingFolderIndex].items, completedVideo],
-                item_count: updatedFolders[existingFolderIndex].item_count + 1
-              };
-              set({ folders: updatedFolders });
-            } else {
-              // 새 폴더 생성
-              const newFolder = {
-                date: creationDate,
-                display_date: new Date(creationDate).toLocaleDateString('ko-KR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }),
-                item_count: 1,
-                items: [completedVideo],
-                is_pending: false
-              };
-              set((state) => ({
-                folders: [newFolder, ...state.folders]
-              }));
-            }
-            
-            console.log(`[SSE 업데이트] 영상 데이터 업데이트 완료: ${targetVideo.temp_id} → ${videoId}`);
+            console.log(`[SSE 업데이트] 영상 완성 처리 완료: ${processingVideo.temp_id} → ${latestCompletedVideo.resultId}`);
           } else {
-            console.warn(`[SSE 업데이트] PROCESSING 상태인 영상을 찾을 수 없습니다`);
+            console.warn(`[SSE 업데이트] PROCESSING 상태인 영상을 찾을 수 없습니다 - 전체 폴더 갱신`);
             
-            // 전체 폴더 목록 갱신으로 대체
+            // PROCESSING 영상이 없는 경우 전체 폴더 목록 갱신
             get().fetch_folders();
           }
           
         } catch (error) {
-          console.error(`[SSE 업데이트] 영상 데이터 조회 실패: ${videoId}`, error);
+          console.error(`[SSE 업데이트] 완성된 영상 처리 실패:`, error);
+          
+          set({ sse_update_error: error.message });
           
           // 실패 시 전체 폴더 목록 갱신
           get().fetch_folders();
+        } finally {
+          set({ sse_update_in_progress: false });
+        }
+      },
+
+      /**
+       * 폴백 메커니즘: SSE 이벤트가 누락되었을 때 수동으로 완성된 영상 확인
+       */
+      check_for_missed_completions: async () => {
+        const { pending_videos, last_sse_update_time } = get();
+        const processingVideos = pending_videos.filter(video => video.status === 'PROCESSING');
+        
+        if (processingVideos.length === 0) {
+          return; // PROCESSING 영상이 없으면 체크 불필요
+        }
+        
+        try {
+          console.log('[폴백] 누락된 완성 영상 확인 중...');
+          
+          // 마지막 SSE 업데이트 시간 이후 완성된 영상들 찾기
+          const checkAfterTime = last_sse_update_time || 
+            new Date(Date.now() - 5 * 60 * 1000).toISOString(); // 5분 전
+          
+          const newCompletedVideos = await get_videos_completed_after(checkAfterTime);
+          
+          if (newCompletedVideos.length > 0) {
+            console.log(`[폴백] ${newCompletedVideos.length}개의 누락된 완성 영상 발견`);
+            
+            // 가장 최신 완성 영상으로 업데이트
+            await get().handle_video_completion();
+          }
+          
+        } catch (error) {
+          console.error('[폴백] 누락된 완성 영상 확인 실패:', error);
+        }
+      },
+
+      /**
+       * 완성된 영상을 해당 날짜 폴더에 추가하는 헬퍼 함수
+       * @param {Object} completedVideo - 완성된 영상 객체  
+       * @param {string} creationDate - 생성 날짜 (YYYY-MM-DD)
+       */
+      add_completed_video_to_folder: (completedVideo, creationDate) => {
+        const { folders } = get();
+        const existingFolderIndex = folders.findIndex(folder => folder.date === creationDate);
+        
+        if (existingFolderIndex !== -1) {
+          // 기존 폴더에 추가
+          const updatedFolders = [...folders];
+          updatedFolders[existingFolderIndex] = {
+            ...updatedFolders[existingFolderIndex],
+            items: [...updatedFolders[existingFolderIndex].items, completedVideo],
+            item_count: updatedFolders[existingFolderIndex].item_count + 1,
+            is_pending: false // 완성된 영상이 포함되므로 pending 아님
+          };
+          set({ folders: updatedFolders });
+        } else {
+          // 새 폴더 생성
+          const newFolder = {
+            date: creationDate,
+            display_date: new Date(creationDate).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            item_count: 1,
+            items: [completedVideo],
+            is_pending: false
+          };
+          
+          // 날짜순으로 정렬하여 적절한 위치에 삽입
+          const sortedFolders = [...folders, newFolder].sort((a, b) => 
+            new Date(b.date) - new Date(a.date)
+          );
+          
+          set({ folders: sortedFolders });
         }
       },
 
@@ -582,6 +674,7 @@ export const use_content_launch = create(
       name: 'content-launch-storage',
       partialize: (state) => ({ 
         pending_videos: state.pending_videos
+        // SSE 관련 상태는 localStorage에 저장하지 않음 (휘발성 상태)
       })
     }
   )

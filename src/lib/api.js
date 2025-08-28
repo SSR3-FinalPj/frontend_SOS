@@ -300,26 +300,61 @@ export async function getVideoResultId() {
   return await res.json();
 }
 
-/* ------------------ 개별 영상 상세 데이터 조회 (SSE 연동용) ------------------ */
+/* ------------------ 완성된 영상 결과 배열 처리 (SSE 연동용) ------------------ */
 /**
- * resultId를 사용하여 특정 영상의 상세 데이터를 조회하는 함수
+ * 완성된 영상 결과 목록에서 가장 최신 영상을 찾는 함수
  * SSE video_ready 이벤트 수신 시 실시간 업데이트에 사용
- * @param {string|number} videoId - 영상 ID (resultId)
- * @returns {Promise} 영상 상세 데이터
+ * @returns {Promise} 최신 완성 영상 데이터 또는 null
  */
-export async function get_video_details_by_id(videoId) {
-  if (!videoId) {
-    throw new Error('Video ID가 필요합니다.');
+export async function get_latest_completed_video() {
+  try {
+    const videoResults = await getVideoResultId(); // List<JobResultDto> 반환
+    
+    if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
+      console.log('[API] 완성된 영상 결과가 없음');
+      return null;
+    }
+
+    // 가장 최신 결과를 createdAt 기준으로 찾기
+    const latestVideo = videoResults.reduce((latest, current) => {
+      const latestTime = new Date(latest.createdAt).getTime();
+      const currentTime = new Date(current.createdAt).getTime();
+      return currentTime > latestTime ? current : latest;
+    });
+
+    console.log('[API] 가장 최신 완성 영상:', latestVideo);
+    return latestVideo;
+    
+  } catch (error) {
+    console.error('[API] 최신 완성 영상 조회 실패:', error);
+    throw error;
   }
+}
 
-  const res = await apiFetch(`/api/dashboard/videos/${videoId}`, {
-    method: 'GET'
-  });
+/**
+ * 특정 시간 이후에 완성된 영상들을 찾는 함수  
+ * @param {string} afterTimestamp - 이 시간 이후의 영상들을 찾음 (ISO string)
+ * @returns {Promise} 해당 시간 이후 완성된 영상 배열
+ */
+export async function get_videos_completed_after(afterTimestamp) {
+  try {
+    const videoResults = await getVideoResultId();
+    
+    if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
+      return [];
+    }
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
-    throw new Error(`영상 상세 데이터 조회 실패: ${res.status} - ${errorData.message}`);
+    const afterTime = new Date(afterTimestamp).getTime();
+    const newCompletedVideos = videoResults.filter(video => {
+      const videoTime = new Date(video.createdAt).getTime();
+      return videoTime > afterTime;
+    });
+
+    console.log(`[API] ${afterTimestamp} 이후 완성된 영상 ${newCompletedVideos.length}개 발견`);
+    return newCompletedVideos;
+    
+  } catch (error) {
+    console.error('[API] 시간 기준 영상 조회 실패:', error);
+    throw error;
   }
-
-  return await res.json();
 }

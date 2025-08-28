@@ -59,33 +59,18 @@ export const useSSEConnection = ({
         // VIDEO_READY 이벤트 시 실시간 UI 업데이트 처리
         if (data.message === 'VIDEO_READY') {
           console.log('[SSE] VIDEO_READY 이벤트 감지 - 실시간 UI 업데이트:', {
-            timestamp: data.timestamp,
-            resultId: data.resultId,
-            video_id: data.video_id,
-            temp_id: data.temp_id
+            message: data.message,
+            timestamp: data.timestamp
           });
           
-          // resultId가 포함된 경우 직접 업데이트
-          if (data.resultId) {
-            console.log('[SSE] resultId 기반 직접 업데이트 시작:', data.resultId);
-            
-            const { fetch_video_and_update_store } = use_content_launch.getState();
-            fetch_video_and_update_store(data.resultId).catch(error => {
-              console.error('[SSE] 영상 데이터 업데이트 실패:', error);
-            });
-          } else {
-            console.warn('[SSE] resultId가 없어 업데이트 불가능:', data);
-            
-            // fallback: 이벤트 데이터에서 다른 식별자 확인
-            const identifier = data.video_id || data.temp_id;
-            if (identifier) {
-              console.log('[SSE] fallback 식별자로 업데이트 시도:', identifier);
-              const { fetch_video_and_update_store } = use_content_launch.getState();
-              fetch_video_and_update_store(identifier).catch(error => {
-                console.error('[SSE] fallback 업데이트 실패:', error);
-              });
-            }
-          }
+          // 백엔드에서 전송하는 실제 SSE 데이터 구조: SimpleMsg(message, timestamp)
+          // resultId나 video_id는 포함되지 않으므로, 완성된 영상 목록을 조회하여 최신 영상 처리
+          console.log('[SSE] 완성된 영상 목록 조회하여 최신 영상 확인 시작');
+          
+          const { handle_video_completion } = use_content_launch.getState();
+          handle_video_completion().catch(error => {
+            console.error('[SSE] 영상 완성 처리 실패:', error);
+          });
         }
 
         set_last_event(eventType);
