@@ -1,24 +1,28 @@
 /**
  * ContentPreviewModal 컴포넌트
- * 실제 비디오 재생, 접근성, 로딩/에러 처리 최종본 - null 체크 추가
+ * 백엔드 API에서 동적으로 Presigned URL을 가져와서 비디오 재생
+ * @description 실제 비디오 재생, 접근성, 로딩/에러 처리, 동적 URL 로딩
  */
 import React, { useState, useEffect } from 'react';
-// DialogTitle과 DialogDescription을 import에 추가합니다.
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '../ui/dialog';
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Image, Upload, X as XIcon, AlertCircle, Clock } from 'lucide-react';
-import { get_platform_color, get_content_type_label } from '../../utils/content_launch_utils.jsx';
-import { getEmbeddableVideoUrl } from '../../utils/video_url_utils.js';
+import { get_content_type_label } from '../../utils/content_launch_utils.jsx';
+import { apiFetch } from '../../lib/api.js';
 
-// --- 비디오/이미지 콘텐츠를 렌더링하는 컴포넌트 (null 체크 추가) ---
-const MediaViewer = React.memo(({ item, dark_mode }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+/**
+ * 비디오/이미지 콘텐츠를 렌더링하는 컴포넌트
+ * @param {Object} item - 미디어 아이템 정보
+ * @param {boolean} dark_mode - 다크모드 여부
+ * @param {string} videoUrl - 동적으로 로딩된 비디오 URL
+ * @param {boolean} apiLoading - API 로딩 상태
+ * @param {string} apiError - API 에러 메시지
+ */
+const MediaViewer = React.memo(({ item, dark_mode, videoUrl, isLoading: apiLoading, error: apiError }) => {
+  const [videoLoadState, setVideoLoadState] = useState('loading'); // 'loading', 'loaded', 'error'
 
   // ▼▼▼▼▼ null 체크 추가 ▼▼▼▼▼
   if (!item) {
-    console.warn('MediaViewer: item is null or undefined');
     return (
       <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
         <div className="flex items-center justify-center h-full">
@@ -29,49 +33,16 @@ const MediaViewer = React.memo(({ item, dark_mode }) => {
   }
   // ▲▲▲▲▲ null 체크 추가 ▲▲▲▲▲
 
-  const handleVideoError = (e) => {
-    console.error('❌ Video loading error occurred');
-    console.error('Failed video URL:', item.video_url);
-    console.error('Error details:', e.target?.error);
-    
-    // 에러 타입에 따른 상세 정보
-    if (e.target?.error) {
-      const errorCode = e.target.error.code;
-      const errorMessage = e.target.error.message;
-      console.error(`Error Code: ${errorCode}, Message: ${errorMessage}`);
-      
-      switch (errorCode) {
-        case 1:
-          console.error('MEDIA_ERR_ABORTED: 비디오 로딩이 중단되었습니다.');
-          break;
-        case 2:
-          console.error('MEDIA_ERR_NETWORK: 네트워크 오류로 비디오를 로드할 수 없습니다.');
-          break;
-        case 3:
-          console.error('MEDIA_ERR_DECODE: 비디오 디코딩 오류가 발생했습니다.');
-          break;
-        case 4:
-          console.error('MEDIA_ERR_SRC_NOT_SUPPORTED: 지원되지 않는 비디오 형식입니다.');
-          break;
-        default:
-          console.error('알 수 없는 비디오 오류가 발생했습니다.');
-      }
-    }
-    
-    setIsLoading(false);
-    setHasError(true);
+  const handleVideoError = () => {
+    setVideoLoadState('error');
   };
 
   const handleVideoCanPlay = () => {
-    console.log('Video loaded successfully:', item.video_url);
-    setIsLoading(false);
-    setHasError(false);
+    setVideoLoadState('loaded');
   };
 
   const handleVideoLoadStart = () => {
-    console.log('Video load started:', item.video_url);
-    setIsLoading(true);
-    setHasError(false);
+    setVideoLoadState('loading');
   };
 
   return (
@@ -88,50 +59,63 @@ const MediaViewer = React.memo(({ item, dark_mode }) => {
 
       {item.type === 'video' ? (
         <>
-          {/* 로딩 상태 */}
-          {isLoading && !hasError && (
+          {/* API 로딩 상태 */}
+          {apiLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 gap-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
               <span className="text-white text-sm">비디오 로딩 중...</span>
-              <span className="text-white/70 text-xs">URL: {item.video_url?.slice(0, 50)}...</span>
             </div>
           )}
 
-          {/* 에러 상태 */}
-          {hasError && (
+          {/* API 에러 상태 */}
+          {apiError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800/90 gap-3 text-center px-4">
               <AlertCircle className="h-12 w-12 text-red-400" />
               <div>
                 <p className="text-white font-medium">비디오를 로드할 수 없습니다</p>
-                <p className="text-gray-400 text-sm mt-1">네트워크 상태나 비디오 URL을 확인해주세요</p>
-                <p className="text-gray-500 text-xs mt-2 break-all">URL: {item.video_url}</p>
+                <p className="text-gray-400 text-sm mt-1">{apiError}</p>
               </div>
             </div>
           )}
 
-          {/* 비디오 플레이어 - CORS 및 로딩 최적화 */}
-          {item.video_url && (
+          {/* 비디오 로딩 상태 */}
+          {videoUrl && videoLoadState === 'loading' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 gap-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              <span className="text-white text-xs">스트림 로딩 중...</span>
+            </div>
+          )}
+
+          {/* 비디오 재생 에러 상태 */}
+          {videoUrl && videoLoadState === 'error' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800/90 gap-3 text-center px-4">
+              <AlertCircle className="h-10 w-10 text-red-400" />
+              <div>
+                <p className="text-white font-medium text-sm">스트림 재생 오류</p>
+                <p className="text-gray-400 text-xs mt-1">비디오 파일을 재생할 수 없습니다</p>
+              </div>
+            </div>
+          )}
+
+          {/* 비디오 플레이어 */}
+          {videoUrl && !apiLoading && !apiError && (
             <video
-              key={item.video_url} // URL 변경 시 비디오 재로드
+              key={videoUrl} // URL 변경 시 비디오 재로드
               className={`w-full h-full object-contain transition-opacity duration-300 ${
-                isLoading || hasError ? 'opacity-0' : 'opacity-100'
+                videoLoadState === 'loaded' ? 'opacity-100' : 'opacity-0'
               }`}
-              src={item.video_url}
+              src={videoUrl}
               controls
               autoPlay
               muted
               loop
               playsInline
-              preload="auto" // 빠른 로딩을 위해 전체 비디오 미리 로드
+              preload="auto"
               onError={handleVideoError}
               onCanPlay={handleVideoCanPlay}
               onLoadStart={handleVideoLoadStart}
-              onLoadedData={() => console.log('✅ Video data loaded successfully')}
-              onLoadedMetadata={() => console.log('✅ Video metadata loaded successfully')}
-              onWaiting={() => console.log('⏳ Video buffering...')}
-              onCanPlayThrough={() => console.log('✅ Video ready to play through')}
             >
-              <source src={item.video_url} type="video/mp4" />
+              <source src={videoUrl} type="video/mp4" />
               브라우저가 비디오를 지원하지 않습니다.
             </video>
           )}
@@ -150,7 +134,6 @@ const MediaViewer = React.memo(({ item, dark_mode }) => {
 const ContentInfo = React.memo(({ item, dark_mode }) => {
   // ▼▼▼▼▼ null 체크 추가 ▼▼▼▼▼
   if (!item) {
-    console.warn('ContentInfo: item is null or undefined');
     return (
       <div className="flex-1 space-y-4">
         <div>
@@ -220,6 +203,67 @@ const ContentPreviewModal = ({
   on_close, 
   on_publish 
 }) => {
+  // 동적 비디오 URL 관리를 위한 상태
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  /**
+   * 모달이 열리고 item이 존재할 때 백엔드에서 Presigned URL을 가져오는 useEffect
+   */
+  useEffect(() => {
+    const fetchVideoUrl = async () => {
+      // 모달이 닫혀있거나 item이 없으면 실행하지 않음
+      if (!is_open || !item) {
+        return;
+      }
+
+      // 비디오 타입이 아니면 API 호출하지 않음
+      if (item.type !== 'video') {
+        return;
+      }
+
+      // resultId 확인 (video_id 또는 id 사용)
+      const resultId = item.video_id || item.id;
+      if (!resultId) {
+        setError('비디오 ID를 찾을 수 없습니다.');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      setVideoUrl(null);
+
+      try {
+        const response = await apiFetch('/api/videos/stream', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ resultId }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`비디오 스트림 요청 실패: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.url) {
+          setVideoUrl(data.url);
+        } else {
+          throw new Error('비디오 URL을 받을 수 없습니다.');
+        }
+      } catch (err) {
+        setError(err.message || '비디오 로딩에 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVideoUrl();
+  }, [item, is_open]);
+
   // ▼▼▼▼▼ 더 안전한 null 체크 ▼▼▼▼▼
   if (!is_open || !item) {
     // 모달이 닫혀있거나 item이 null이면 렌더링하지 않음
@@ -235,7 +279,13 @@ const ContentPreviewModal = ({
   return (
     <Dialog open={is_open} onOpenChange={(open) => !open && on_close()}>
       <DialogContent className={`max-w-4xl w-[90vw] ${dark_mode ? 'bg-gray-900/90 border-gray-700/20' : 'bg-white/90 border-gray-300/20'} backdrop-blur-2xl rounded-3xl shadow-xl border p-8 space-y-6`}>
-        <MediaViewer item={item} dark_mode={dark_mode} />
+        <MediaViewer 
+          item={item} 
+          dark_mode={dark_mode} 
+          videoUrl={videoUrl}
+          isLoading={isLoading}
+          error={error}
+        />
         <div className="flex items-start gap-8">
           <ContentInfo item={item} dark_mode={dark_mode} />
           <div className="flex flex-col gap-3 w-40 flex-shrink-0">
