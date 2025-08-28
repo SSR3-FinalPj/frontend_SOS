@@ -58,7 +58,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
   // 선택된 영상 데이터로 폼 자동 초기화
   useEffect(() => {
     if (selectedVideoData) {
-      console.log('선택된 영상 데이터로 폼 자동 초기화:', selectedVideoData);
+      //console.log('선택된 영상 데이터로 폼 자동 초기화:', selectedVideoData);
       
       // 위치 정보 자동 설정
       if (selectedVideoData.location_name || selectedVideoData.location_id) {

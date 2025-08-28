@@ -86,12 +86,12 @@ const ContentFolderCard = ({
                   const ready_count = folder.items.filter(item => item.status === 'ready').length;
                   const uploaded_count = folder.items.filter(item => item.status === 'uploaded').length;
                   
-                  console.log(`[${folder.date}] 폴더 카운터:`, {
-                    total_items: folder.items.length,
-                    ready_count,
-                    uploaded_count,
-                    items: folder.items.map(item => ({ id: item.id || item.temp_id, status: item.status }))
-                  });
+                  // console.log(`[${folder.date}] 폴더 카운터:`, {
+                  //   total_items: folder.items.length,
+                  //   ready_count,
+                  //   uploaded_count,
+                  //   items: folder.items.map(item => ({ id: item.id || item.temp_id, status: item.status }))
+                  // });
                   
                   return (
                     <>

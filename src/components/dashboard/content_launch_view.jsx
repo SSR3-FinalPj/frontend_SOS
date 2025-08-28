@@ -99,11 +99,11 @@ const ContentLaunchView = ({ dark_mode }) => {
     // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
     const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
     
-    console.log('게시 시작:', {
-      item: publish_modal.item,
-      final_item_id: item_id,
-      publish_form
-    });
+    // console.log('게시 시작:', {
+    //   item: publish_modal.item,
+    //   final_item_id: item_id,
+    //   publish_form
+    // });
     
     close_publish_modal();
     await simulate_upload(item_id);

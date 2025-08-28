@@ -146,18 +146,18 @@ export const useNotificationStore = create(
         // video_id가 있으면 해당 영상을 ready 상태로 전환
         if (sse_data.video_id || sse_data.data?.video_id) {
           const video_id = sse_data.video_id || sse_data.data.video_id;
-          console.log('SSE 이벤트로 영상 상태 전환:', video_id);
+          //console.log('SSE 이벤트로 영상 상태 전환:', video_id);
           use_content_launch.getState().transition_to_ready(video_id);
         }
         
         // temp_id가 있는 경우에도 처리
         if (sse_data.temp_id || sse_data.data?.temp_id) {
           const temp_id = sse_data.temp_id || sse_data.data.temp_id;
-          console.log('SSE 이벤트로 임시 영상 상태 전환:', temp_id);
+          //console.log('SSE 이벤트로 임시 영상 상태 전환:', temp_id);
           use_content_launch.getState().transition_to_ready(temp_id);
         }
         
-        console.log('video-ready 이벤트 처리 완료:', sse_data);
+        //console.log('video-ready 이벤트 처리 완료:', sse_data);
       }).catch(error => {
         console.error('use_content_launch 스토어 연동 실패:', error);
       });
@@ -220,7 +220,7 @@ export const useNotificationStore = create(
         if (state) {
           // 복원 후 오래된 알림 정리
           state.cleanup_old_notifications();
-          console.log('알림 데이터 복원 완료:', state.notifications.length, '개');
+          //console.log('알림 데이터 복원 완료:', state.notifications.length, '개');
         }
       },
     }

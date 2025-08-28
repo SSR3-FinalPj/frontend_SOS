@@ -55,7 +55,7 @@ export const use_content_launch = create(
        * @param {string} item_id - 아이템 ID
        */
       finish_upload: (item_id) => {
-        console.log(`업로드 완료 처리 시작: ${item_id}`);
+        //console.log(`업로드 완료 처리 시작: ${item_id}`);
         
         // 업로드 중 목록에서 제거
         set((state) => ({
@@ -75,7 +75,7 @@ export const use_content_launch = create(
         // 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
         
-        console.log(`업로드 완료 처리 완료: ${item_id} → uploaded`);
+        //console.log(`업로드 완료 처리 완료: ${item_id} → uploaded`);
       },
 
       /**
@@ -262,7 +262,7 @@ export const use_content_launch = create(
        * @param {string} temp_id - 임시 ID
        */
       transition_to_ready: async (temp_id) => {
-        console.log(`영상 ${temp_id}를 업로드 대기 상태로 전환 중...`);
+        //console.log(`영상 ${temp_id}를 업로드 대기 상태로 전환 중...`);
         
         // 1. 상태 업데이트
         set((state) => ({
@@ -283,7 +283,7 @@ export const use_content_launch = create(
         // 3. 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
         
-        console.log(`영상 ${temp_id} 상태 변경 완료: ready`);
+        //console.log(`영상 ${temp_id} 상태 변경 완료: ready`);
       },
       
       /**
@@ -291,7 +291,7 @@ export const use_content_launch = create(
        * @param {string} temp_id - 임시 ID
        */
       transition_to_uploaded: (temp_id) => {
-        console.log(`영상 ${temp_id}를 완료 상태로 전환 중...`);
+        //console.log(`영상 ${temp_id}를 완료 상태로 전환 중...`);
         
         set((state) => ({
           pending_videos: state.pending_videos.map(video => 
@@ -304,7 +304,7 @@ export const use_content_launch = create(
         // 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
         
-        console.log(`영상 ${temp_id} 상태 변경 완료: uploaded`);
+        //console.log(`영상 ${temp_id} 상태 변경 완료: uploaded`);
       },
       
       /**
@@ -319,7 +319,7 @@ export const use_content_launch = create(
             throw new Error(`완료된 영상을 찾을 수 없음: ${temp_id}`);
           }
           
-          console.log('백엔드에 완료 알림 전송 중...', completed_video);
+          //console.log('백엔드에 완료 알림 전송 중...', completed_video);
           
           // 백엔드에 완료 알림
           const completion_response = await apiFetch('/api/videos/complete', {
@@ -342,19 +342,19 @@ export const use_content_launch = create(
           // 마지막 요청 정보 가져오기
           const last_request_data = localStorage.getItem('last_video_request');
           if (!last_request_data) {
-            console.log('마지막 요청 정보가 없어 자동 생성 건너뜀');
+            //console.log('마지막 요청 정보가 없어 자동 생성 건너뜀');
             return;
           }
           
           const last_request = JSON.parse(last_request_data);
-          console.log('마지막 요청 정보로 다음 영상 자동 생성 중...', last_request);
+          //console.log('마지막 요청 정보로 다음 영상 자동 생성 중...', last_request);
           
           // 다음 영상 자동 생성 (모의 로직 - 실제로는 백엔드에서 처리)
           await get().auto_generate_next_video(last_request);
           
         } catch (error) {
-          console.error('완료 알림 및 자동 생성 실패:', error);
-          console.log('백엔드 미연동으로 인한 오류입니다. 모의 자동 생성 로직을 실행합니다.');
+          //console.error('완료 알림 및 자동 생성 실패:', error);
+          //console.log('백엔드 미연동으로 인한 오류입니다. 모의 자동 생성 로직을 실행합니다.');
           // 백엔드 연동 실패 시 모의 로직으로 대체
           await get().mock_auto_generate_next_video();
         }
@@ -383,10 +383,10 @@ export const use_content_launch = create(
           }
           
           const result = await create_response.json();
-          console.log('백엔드에서 자동 영상 생성 시작:', result);
+          //console.log('백엔드에서 자동 영상 생성 시작:', result);
           
         } catch (error) {
-          console.error('자동 영상 생성 실패:', error);
+          //console.error('자동 영상 생성 실패:', error);
           throw error;
         }
       },
@@ -398,12 +398,12 @@ export const use_content_launch = create(
         try {
           const last_request_data = localStorage.getItem('last_video_request');
           if (!last_request_data) {
-            console.log('마지막 요청 정보가 없어 모의 자동 생성 건너뜀');
+            //console.log('마지막 요청 정보가 없어 모의 자동 생성 건너뜀');
             return;
           }
           
           const last_request = JSON.parse(last_request_data);
-          console.log('모의 자동 영상 생성 시작...', last_request);
+          //console.log('모의 자동 영상 생성 시작...', last_request);
           
           // 1초 후 새 영상 추가 (백엔드 처리 시뮬레이션)
           setTimeout(() => {
@@ -418,11 +418,11 @@ export const use_content_launch = create(
             };
             
             get().add_pending_video(video_data, creation_date);
-            console.log('모의 자동 영상 생성 완료');
+            //console.log('모의 자동 영상 생성 완료');
           }, 1000);
           
         } catch (error) {
-          console.error('모의 자동 영상 생성 실패:', error);
+          //console.error('모의 자동 영상 생성 실패:', error);
         }
       },
       
@@ -432,7 +432,7 @@ export const use_content_launch = create(
        * @param {string} video_id - 백엔드에서 제공한 실제 영상 ID
        */
       update_video_id: (temp_id, video_id) => {
-        console.log(`영상 ID 업데이트 시작: ${temp_id} → ${video_id}`);
+        //console.log(`영상 ID 업데이트 시작: ${temp_id} → ${video_id}`);
         
         set((state) => ({
           pending_videos: state.pending_videos.map(video => 
@@ -445,7 +445,7 @@ export const use_content_launch = create(
         // 상태 업데이트 후 폴더 목록 갱신
         get().fetch_folders();
         
-        console.log(`영상 ID 업데이트 완료: ${temp_id} → ${video_id}`);
+        //console.log(`영상 ID 업데이트 완료: ${temp_id} → ${video_id}`);
       },
 
       /**
@@ -462,14 +462,14 @@ export const use_content_launch = create(
             selected_video_id: null,
             selected_video_data: null
           });
-          console.log(`영상 선택 해제: ${video_id}`);
+          //console.log(`영상 선택 해제: ${video_id}`);
         } else {
           // 새로운 영상 선택
           set({
             selected_video_id: video_id,
             selected_video_data: video
           });
-          console.log(`영상 선택: ${video_id}`, video);
+          //console.log(`영상 선택: ${video_id}`, video);
         }
       },
 
@@ -481,7 +481,7 @@ export const use_content_launch = create(
           selected_video_id: null,
           selected_video_data: null
         });
-        console.log('영상 선택 해제됨');
+        //console.log('영상 선택 해제됨');
       }
     }),
     {

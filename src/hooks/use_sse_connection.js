@@ -110,7 +110,7 @@ export const useSSEConnection = ({
     if (event_source_ref.current) return;
 
     try {
-      console.log('[SSE TRY]', endpoint);              // ✅ 여기서 로그
+      //console.log('[SSE TRY]', endpoint);              // ✅ 여기서 로그
       const es = new EventSource(endpoint);            // ✅ 실제 생성
       event_source_ref.current = es;
 
@@ -119,7 +119,7 @@ export const useSSEConnection = ({
         set_connection_error(null);
         set_reconnect_attempts(0);
         set_connection_status(true);
-        console.log('SSE connected:', endpoint);
+        //console.log('SSE connected:', endpoint);
       };
 
       // ping 이벤트도 상태에 반영(콘솔/화면에서 확인)

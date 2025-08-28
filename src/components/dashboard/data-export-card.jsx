@@ -6,10 +6,10 @@ import GlassCard from '../ui/glass-card.jsx';
 function DataExportCard() {
   const [selectedPeriod, setSelectedPeriod] = useState('7days');
 
-  const handleExport = (format) => {
-    // Mock export functionality
-    console.log(`Exporting ${selectedPeriod} data as ${format}`);
-  };
+  // const handleExport = (format) => {
+  //   // Mock export functionality
+  //   console.log(`Exporting ${selectedPeriod} data as ${format}`);
+  // };
 
   return (
     <motion.div
