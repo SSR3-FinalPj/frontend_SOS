@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, TestTube } from 'lucide-react';
 import ContentFolderCard from './content_folder_card';
 import ContentPreviewModal from './content_preview_modal';
 import ContentPublishModal from './content_publish_modal';
@@ -32,6 +32,9 @@ const ContentLaunchView = ({ dark_mode }) => {
   // 성공 모달 및 예약 비디오 데이터 상태
   const [is_success_modal_open, set_is_success_modal_open] = useState(false);
   const [pending_video_data, set_pending_video_data] = useState(null);
+  
+  // 테스트 모달 상태
+  const [is_test_modal_open, set_is_test_modal_open] = useState(false);
 
   // 커스텀 훅 사용
   const {
@@ -61,6 +64,15 @@ const ContentLaunchView = ({ dark_mode }) => {
     toggle_platform,
     update_publish_form
   } = use_content_modals();
+  
+  // 테스트 모달 핸들러
+  const handle_open_test_modal = () => {
+    set_is_test_modal_open(true);
+  };
+  
+  const handle_close_test_modal = () => {
+    set_is_test_modal_open(false);
+  };
 
 
   // 컴포넌트 마운트 시 폴더 데이터 로딩
@@ -168,6 +180,23 @@ const ContentLaunchView = ({ dark_mode }) => {
                   </p>
                 </div>
               )}
+              
+              {/* 테스트 모달 버튼 */}
+              <div className="flex flex-col">
+                <Button
+                  onClick={handle_open_test_modal}
+                  className="bg-gradient-to-r from-green-500/20 to-teal-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-teal-500/30 text-green-600 dark:text-green-300 shadow-lg font-semibold rounded-2xl"
+                  size="lg"
+                >
+                  <TestTube className="w-5 h-5 mr-2" />
+                  샘플 영상 테스트
+                </Button>
+                
+                {/* 설명 텍스트 */}
+                <p className={`text-xs mt-2 ${dark_mode ? 'text-green-200/80' : 'text-green-600/70'} font-medium max-w-xs`}>
+                  완성된 영상으로 미리보기 모달을 테스트합니다
+                </p>
+              </div>
             </div>
             
             {/* 통계 정보 */}
@@ -257,6 +286,16 @@ const ContentLaunchView = ({ dark_mode }) => {
         dark_mode={dark_mode}
         on_close={close_preview_modal}
         on_publish={open_publish_modal}
+      />
+      
+      {/* 테스트 모달 - 샘플 영상 테스트용 */}
+      <ContentPreviewModal
+        is_open={is_test_modal_open}
+        item={null} // testMode에서 동적으로 생성
+        dark_mode={dark_mode}
+        on_close={handle_close_test_modal}
+        on_publish={() => {}} // 테스트 모드에서는 게시 비활성화
+        testMode={true} // 테스트 모드 활성화
       />
 
       {/* 게시 모달 */}

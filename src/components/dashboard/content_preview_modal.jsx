@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } fr
 import { Button } from '../ui/button';
 import { Image, Upload, X as XIcon, AlertCircle, Clock } from 'lucide-react';
 import { get_content_type_label } from '../../utils/content_launch_utils.jsx';
-import { apiFetch } from '../../lib/api.js';
+import { apiFetch, getVideoResultId } from '../../lib/api.js';
 
 /**
  * 비디오/이미지 콘텐츠를 렌더링하는 컴포넌트
@@ -142,7 +142,7 @@ const MediaViewer = React.memo(({ item, dark_mode, videoUrl, isLoading: apiLoadi
 });
 
 // --- 콘텐츠 정보 (제목, 설명, 통계)를 표시하는 컴포넌트 (null 체크 추가) ---
-const ContentInfo = React.memo(({ item, dark_mode }) => {
+const ContentInfo = React.memo(({ item, dark_mode, testMode = false }) => {
   // ▼▼▼▼▼ null 체크 추가 ▼▼▼▼▼
   if (!item) {
     return (
@@ -178,7 +178,10 @@ const ContentInfo = React.memo(({ item, dark_mode }) => {
     <div className="flex-1 space-y-4">
       <div>
         <DialogTitle asChild>
-          <h2 className={`text-2xl font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>{item.title}</h2>
+          <h2 className={`text-2xl font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+            {testMode && <span className="text-blue-500 text-sm font-normal mr-2">[테스트 모드]</span>}
+            {item.title}
+          </h2>
         </DialogTitle>
         <div className="flex items-center gap-2 mt-2">
           <span className={`text-sm ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>{get_content_type_label(item.type)}</span>
@@ -212,30 +215,89 @@ const ContentPreviewModal = ({
   item, 
   dark_mode, 
   on_close, 
-  on_publish 
+  on_publish,
+  testMode = false  // 테스트 모드 활성화 prop
 }) => {
   // 동적 비디오 URL 관리를 위한 상태
   const [videoUrl, setVideoUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // 테스트 모드를 위한 동적 item 상태
+  const [dynamicItem, setDynamicItem] = useState(null);
 
   /**
    * 모달이 열리고 item이 존재할 때 백엔드에서 Presigned URL을 가져오는 useEffect
+   * testMode가 활성화되면 완성된 영상 목록에서 최신 영상을 자동으로 선택
    */
   useEffect(() => {
     const fetchVideoUrl = async () => {
-      // 모달이 닫혀있거나 item이 없으면 실행하지 않음
-      if (!is_open || !item) {
+      // 모달이 닫혀있으면 실행하지 않음
+      if (!is_open) {
         return;
+      }
+
+      let targetItem = item;
+      let resultId = null;
+
+      // 🧪 테스트 모드: item이 없거나 resultId가 없을 때 동적으로 완성된 영상 조회
+      if (testMode && (!item || !(item.video_id || item.id))) {
+        try {
+          console.log('🧪 [테스트 모드] 완성된 영상 목록 조회 중...');
+          const videoResults = await getVideoResultId();
+          
+          if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
+            throw new Error('완성된 영상이 없습니다');
+          }
+
+          // 가장 최신 영상 선택 (첫 번째 항목)
+          const latestVideo = videoResults[0];
+          if (!latestVideo?.resultId) {
+            throw new Error('완성된 영상에서 resultId를 찾을 수 없습니다');
+          }
+
+          // 테스트용 item 객체 생성
+          targetItem = {
+            id: latestVideo.resultId,
+            video_id: latestVideo.resultId,
+            resultId: latestVideo.resultId,
+            title: `테스트 영상 ${latestVideo.resultId}`,
+            description: `동적으로 로드된 테스트 영상입니다. ResultId: ${latestVideo.resultId}`,
+            type: 'video',
+            status: 'ready',
+            createdAt: latestVideo.createdAt,
+            created_at: latestVideo.createdAt
+          };
+          
+          setDynamicItem(targetItem);
+          resultId = latestVideo.resultId;
+          
+          console.log('🧪 [테스트 모드] 선택된 영상:', {
+            resultId: latestVideo.resultId,
+            createdAt: latestVideo.createdAt,
+            title: targetItem.title
+          });
+          
+        } catch (err) {
+          console.error('🧪 [테스트 모드] 완성된 영상 조회 실패:', err);
+          setError(`테스트 모드 초기화 실패: ${err.message}`);
+          return;
+        }
+      } else {
+        // 일반 모드: 기존 로직
+        if (!targetItem) {
+          return;
+        }
+        
+        // resultId 확인 (video_id 또는 id 사용)
+        resultId = targetItem.video_id || targetItem.id;
       }
 
       // 비디오 타입이 아니면 API 호출하지 않음
-      if (item.type !== 'video') {
+      if (targetItem.type !== 'video') {
         return;
       }
 
-      // resultId 확인 (video_id 또는 id 사용)
-      const resultId = item.video_id || item.id;
       if (!resultId) {
         setError('비디오 ID를 찾을 수 없습니다.');
         return;
@@ -273,40 +335,49 @@ const ContentPreviewModal = ({
     };
 
     fetchVideoUrl();
-  }, [item, is_open]);
+  }, [item, is_open, testMode]); // testMode 의존성 추가
 
-  // ▼▼▼▼▼ 더 안전한 null 체크 ▼▼▼▼▼
-  if (!is_open || !item) {
-    // 모달이 닫혀있거나 item이 null이면 렌더링하지 않음
+  // ▼▼▼▼▼ 테스트 모드 및 null 체크 ▼▼▼▼▼
+  if (!is_open) {
     return null;
   }
-  // ▲▲▲▲▲ 더 안전한 null 체크 ▲▲▲▲▲
+  
+  // 테스트 모드에서는 dynamicItem 사용, 일반 모드에서는 기존 item 사용
+  const currentItem = testMode && dynamicItem ? dynamicItem : item;
+  
+  if (!testMode && !item) {
+    // 일반 모드에서 item이 없으면 렌더링하지 않음
+    return null;
+  }
+  // ▲▲▲▲▲ 테스트 모드 및 null 체크 ▲▲▲▲▲
 
   const handle_publish_click = () => {
     on_close();
-    on_publish(item);
+    // 테스트 모드에서는 실제 item 전달, 일반 모드에서는 기존 item 사용
+    on_publish(testMode && dynamicItem ? dynamicItem : item);
   };
 
   return (
     <Dialog open={is_open} onOpenChange={(open) => !open && on_close()}>
       <DialogContent className={`max-w-4xl w-[90vw] ${dark_mode ? 'bg-gray-900/90 border-gray-700/20' : 'bg-white/90 border-gray-300/20'} backdrop-blur-2xl rounded-3xl shadow-xl border p-8 space-y-6`}>
         <MediaViewer 
-          item={item} 
+          item={currentItem} 
           dark_mode={dark_mode} 
           videoUrl={videoUrl}
           isLoading={isLoading}
           error={error}
         />
         <div className="flex items-start gap-8">
-          <ContentInfo item={item} dark_mode={dark_mode} />
+          <ContentInfo item={currentItem} dark_mode={dark_mode} testMode={testMode} />
           <div className="flex flex-col gap-3 w-40 flex-shrink-0">
-            {item.status === 'ready' && (
+            {(currentItem?.status === 'ready') && (
               <Button 
                 onClick={handle_publish_click}
                 className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
+                disabled={testMode} // 테스트 모드에서는 비활성화
               >
                 <Upload className="h-5 w-5 mr-2" />
-                지금 론칭
+                {testMode ? '테스트 모드' : '지금 론칭'}
               </Button>
             )}
           </div>
