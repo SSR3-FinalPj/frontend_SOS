@@ -75,6 +75,7 @@ const SSEProvider = ({ children }) => {
         window.simulateVideoReady = simulate_video_ready_event;
         window.manualRefreshVideos = manual_refresh_videos;
         window.emergencyRecovery = emergency_recovery;
+        window.debugMatchingStatus = debug_matching_status;
         
         console.log('🧪 Enhanced 개발자 도구 함수 등록 완료:');
         console.log('  === 기본 도구 ===');
@@ -88,6 +89,7 @@ const SSEProvider = ({ children }) => {
         console.log('  - window.toggleSmartPolling() : 스마트 폴링 토글');
         console.log('  - window.generateDiagnosticReport() : 종합 진단 보고서');
         console.log('  - window.simulateVideoReady() : VIDEO_READY 이벤트 시뮬레이션');
+        console.log('  - window.debugMatchingStatus() : 매칭 상태 상세 분석');
         console.log('  === 사용자 도구 ===');
         console.log('  - window.manualRefreshVideos() : 수동 새로고침');
         console.log('  - window.emergencyRecovery() : 응급 복구');

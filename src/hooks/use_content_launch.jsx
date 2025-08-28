@@ -523,20 +523,47 @@ export const use_content_launch = create(
             return;
           }
 
-          // 4. '처리 중' 영상과 '새로 완성된' 영상을 매칭하고 업데이트할 내용을 준비합니다.
+          // 4. '처리 중' 영상과 '새로 완성된' 영상을 시간 기반으로 매칭하고 업데이트할 내용을 준비합니다.
           const updates = new Map(); // temp_id -> updatedVideoObject
+          
+          // 완성된 영상들을 createdAt 시간순으로 정렬 (오래된 것부터)
+          const sortedCompletedVideos = [...newCompletedVideos].sort((a, b) => 
+            new Date(a.createdAt) - new Date(b.createdAt)
+          );
+          
+          console.log(`[🎬 SSE 처리] 📝 매칭 시작: 처리중 ${processingVideos.length}개, 완성됨 ${sortedCompletedVideos.length}개`);
 
-          for (const completedVideoData of newCompletedVideos) {
+          for (const completedVideoData of sortedCompletedVideos) {
+            // 가장 오래된 '처리 중' 영상과 매칭
             const matchingProcessingVideo = processingVideos.shift();
             
             if (!matchingProcessingVideo) {
               console.warn(`[🎬 SSE 처리] ⚠️ 완성된 영상(${completedVideoData.resultId})이 있지만 매칭할 '처리 중' 영상이 없습니다.`);
-              break;
+              
+              // 매칭 실패한 완성 영상을 새 아이템으로 생성하여 추가
+              const orphanedVideo = {
+                temp_id: `completed-${completedVideoData.resultId}-${Date.now()}`,
+                id: completedVideoData.resultId,
+                video_id: completedVideoData.resultId,
+                resultId: completedVideoData.resultId,
+                title: `완성된 영상 ${completedVideoData.resultId}`,
+                status: 'ready',
+                type: 'video',
+                createdAt: completedVideoData.createdAt,
+                created_at: completedVideoData.createdAt,
+                completion_time: new Date().toISOString(),
+              };
+              
+              updates.set(orphanedVideo.temp_id, orphanedVideo);
+              console.log(`[🎬 SSE 처리] 🆕 매칭 실패한 영상을 새 아이템으로 추가: ${completedVideoData.resultId}`);
+              continue; // break 대신 continue로 다른 완성 영상도 처리
             }
 
             console.log(`[🎬 SSE 처리] 🎯 영상 매칭 성공!`, {
               processingTitle: matchingProcessingVideo.title,
-              completedId: completedVideoData.resultId
+              processingCreatedAt: matchingProcessingVideo.created_at,
+              completedId: completedVideoData.resultId,
+              completedCreatedAt: completedVideoData.createdAt
             });
 
             const updatedVideo = {
@@ -553,11 +580,26 @@ export const use_content_launch = create(
 
           // 5. 상태를 한번에 업데이트합니다.
           if (updates.size > 0) {
-            set(state => ({
-              pending_videos: state.pending_videos.map(video => 
+            set(state => {
+              // 기존 영상 업데이트
+              const updatedExistingVideos = state.pending_videos.map(video => 
                 updates.has(video.temp_id) ? updates.get(video.temp_id) : video
-              )
-            }));
+              );
+              
+              // 새로 생성된 orphaned 영상들 찾기
+              const newOrphanedVideos = [];
+              for (const [tempId, videoData] of updates.entries()) {
+                if (tempId.startsWith('completed-')) {
+                  newOrphanedVideos.push(videoData);
+                }
+              }
+              
+              console.log(`[🎬 SSE 처리] 📊 상태 업데이트: 기존 ${updatedExistingVideos.length}개, 새 영상 ${newOrphanedVideos.length}개`);
+              
+              return {
+                pending_videos: [...updatedExistingVideos, ...newOrphanedVideos]
+              };
+            });
             
             // 6. UI를 갱신합니다.
             get().fetch_folders();
@@ -812,6 +854,62 @@ export const use_content_launch = create(
       force_smart_polling_check: async () => {
         console.log(`[🎯 Force Check] 스마트 폴링 강제 실행`);
         await get().check_for_missed_completions();
+      },
+
+      /**
+       * 🔬 매칭 상태 상세 디버깅
+       */
+      debug_matching_status: async () => {
+        const state = get();
+        console.log(`[🔬 Matching Debug] ===== 매칭 상태 분석 =====`);
+        
+        // 1. pending_videos 상태 분석
+        const readyVideos = state.pending_videos.filter(v => v.status === 'ready');
+        const processingVideos = state.pending_videos.filter(v => v.status === 'PROCESSING');
+        
+        console.log(`📊 현재 상태:`, {
+          total_pending: state.pending_videos.length,
+          ready_count: readyVideos.length,
+          processing_count: processingVideos.length
+        });
+        
+        console.log(`✅ Ready 영상들:`, readyVideos.map(v => ({
+          temp_id: v.temp_id,
+          title: v.title,
+          video_id: v.video_id,
+          resultId: v.resultId,
+          created_at: v.created_at
+        })));
+        
+        console.log(`⏳ Processing 영상들:`, processingVideos.map(v => ({
+          temp_id: v.temp_id,
+          title: v.title,
+          created_at: v.created_at
+        })));
+        
+        // 2. API에서 완성된 영상들 확인
+        try {
+          const completedVideos = await getVideoResultId();
+          console.log(`🎬 백엔드 완성 영상들:`, completedVideos);
+          
+          // 3. 매칭되지 않은 완성 영상들 찾기
+          const knownResultIds = new Set(state.pending_videos.map(v => v.resultId).filter(Boolean));
+          const unmatchedCompleted = completedVideos.filter(cv => !knownResultIds.has(cv.resultId));
+          
+          if (unmatchedCompleted.length > 0) {
+            console.warn(`⚠️ 매칭되지 않은 완성 영상들:`, unmatchedCompleted);
+          } else {
+            console.log(`✅ 모든 완성 영상이 매칭됨`);
+          }
+        } catch (error) {
+          console.error(`❌ 백엔드 완성 영상 조회 실패:`, error);
+        }
+        
+        return {
+          ready_videos: readyVideos,
+          processing_videos: processingVideos,
+          total_pending: state.pending_videos.length
+        };
       },
 
       /**

@@ -97,14 +97,14 @@ const MediaViewer = React.memo(({ item, dark_mode, videoUrl, isLoading: apiLoadi
             </div>
           )}
 
-          {/* 비디오 플레이어 */}
-          {videoUrl && !apiLoading && !apiError && (
+          {/* 비디오 플레이어 - 동적 URL 또는 폴백 URL 사용 */}
+          {((videoUrl && !apiLoading && !apiError) || (!videoUrl && item.video_url)) && (
             <video
-              key={videoUrl} // URL 변경 시 비디오 재로드
+              key={videoUrl || item.video_url} // URL 변경 시 비디오 재로드
               className={`w-full h-full object-contain transition-opacity duration-300 ${
                 videoLoadState === 'loaded' ? 'opacity-100' : 'opacity-0'
               }`}
-              src={videoUrl}
+              src={videoUrl || item.video_url} // 동적 URL 우선, 없으면 기존 URL 사용
               controls
               autoPlay
               muted
@@ -115,9 +115,20 @@ const MediaViewer = React.memo(({ item, dark_mode, videoUrl, isLoading: apiLoadi
               onCanPlay={handleVideoCanPlay}
               onLoadStart={handleVideoLoadStart}
             >
-              <source src={videoUrl} type="video/mp4" />
+              <source src={videoUrl || item.video_url} type="video/mp4" />
               브라우저가 비디오를 지원하지 않습니다.
             </video>
+          )}
+
+          {/* 비디오 URL이 전혀 없는 경우 */}
+          {!videoUrl && !item.video_url && !apiLoading && !apiError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800/90 gap-3 text-center px-4">
+              <AlertCircle className="h-12 w-12 text-yellow-400" />
+              <div>
+                <p className="text-white font-medium">비디오 URL을 찾을 수 없습니다</p>
+                <p className="text-gray-400 text-sm mt-1">영상이 아직 처리 중일 수 있습니다</p>
+              </div>
+            </div>
           )}
         </>
       ) : (
