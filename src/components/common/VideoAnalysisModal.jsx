@@ -26,10 +26,10 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
         setAtmosphereSummary(commentData.atmosphere || '분석 결과 없음');
 
         // 트래픽 소스 요약 API
-        const trafficResponse = await apiFetch(`/api/youtube/traffic-source-summary/${videoId}`);
-        if (!trafficResponse.ok) throw new Error(`Failed to fetch traffic data: ${trafficResponse.status}`);
-        const trafficResult = await trafficResponse.json();
-        setTrafficData(trafficResult.data || []); // Assuming apiFetch returns { data: [...] }
+        // const trafficResponse = await apiFetch(`/api/youtube/traffic-source-summary/${videoId}`);
+        // if (!trafficResponse.ok) throw new Error(`Failed to fetch traffic data: ${trafficResponse.status}`);
+        // const trafficResult = await trafficResponse.json();
+        // setTrafficData(trafficResult.data || []); // Assuming apiFetch returns { data: [...] }
 
       } catch (err) {
         setError(String(err));
@@ -112,17 +112,7 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
                 <p className="text-sm text-gray-700">{atmosphereSummary}</p>
               </div>
 
-              {/* Traffic Source Graph */}
-              <div className="p-4 rounded-xl bg-gray-100/50 border border-gray-300/30">
-                <h4 className="text-lg font-semibold mb-3 text-gray-800">트래픽 소스 그래프</h4>
-                {trafficData.length > 0 ? (
-                  <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-                    트래픽 그래프 영역 (Recharts 통합 예정)
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">트래픽 데이터가 없습니다.</p>
-                )}
-              </div>
+              
             </div>
           )}
         </div>
