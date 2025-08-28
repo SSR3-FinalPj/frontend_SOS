@@ -5,8 +5,6 @@ export const usePageStore = create((set) => ({
   setCurrentPage: (page) => set({ currentPage: page }),
   isDarkMode: false,
   setIsDarkMode: (isDark) => set({ isDarkMode: isDark }),
-  language: 'ko',
-  setLanguage: (lang) => set({ language: lang }),
   
   // ▼▼▼▼▼ 플랫폼 연동 상태 관리 코드 추가 ▼▼▼▼▼
   platformConnectionStatus: {

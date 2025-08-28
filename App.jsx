@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-// ✅ alias(@) 사용
+
 import { tryRefreshOnBoot } from '@/lib/auth_bootstrap';
 import { usePageStore } from '@/stores/page_store';
-import { useAuthAndChannelInfoInitializer } from '@/hooks/use_auth_and_channel_info';
-import Router from '@/Router';
-import ConnectYouTubeButton from '@/components/ui/ConnectYouTubeButton';
+import { usePlatformInitializer } from '@/hooks/usePlatformInitializer';
+import Router from '@/Router'; 
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 import SSEProvider from '@/components/common/SSEProvider';
 
 export default function App() {
-  const { isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
-  const { loading: authLoading } = useAuthAndChannelInfoInitializer();
+  const { isDarkMode, setIsDarkMode } = usePageStore();
+  const { loading: platformLoading } = usePlatformInitializer();
   const [bootDone, setBootDone] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,15 +39,11 @@ export default function App() {
   // 다크 모드/언어 초기화
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
-    const savedLanguage = localStorage.getItem('contentboost-language');
 
     if (savedDarkMode !== null) {
       setIsDarkMode(JSON.parse(savedDarkMode));
     }
-    if (savedLanguage) {
-      setLanguage(savedLanguage);
-    }
-  }, [setIsDarkMode, setLanguage]);
+  }, [setIsDarkMode]);
 
   // 다크 모드 적용
   useEffect(() => {
@@ -63,7 +58,7 @@ export default function App() {
 
 
 
-  if (!bootDone || authLoading) {
+  if (!bootDone || platformLoading) {
     return <div />; // 로딩 화면
   }
 

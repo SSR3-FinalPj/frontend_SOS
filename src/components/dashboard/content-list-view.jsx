@@ -1,5 +1,3 @@
-//content-list-view
-
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image, MessageSquare, ThumbsUp, ArrowBigUp, Eye } from 'lucide-react';
@@ -7,8 +5,8 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } fro
 import GlassCard from '../ui/glass-card.jsx';
 import { getYouTubeVideosByChannelId } from '../../lib/api.js';
 import { useYouTubeStore } from '../../stores/youtube_store.js';
+import { usePlatformStore } from '../../stores/platform_store.js';
 import { mockContentData } from '../../utils/mock-data.js';
-import { useAuthAndChannelInfoInitializer } from '../../hooks/use_auth_and_channel_info.js';
 
 function ContentListView({
   selectedPlatform,
@@ -26,7 +24,8 @@ function ContentListView({
 
   const sortDropdownRef = useRef(null);
   const { channelId } = useYouTubeStore();
-  const { loading: authLoading } = useAuthAndChannelInfoInitializer();
+  const { platforms } = usePlatformStore();
+  const authLoading = platforms.google.loading;
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
