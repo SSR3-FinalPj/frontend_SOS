@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, TestTube } from 'lucide-react';
+import { Plus, RefreshCw, TestTube, Code } from 'lucide-react';
 import ContentFolderCard from './content_folder_card';
 import ContentPreviewModal from './content_preview_modal';
 import ContentPublishModal from './content_publish_modal';
 import AIMediaRequestModal from './ai_media_request_modal.jsx';
+import VideoStreamTestApp from './VideoStreamTestApp.jsx';
 import { Button } from '../ui/button.jsx';
 import { use_content_launch } from '../../hooks/use_content_launch.jsx';
 import { use_content_modals } from '../../hooks/use_content_modals.jsx';
@@ -35,6 +36,9 @@ const ContentLaunchView = ({ dark_mode }) => {
   
   // 테스트 모달 상태
   const [is_test_modal_open, set_is_test_modal_open] = useState(false);
+  
+  // API 테스트 앱 표시 상태
+  const [show_test_app, set_show_test_app] = useState(false);
 
   // 커스텀 훅 사용
   const {
@@ -72,6 +76,11 @@ const ContentLaunchView = ({ dark_mode }) => {
   
   const handle_close_test_modal = () => {
     set_is_test_modal_open(false);
+  };
+  
+  // API 테스트 앱 토글
+  const toggle_test_app = () => {
+    set_show_test_app(!show_test_app);
   };
 
 
@@ -185,16 +194,26 @@ const ContentLaunchView = ({ dark_mode }) => {
               <div className="flex flex-col">
                 <Button
                   onClick={handle_open_test_modal}
-                  className="bg-gradient-to-r from-green-500/20 to-teal-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-teal-500/30 text-green-600 dark:text-green-300 shadow-lg font-semibold rounded-2xl"
+                  className="bg-gradient-to-r from-green-500/20 to-teal-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-teal-500/30 text-green-600 dark:text-green-300 shadow-lg font-semibold rounded-2xl mb-2"
                   size="lg"
                 >
                   <TestTube className="w-5 h-5 mr-2" />
                   샘플 영상 테스트
                 </Button>
                 
+                {/* API 테스트 앱 토글 버튼 */}
+                <Button
+                  onClick={toggle_test_app}
+                  className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 hover:from-indigo-500/30 hover:to-purple-500/30 text-indigo-600 dark:text-indigo-300 shadow-lg font-semibold rounded-2xl"
+                  size="lg"
+                >
+                  <Code className="w-5 h-5 mr-2" />
+                  {show_test_app ? 'API 테스트 숨기기' : 'API 테스트 보기'}
+                </Button>
+                
                 {/* 설명 텍스트 */}
                 <p className={`text-xs mt-2 ${dark_mode ? 'text-green-200/80' : 'text-green-600/70'} font-medium max-w-xs`}>
-                  완성된 영상으로 미리보기 모달을 테스트합니다
+                  완성된 영상으로 미리보기 모달 테스트 및 하드코딩 API 테스트
                 </p>
               </div>
             </div>
@@ -261,6 +280,13 @@ const ContentLaunchView = ({ dark_mode }) => {
             </div>
           </div>
 
+          {/* API 테스트 앱 (조건부 표시) */}
+          {show_test_app && (
+            <div className="mb-6">
+              <VideoStreamTestApp dark_mode={dark_mode} />
+            </div>
+          )}
+          
           {/* 폴더 카드들 */}
           {folders.map((folder) => (
             <ContentFolderCard
