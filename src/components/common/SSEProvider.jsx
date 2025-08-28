@@ -53,7 +53,8 @@ const SSEProvider = ({ children }) => {
         generate_diagnostic_report,
         simulate_video_ready_event,
         manual_refresh_videos,
-        emergency_recovery
+        emergency_recovery,
+        debug_matching_status
       } = use_content_launch.getState();
       
       // 하이브리드 폴링 시스템 활성화
