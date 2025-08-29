@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
-import { Clock, BarChart2, X as XIcon } from 'lucide-react';
-import { getVideoStreamUrl } from '../../lib/api';
+import { Clock, BarChart2, Download, X as XIcon } from 'lucide-react';
+import { getVideoStreamUrl, getVideoDownloadUrl } from '../../lib/api';
 
 const GeneratedVideoPreviewModal = ({ 
   is_open, 
@@ -17,6 +17,9 @@ const GeneratedVideoPreviewModal = ({
   const [videoUrl, setVideoUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // 영상 다운로드를 위한 상태 관리
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // 모달이 열릴 때 API를 호출하여 비디오 URL을 가져옴
   useEffect(() => {
@@ -58,6 +61,45 @@ const GeneratedVideoPreviewModal = ({
   const handleViewAnalytics = () => {
     navigate(`/analytics?videoId=${item.videoId}`);
     on_close();
+  };
+
+  // 영상 다운로드 핸들러
+  const handleDownload = async () => {
+    if (!item || isDownloading) return;
+
+    setIsDownloading(true);
+
+    try {
+      // 실제 아이템의 resultId 추출 (스트리밍과 동일한 로직)
+      const resultId = item.resultId || item.id || item.video_id;
+      if (!resultId) {
+        throw new Error('영상 ID를 찾을 수 없습니다.');
+      }
+
+      // 다운로드 URL 요청
+      const data = await getVideoDownloadUrl(resultId);
+      
+      // 파일 다운로드 실행
+      const link = document.createElement('a');
+      link.href = data.url;
+      
+      // 백엔드에서 파일명을 제공하지 않는 경우 기본 파일명 설정
+      const fileName = `video_${resultId}.mp4`;
+      link.setAttribute('download', fileName);
+      
+      // 임시로 DOM에 추가 후 클릭하여 다운로드 시작
+      document.body.appendChild(link);
+      link.click();
+      
+      // 사용 후 DOM에서 제거하여 메모리 정리
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error('영상 다운로드 실패:', error);
+      alert(`다운로드에 실패했습니다: ${error.message}`);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const formatDate = (dateStr) => {
@@ -156,6 +198,14 @@ const GeneratedVideoPreviewModal = ({
             </DialogDescription>
           </div>
           <div className="flex flex-col gap-3 w-40 flex-shrink-0">
+            <Button 
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="w-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-emerald-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              {isDownloading ? '다운로드 중...' : '다운로드'}
+            </Button>
             <Button 
               onClick={handleViewAnalytics}
               className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"

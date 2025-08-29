@@ -438,3 +438,47 @@ export async function getVideoStreamUrl(resultId) {
 
   return await res.json();
 }
+
+/**
+ * 비디오 다운로드 URL을 가져오는 함수
+ * @param {number|string} resultId - 영상 결과 ID (필수)
+ * @returns {Promise} 비디오 다운로드 URL 데이터
+ */
+export async function getVideoDownloadUrl(resultId) {
+  // 토큰 상태 사전 체크
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('인증이 필요합니다. 로그인 후 다시 시도해주세요.');
+  }
+
+  // resultId 검증
+  if (!resultId || (typeof resultId !== 'number' && typeof resultId !== 'string')) {
+    throw new Error('다운로드할 영상 ID가 필요합니다.');
+  }
+
+  const actualResultId = resultId;
+
+  const res = await apiFetch('/api/videos/download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resultId: actualResultId }),
+  });
+
+  if (!res.ok) {
+    // 상태 코드별 구체적인 에러 메시지
+    if (res.status === 401) {
+      throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+    }
+    if (res.status === 403) {
+      throw new Error('해당 영상을 다운로드할 권한이 없습니다.');
+    }
+    if (res.status === 404) {
+      throw new Error('다운로드하려는 영상을 찾을 수 없습니다.');
+    }
+    
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`다운로드 URL 조회 실패 (${res.status}): ${errorData.message || '서버 오류가 발생했습니다.'}`);
+  }
+
+  return await res.json();
+}
