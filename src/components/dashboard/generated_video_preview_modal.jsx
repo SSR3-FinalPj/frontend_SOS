@@ -18,15 +18,6 @@ const GeneratedVideoPreviewModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  if (!is_open || !item) {
-    return null;
-  }
-
-  const handleViewAnalytics = () => {
-    navigate(`/analytics?videoId=${item.videoId}`);
-    on_close();
-  };
-
   // 모달이 열릴 때 API를 호출하여 비디오 URL을 가져옴
   useEffect(() => {
     if (is_open) {
@@ -54,6 +45,15 @@ const GeneratedVideoPreviewModal = ({
       setIsLoading(false);
     }
   }, [is_open]);
+
+  if (!is_open || !item) {
+    return null;
+  }
+
+  const handleViewAnalytics = () => {
+    navigate(`/analytics?videoId=${item.videoId}`);
+    on_close();
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
