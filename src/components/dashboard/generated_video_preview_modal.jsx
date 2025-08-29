@@ -27,8 +27,13 @@ const GeneratedVideoPreviewModal = ({
         setVideoUrl(null);
 
         try {
-          // getVideoStreamUrl 함수 사용 (resultId 생략 시 테스트용 기본값 1 사용)
-          const data = await getVideoStreamUrl();
+          // 실제 아이템의 resultId 사용
+          const resultId = item.resultId || item.id || item.video_id;
+          if (!resultId) {
+            throw new Error('영상 ID를 찾을 수 없습니다.');
+          }
+          
+          const data = await getVideoStreamUrl(resultId);
           setVideoUrl(data.url);
         } catch (err) {
           setError('영상을 불러오는 데 실패했습니다: ' + err.message);
@@ -76,9 +81,41 @@ const GeneratedVideoPreviewModal = ({
             </div>
           )}
           {error && (
-            <div className="text-red-400 p-4 text-center max-w-md">
-              <p className="text-lg font-medium mb-2">오류 발생</p>
-              <p className="text-sm">{error}</p>
+            <div className="text-red-400 p-6 text-center max-w-md">
+              <p className="text-lg font-medium mb-3">
+                {error.includes('인증') ? '🔐 인증 필요' : 
+                 error.includes('권한') ? '🚫 접근 권한 없음' : 
+                 error.includes('찾을 수 없습니다') ? '📹 영상 없음' : 
+                 '❌ 오류 발생'}
+              </p>
+              <p className="text-sm mb-4 text-red-300">{error}</p>
+              <button
+                onClick={() => {
+                  const fetchVideoUrl = async () => {
+                    setIsLoading(true);
+                    setError(null);
+                    setVideoUrl(null);
+
+                    try {
+                      const resultId = item.resultId || item.id || item.video_id;
+                      if (!resultId) {
+                        throw new Error('영상 ID를 찾을 수 없습니다.');
+                      }
+                      
+                      const data = await getVideoStreamUrl(resultId);
+                      setVideoUrl(data.url);
+                    } catch (err) {
+                      setError(err.message);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  };
+                  fetchVideoUrl();
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+              >
+                다시 시도
+              </button>
             </div>
           )}
           {videoUrl && !isLoading && !error && (

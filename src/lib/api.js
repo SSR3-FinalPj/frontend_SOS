@@ -401,18 +401,35 @@ export async function getCommentAnalysis(videoId) {
  * @returns {Promise} 비디오 스트리밍 URL 데이터
  */
 export async function getVideoStreamUrl(resultId) {
+  // 토큰 상태 사전 체크
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('인증이 필요합니다. 로그인 후 다시 시도해주세요.');
+  }
+
   // 테스트용 하드코딩된 값 (추후 실제 resultId로 변경 예정)
-  const testResultId = resultId || 1;
+  const actualResultId = resultId || 1;
 
   const res = await apiFetch('/api/videos/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ resultId: testResultId }),
+    body: JSON.stringify({ resultId: actualResultId }),
   });
 
   if (!res.ok) {
+    // 상태 코드별 구체적인 에러 메시지
+    if (res.status === 401) {
+      throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+    }
+    if (res.status === 403) {
+      throw new Error('해당 영상에 접근할 권한이 없습니다.');
+    }
+    if (res.status === 404) {
+      throw new Error('요청하신 영상을 찾을 수 없습니다.');
+    }
+    
     const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
-    throw new Error(`비디오 스트리밍 URL 조회 실패: ${res.status} - ${errorData.message}`);
+    throw new Error(`서버 오류 (${res.status}): ${errorData.message || '비디오 스트리밍 URL 조회에 실패했습니다.'}`);
   }
 
   return await res.json();
