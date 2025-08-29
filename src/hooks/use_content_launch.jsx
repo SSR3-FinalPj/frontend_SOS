@@ -545,8 +545,11 @@ export const use_content_launch = create(
                 }
               }
               
+              // ⭐ 새로운 더미 아이템 자동 생성
+              const newDummyItem = get().create_dummy_item();
+              
               return {
-                pending_videos: [...updatedExistingVideos, ...newOrphanedVideos]
+                pending_videos: [newDummyItem, ...updatedExistingVideos, ...newOrphanedVideos]
               };
             });
             
@@ -975,6 +978,25 @@ export const use_content_launch = create(
             timestamp: new Date().toISOString()
           };
         }
+      },
+
+      /**
+       * 새로운 더미 아이템을 생성하는 헬퍼 함수
+       * @returns {Object} 새로운 더미 아이템 객체
+       */
+      create_dummy_item: () => {
+        const today = new Date().toISOString().split('T')[0];
+        return {
+          temp_id: `dummy-${Date.now()}`,
+          title: '새로운 AI 영상',
+          status: 'DUMMY',
+          created_at: new Date().toISOString(),
+          start_time: new Date().toISOString(),
+          creationTime: new Date().toISOString(),
+          creation_date: today,
+          type: 'video',
+          image_url: null
+        };
       },
 
       /**
