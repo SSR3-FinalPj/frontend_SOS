@@ -393,3 +393,27 @@ export async function getCommentAnalysis(videoId) {
 
   return responseData;
 }
+
+/* ------------------ 영상 스트리밍 API ------------------ */
+/**
+ * 비디오 스트리밍 URL을 가져오는 함수
+ * @param {number} [resultId] - 영상 결과 ID (생략 시 테스트용 기본값 사용)
+ * @returns {Promise} 비디오 스트리밍 URL 데이터
+ */
+export async function getVideoStreamUrl(resultId) {
+  // 테스트용 하드코딩된 값 (추후 실제 resultId로 변경 예정)
+  const testResultId = resultId || 1;
+
+  const res = await apiFetch('/api/videos/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resultId: testResultId }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`비디오 스트리밍 URL 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}

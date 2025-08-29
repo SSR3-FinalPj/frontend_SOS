@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, TestTube, Code } from 'lucide-react';
 import ContentFolderCard from './content_folder_card';
-import ContentPreviewModal from './content_preview_modal';
+import GeneratedVideoPreviewModal from './generated_video_preview_modal';
 import ContentPublishModal from './content_publish_modal';
 import AIMediaRequestModal from './ai_media_request_modal.jsx';
 import { Button } from '../ui/button.jsx';
@@ -227,13 +227,12 @@ const ContentLaunchView = ({ dark_mode }) => {
         </div>
       </div>
 
-      {/* 미리보기 모달 */}
-      <ContentPreviewModal
+      {/* AI 생성 영상 미리보기 모달 */}
+      <GeneratedVideoPreviewModal
         is_open={preview_modal.open}
         item={preview_modal.item}
         dark_mode={dark_mode}
         on_close={close_preview_modal}
-        on_publish={open_publish_modal}
       />
 
       {/* 게시 모달 */}
