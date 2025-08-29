@@ -21,17 +21,18 @@ const NaturalPromptInput = ({
   // 프롬프트 변경 핸들러
   const handle_prompt_change = useCallback((e) => {
     const value = e.target.value;
-    // 200자 제한
-    if (value.length <= 200) {
+    // 100자 제한
+    if (value.length <= 100) {
       on_prompt_change(value);
     }
   }, [on_prompt_change]);
 
-  // 글자 수에 따른 색상 클래스 결정
+  // 글자 수에 따른 색상 클래스 결정 (100자 기준으로 조정)
   const get_counter_color = useCallback((length) => {
-    if (length <= 50) return 'text-green-600 dark:text-green-400';
-    if (length <= 100) return 'text-yellow-600 dark:text-yellow-400';
-    if (length <= 200) return 'text-orange-600 dark:text-orange-400';
+    if (length <= 25) return 'text-green-600 dark:text-green-400';
+    if (length <= 50) return 'text-yellow-600 dark:text-yellow-400';
+    if (length <= 75) return 'text-orange-600 dark:text-orange-400';
+    if (length <= 100) return 'text-red-600 dark:text-red-400';
     return 'text-red-600 dark:text-red-400';
   }, []);
 
@@ -72,7 +73,7 @@ const NaturalPromptInput = ({
           
           {/* 글자 수 카운터 */}
           <div className={`absolute bottom-3 right-3 text-xs font-medium ${get_counter_color(prompt_text.length)}`}>
-            {prompt_text.length}/200자
+            {prompt_text.length}/100자
           </div>
         </div>
 
@@ -83,7 +84,7 @@ const NaturalPromptInput = ({
               💡 입력 가이드
             </h4>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• <strong>50자 내외</strong>가 8초 영상에 가장 최적화됩니다</li>
+              <li>• <strong>25자 내외</strong>가 8초 영상에 가장 최적화됩니다</li>
               <li>• 구체적인 방향성을 제시할수록 더 정확한 결과를 얻을 수 있습니다</li>
               <li>• 한국어로 자연스럽게 입력해주세요</li>
             </ul>
