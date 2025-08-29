@@ -49,7 +49,7 @@ const GeneratedVideoPreviewModal = ({
       setError(null);
       setIsLoading(false);
     }
-  }, [is_open]);
+  }, [is_open, item]);
 
   if (!is_open || !item) {
     return null;

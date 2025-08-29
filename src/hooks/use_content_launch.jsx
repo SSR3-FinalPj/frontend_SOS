@@ -8,6 +8,47 @@ import { persist } from 'zustand/middleware';
 import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '../lib/api.js';
 
 /**
+ * 백엔드에서 오는 날짜 형식을 안전하게 파싱하는 함수
+ * @param {string} dateString - 백엔드 날짜 문자열 (예: "2025-08-29 12:03:21.07964")
+ * @returns {Date} 안전하게 파싱된 Date 객체
+ */
+function parseSafeDate(dateString) {
+  if (!dateString || typeof dateString !== 'string') {
+    return new Date();
+  }
+  // 공백을 'T'로 바꿔 ISO 8601 형식에 가깝게 만들어 파싱 안정성을 높임
+  const isoString = dateString.replace(' ', 'T');
+  const parsedDate = new Date(isoString);
+  
+  // Invalid Date 체크
+  if (isNaN(parsedDate.getTime())) {
+    console.warn(`[날짜 파싱 경고] 잘못된 날짜 형식: "${dateString}", 현재 시간으로 대체`);
+    return new Date();
+  }
+  
+  return parsedDate;
+}
+
+/**
+ * 날짜에서 YYYY-MM-DD 형식의 문자열을 안전하게 추출하는 함수
+ * @param {string|Date} dateInput - 날짜 입력 (문자열 또는 Date 객체)
+ * @returns {string} YYYY-MM-DD 형식의 날짜 문자열
+ */
+function extractSafeCreationDate(dateInput) {
+  let date;
+  
+  if (dateInput instanceof Date) {
+    date = dateInput;
+  } else if (typeof dateInput === 'string') {
+    date = parseSafeDate(dateInput);
+  } else {
+    date = new Date();
+  }
+  
+  return date.toISOString().split('T')[0];
+}
+
+/**
  * 콘텐츠 론칭 관련 상태와 액션을 제공하는 Zustand 스토어
  * @returns {Object} 콘텐츠 론칭 상태와 액션 함수들
  */
@@ -108,20 +149,36 @@ export const use_content_launch = create(
           
           const pending_videos = get().pending_videos;
           
-          // pending_videos를 날짜별로 그룹화
+          // pending_videos를 날짜별로 그룹화 (안전한 날짜 처리)
           const grouped_by_date = {};
           pending_videos.forEach(video => {
-            const date = video.creation_date;
+            // creation_date가 없거나 유효하지 않은 경우 안전하게 처리
+            let date = video.creation_date;
+            
+            if (!date || date === 'undefined' || date === 'null') {
+              // createdAt이나 created_at에서 날짜 추출 시도
+              const fallbackDate = video.createdAt || video.created_at;
+              if (fallbackDate) {
+                date = extractSafeCreationDate(fallbackDate);
+              } else {
+                // 모든 날짜 정보가 없는 경우 오늘 날짜 사용
+                date = new Date().toISOString().split('T')[0];
+              }
+              
+              // video 객체에 올바른 creation_date 설정
+              video.creation_date = date;
+            }
+            
             if (!grouped_by_date[date]) {
               grouped_by_date[date] = [];
             }
             grouped_by_date[date].push(video);
           });
           
-          // 날짜별 폴더 생성
+          // 날짜별 폴더 생성 (안전한 날짜 파싱 적용)
           const pending_folders = Object.keys(grouped_by_date).map(date => ({
             date: date,
-            display_date: new Date(date).toLocaleDateString('ko-KR', {
+            display_date: parseSafeDate(date + 'T00:00:00').toLocaleDateString('ko-KR', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
@@ -179,10 +236,10 @@ export const use_content_launch = create(
           };
           set({ folders: updated_folders });
         } else {
-          // 새로운 폴더 생성: 현재 날짜로 폴더를 만들고 전체 폴더 목록 맨 앞에 추가
+          // 새로운 폴더 생성: 현재 날짜로 폴더를 만들고 전체 폴더 목록 맨 앞에 추가 (안전한 날짜 파싱 적용)
           const new_folder = {
             date: creation_date,
-            display_date: new Date(creation_date).toLocaleDateString('ko-KR', {
+            display_date: parseSafeDate(creation_date + 'T00:00:00').toLocaleDateString('ko-KR', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
@@ -253,7 +310,7 @@ export const use_content_launch = create(
         if (!existing_folder) {
           const new_folder = {
             date: creationDate,
-            display_date: new Date(creationDate).toLocaleDateString('ko-KR', {
+            display_date: parseSafeDate(creationDate + 'T00:00:00').toLocaleDateString('ko-KR', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
@@ -500,6 +557,9 @@ export const use_content_launch = create(
             
             if (!matchingProcessingVideo) {
               // 매칭 실패한 완성 영상을 새 아이템으로 생성하여 추가
+              const parsedCreatedAt = parseSafeDate(completedVideoData.createdAt);
+              const creationDate = extractSafeCreationDate(parsedCreatedAt);
+              
               const orphanedVideo = {
                 temp_id: `completed-${completedVideoData.resultId}-${Date.now()}`,
                 id: completedVideoData.resultId,
@@ -508,8 +568,9 @@ export const use_content_launch = create(
                 title: `완성된 영상 ${completedVideoData.resultId}`,
                 status: 'ready',
                 type: 'video',
-                createdAt: completedVideoData.createdAt,
-                created_at: completedVideoData.createdAt,
+                createdAt: parsedCreatedAt.toISOString(),
+                created_at: parsedCreatedAt.toISOString(),
+                creation_date: creationDate,
                 completion_time: new Date().toISOString(),
               };
               
@@ -517,13 +578,18 @@ export const use_content_launch = create(
               continue; // break 대신 continue로 다른 완성 영상도 처리
             }
 
+            const parsedCreatedAt = parseSafeDate(completedVideoData.createdAt);
+            const creationDate = extractSafeCreationDate(parsedCreatedAt);
+            
             const updatedVideo = {
               ...matchingProcessingVideo,
               id: completedVideoData.resultId,
               video_id: completedVideoData.resultId,
               resultId: completedVideoData.resultId,
               status: 'ready',
-              createdAt: completedVideoData.createdAt,
+              createdAt: parsedCreatedAt.toISOString(),
+              created_at: parsedCreatedAt.toISOString(),
+              creation_date: creationDate,
               completion_time: new Date().toISOString(),
             };
             updates.set(matchingProcessingVideo.temp_id, updatedVideo);
@@ -1019,10 +1085,10 @@ export const use_content_launch = create(
           };
           set({ folders: updatedFolders });
         } else {
-          // 새 폴더 생성
+          // 새 폴더 생성 (안전한 날짜 파싱 적용)
           const newFolder = {
             date: creationDate,
-            display_date: new Date(creationDate).toLocaleDateString('ko-KR', {
+            display_date: parseSafeDate(creationDate + 'T00:00:00').toLocaleDateString('ko-KR', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'

@@ -407,8 +407,12 @@ export async function getVideoStreamUrl(resultId) {
     throw new Error('인증이 필요합니다. 로그인 후 다시 시도해주세요.');
   }
 
-  // 테스트용 하드코딩된 값 (추후 실제 resultId로 변경 예정)
-  const actualResultId = resultId || 1;
+  // resultId 검증 - 하드코딩된 fallback 제거
+  if (!resultId || (typeof resultId !== 'number' && typeof resultId !== 'string')) {
+    throw new Error('요청에 영상 ID가 포함되지 않았습니다.');
+  }
+
+  const actualResultId = resultId;
 
   const res = await apiFetch('/api/videos/stream', {
     method: 'POST',
