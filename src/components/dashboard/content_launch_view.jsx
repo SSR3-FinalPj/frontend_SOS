@@ -107,7 +107,7 @@ const ContentLaunchView = ({ dark_mode }) => {
       
 
       {/* 날짜별 폴더 목록 */}
-      <div className="h-full overflow-auto px-8 py-6 relative z-10">
+      <div className="h-full overflow-auto relative z-10">
         <div className="max-w-7xl mx-auto space-y-6">
           
           {/* 통계 정보 및 CTA 버튼 */}
