@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '../../common/ui/dialog';
-import { Button } from '../../common/ui/button';
+import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from "../../../common/ui/dialog.jsx";
+import { Button } from "../../../common/ui/button.jsx";
 import { Clock, BarChart2, X as XIcon } from 'lucide-react';
 
 const ContentPreviewModal = ({ 

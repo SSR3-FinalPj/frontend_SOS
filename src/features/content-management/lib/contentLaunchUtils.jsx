@@ -2,6 +2,7 @@
  * 콘텐츠 론칭 관련 유틸리티 함수들
  */
 
+import React from 'react';
 import { 
   Play, 
   FileText, 

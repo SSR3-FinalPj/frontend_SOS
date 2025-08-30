@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { usePageStore } from '../stores/page_store.js';
-import LoginCard from '../components/login/LoginCard.jsx';
+import { usePageStore } from '../common/stores/pageStore.js';
+import LoginCard from '../features/auth/ui/LoginCard.jsx';
 import { User, Lock } from 'lucide-react';
 
 // 🔹 토큰 유틸 + API 호출 가져오기

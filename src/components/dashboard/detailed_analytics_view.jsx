@@ -11,7 +11,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { usePageStore } from '../../stores/page_store.js';
+import { usePageStore } from '../../common/stores/pageStore.js';
 import { Calendar as CalendarComponent } from "../../common/ui/calendar.jsx";
 import { useAnalyticsStore } from '../../domain/analytics/model/store.js';
 import { get_kpi_data_from_api } from '../../domain/dashboard/model/dashboardUtils.js';
@@ -19,7 +19,7 @@ import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
 import Notification from '../../common/ui/notification.jsx';
 import AudienceDemographicsChart from '../../common/ui/AudienceDemographicsChart.jsx';
 import TrafficSourceChart from '../../common/ui/TrafficSourceChart.jsx';
-import UploadedContentList from './UploadedContentList.jsx';
+import UploadedContentList from '../../features/content-management/ui/UploadedContentList.jsx';
 
 /**
  * Detailed Analytics View 컴포넌트

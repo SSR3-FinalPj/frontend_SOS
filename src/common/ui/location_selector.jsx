@@ -10,7 +10,7 @@ import {
   SEOUL_DISTRICTS, 
   get_locations_by_district, 
   search_locations 
-} from '../../utils/location_data.js';
+} from '../constants/locationData.js';
 
 /**
  * LocationSelector 컴포넌트

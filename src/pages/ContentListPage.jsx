@@ -5,13 +5,13 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { usePageStore } from '../stores/page_store.js';
+import { usePageStore } from '../common/stores/pageStore.js';
 import { use_dashboard_data } from '../domain/dashboard/model/useDashboardData.jsx';
 
 // 기존 컴포넌트들 import
 import Sidebar from '../components/dashboard/sidebar.jsx';
 import DashboardHeader from '../components/dashboard/dashboard_header.jsx';
-import { ContentListView } from '../components/dashboard/content-list-view.jsx';
+import { ContentListView } from '../features/content-modals/ui/ContentListView.jsx';
 
 /**
  * Content List Page 컴포넌트

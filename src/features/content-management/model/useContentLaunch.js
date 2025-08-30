@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '../common/api/api.js';
+import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '../../../common/api/api.js';
 
 /**
  * 백엔드에서 오는 날짜 형식을 안전하게 파싱하는 함수

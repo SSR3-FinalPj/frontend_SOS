@@ -185,7 +185,7 @@ export const useNotificationStore = create(
   handle_video_ready_event: (sse_data) => {
     try {
       // use_content_launch 스토어를 dynamic import로 가져와서 순환 참조 방지
-      import('../hooks/use_content_launch.jsx').then(({ use_content_launch }) => {
+      import('../../content-management/model/useContentLaunch.js').then(({ use_content_launch }) => {
         // video_id가 있으면 해당 영상을 ready 상태로 전환
         if (sse_data.video_id || sse_data.data?.video_id) {
           const video_id = sse_data.video_id || sse_data.data.video_id;

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
-import { usePageStore } from '../../stores/page_store.js';
+import { usePageStore } from '../stores/pageStore.js';
 
 /**
  * 플로팅 네비게이션 컴포넌트

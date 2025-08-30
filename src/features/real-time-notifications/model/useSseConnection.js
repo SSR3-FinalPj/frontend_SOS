@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNotificationStore } from '../stores/notification_store.js';
-import { use_content_launch } from './use_content_launch.jsx';
+import { useNotificationStore } from './notificationStore.js';
+import { use_content_launch } from '../../content-management/model/useContentLaunch.js';
 
 /**
  * @param {Object} opts

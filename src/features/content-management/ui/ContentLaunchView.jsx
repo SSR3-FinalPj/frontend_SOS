@@ -5,15 +5,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, TestTube, Code } from 'lucide-react';
-import ContentFolderCard from './content_folder_card';
-import GeneratedVideoPreviewModal from './generated_video_preview_modal';
-import ContentPublishModal from './content_publish_modal';
-import AIMediaRequestModal from './ai_media_request_modal.jsx';
-import { Button } from '../../common/ui/button.jsx';
-import { use_content_launch } from '../../hooks/use_content_launch.jsx';
-import { use_content_modals } from '../../hooks/use_content_modals.jsx';
-import ConfirmationModal from '../../common/ui/confirmation_modal.jsx';
-import SuccessModal from '../../common/ui/success_modal.jsx';
+import ContentFolderCard from './ContentFolderCard.jsx';
+import GeneratedVideoPreviewModal from '../../content-modals/ui/GeneratedVideoPreviewModal.jsx';
+import ContentPublishModal from '../../content-modals/ui/ContentPublishModal.jsx';
+import AIMediaRequestModal from '../../ai-media-request/ui/AiMediaRequestModal.jsx';
+import { Button } from '../../../common/ui/button.jsx';
+import { use_content_launch } from '../model/useContentLaunch.js';
+import { use_content_modals } from '../../content-modals/model/useContentModals.js';
+import ConfirmationModal from '../../../common/ui/confirmation_modal.jsx';
+import SuccessModal from '../../../common/ui/success_modal.jsx';
 
 /**
  * ContentLaunchView 컴포넌트

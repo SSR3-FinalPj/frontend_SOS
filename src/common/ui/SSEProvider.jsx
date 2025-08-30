@@ -3,9 +3,9 @@
  */
 
 import React from 'react';
-import { useSSEConnection } from '../../hooks/use_sse_connection.js';
-import { useAccessTokenMemory } from '../../hooks/useAccessTokenMemory.js';
-import { use_content_launch } from '../../hooks/use_content_launch.jsx';
+import { useSSEConnection } from '../../features/real-time-notifications/model/useSseConnection.js';
+import { useAccessTokenMemory } from '../../features/auth/model/useAccessTokenMemory.js';
+import { use_content_launch } from '../../features/content-management/model/useContentLaunch.js';
 
 /**
  * SSE 연결을 전역적으로 관리하는 Provider 컴포넌트

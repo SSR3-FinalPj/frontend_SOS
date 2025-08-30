@@ -4,17 +4,17 @@
  */
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '../../common/ui/dialog';
-import { Button } from '../../common/ui/button';
-import { Input } from '../../common/ui/input';
-import { Textarea } from '../../common/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '../../../common/ui/dialog';
+import { Button } from '../../../common/ui/button';
+import { Input } from '../../../common/ui/input';
+import { Textarea } from '../../../common/ui/textarea';
 import { Upload, X as XIcon } from 'lucide-react';
 import { 
   get_type_icon, 
   get_platform_icon, 
   get_platform_list 
-} from '../../utils/content_launch_utils.jsx';
-import { usePlatformStore } from '../../domain/platform/model/store.js';
+} from '../../content-management/lib/contentLaunchUtils.jsx';
+import { usePlatformStore } from '../../../domain/platform/model/store.js';
 
 const ContentPublishModal = ({ 
   is_open, 

@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCircle2, Play, Trash2, Check } from 'lucide-react';
 import { useOnClickOutside } from '../hooks/use_on_click_outside.js';
-import { useNotificationStore } from '../../stores/notification_store.js';
+import { useNotificationStore } from '../../features/real-time-notifications/model/notificationStore.js';
 
 /**
  * Premium Notification 컴포넌트

@@ -7,7 +7,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Home, ArrowLeft } from 'lucide-react';
-import { usePageStore } from '../stores/page_store.js';
+import { usePageStore } from '../common/stores/pageStore.js';
 
 /**
  * Not Found Page 컴포넌트

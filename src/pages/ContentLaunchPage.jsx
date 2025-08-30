@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TestTube } from 'lucide-react';
-import { usePageStore } from '../stores/page_store.js';
+import { usePageStore } from '../common/stores/pageStore.js';
 
 // 컴포넌트들 import
 import Sidebar from '../components/dashboard/sidebar.jsx';
 import DashboardHeader from '../components/dashboard/dashboard_header.jsx';
-import ContentLaunchView from '../components/dashboard/content_launch_view.jsx';
+import ContentLaunchView from '../features/content-management/ui/ContentLaunchView.jsx';
 import VideoStreamTestPanel from '../components/dashboard/VideoStreamTestPanel.jsx';
 import { Button } from '../common/ui/button.jsx';
 
