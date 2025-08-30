@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { EnhancedPlatformCard } from "./enhanced-platform-card.jsx";
+import { EnhancedPlatformCard } from "../EnhancedPlatformCard";
 import { get_platform_data } from '../../domain/dashboard/model/dashboardUtils.js';
 import { getDashboardData } from '../../common/api/api.js';
 import { format, subDays } from 'date-fns';

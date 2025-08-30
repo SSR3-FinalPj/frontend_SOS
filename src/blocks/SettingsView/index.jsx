@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import ConnectionManagementCard from "./connection-management-card.jsx";
-import { DataExportCard } from "./data-export-card.jsx";
+import ConnectionManagementCard from "../ConnectionManagementCard";
+import { DataExportCard } from "../DataExportCard";
 import { get_platform_data } from '../../domain/dashboard/model/dashboardUtils.js';
 
 /**
