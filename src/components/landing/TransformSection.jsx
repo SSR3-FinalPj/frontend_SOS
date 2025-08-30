@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { BarChart3, Rocket, Target } from 'lucide-react';
 import { IMAGE_PATHS } from '../../utils/image_paths.js';
-import Section from '../common/Section.jsx';
+import Section from '../../common/ui/Section.jsx';
 
 /**
  * 변화 소개 섹션 컴포넌트

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DetailedAnalyticsView from '../components/dashboard/detailed_analytics_view.jsx';
-import VideoAnalysisModal from '../components/common/VideoAnalysisModal.jsx';
+import VideoAnalysisModal from '../common/ui/VideoAnalysisModal.jsx';
 import { mockContentData } from '../utils/mock-data.js'; // Assuming mockContentData is still needed for initial lookup
 
 /**

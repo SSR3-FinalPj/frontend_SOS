@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { IMAGE_PATHS } from '../../utils/image_paths.js';
-import Section from '../common/Section.jsx';
+import Section from '../../common/ui/Section.jsx';
 
 /**
  * 히어로 섹션 컴포넌트

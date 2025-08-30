@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Eye, Heart, MessageSquare, VideoOff } from 'lucide-react';
-import { getYouTubeChannelId, getYouTubeVideosByChannelId } from '../../lib/api.js';
-import GlassCard from '../ui/glass-card.jsx';
+import { getYouTubeChannelId, getYouTubeVideosByChannelId } from '../../common/api/api.js';
+import GlassCard from '../../common/ui/glass-card.jsx';
 
 const UploadedContentList = ({ startDate, endDate, onVideoCardClick }) => {
   const [videos, setVideos] = useState([]);

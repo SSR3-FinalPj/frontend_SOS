@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '../../common/ui/dialog';
+import { Button } from '../../common/ui/button';
+import { Input } from '../../common/ui/input';
+import { Textarea } from '../../common/ui/textarea';
 import { Upload, X as XIcon } from 'lucide-react';
 import { 
   get_type_icon, 

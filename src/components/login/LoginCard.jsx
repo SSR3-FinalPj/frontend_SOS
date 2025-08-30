@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Lock } from 'lucide-react';
-import AppleInput from '../ui/AppleInput.jsx';
+import AppleInput from '../../common/ui/AppleInput.jsx';
 
 export default function LoginCard({
   t,

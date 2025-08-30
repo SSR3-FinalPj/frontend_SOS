@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Smartphone, Brain, Zap } from 'lucide-react';
-import Section from '../common/Section.jsx';
-import GlassFeatureCard from '../common/GlassFeatureCard.jsx';
+import Section from '../../common/ui/Section.jsx';
+import GlassFeatureCard from '../../common/ui/GlassFeatureCard.jsx';
 
 /**
  * 기능 소개 섹션 컴포넌트

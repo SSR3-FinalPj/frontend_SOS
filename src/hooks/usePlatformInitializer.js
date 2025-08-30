@@ -1,7 +1,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { usePlatformStore } from '../stores/platform_store';
-import { getGoogleStatus, getRedditStatus } from '../lib/api';
+import { getGoogleStatus, getRedditStatus } from '../common/api/api';
 
 export const usePlatformInitializer = () => {
   const { setPlatformStatus } = usePlatformStore();

@@ -6,9 +6,9 @@
 import React, { useState, useEffect } from 'react';
 import { EnhancedPlatformCard } from "./enhanced-platform-card.jsx";
 import { get_platform_data } from '../../utils/dashboard_utils.js';
-import { getDashboardData } from '../../lib/api.js';
+import { getDashboardData } from '../../common/api/api.js';
 import { format, subDays } from 'date-fns';
-import { TooltipProvider } from '../../components/ui/tooltip.jsx';
+import { TooltipProvider } from '../../common/ui/tooltip.jsx';
 
 /**
  * Main Dashboard View 컴포넌트

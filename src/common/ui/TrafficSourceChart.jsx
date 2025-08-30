@@ -5,7 +5,7 @@ import { PieChart as PieChartIcon, Loader2 } from 'lucide-react';
 import GlassCard from './glass-card.jsx';
 import { traffic_source_data } from '../../utils/dashboard_constants.js';
 import { useAnalyticsStore } from '../../stores/analytics_store.js';
-import { cn } from '../../utils/ui_utils.js';
+import { cn } from '../utils/ui_utils.js';
 
 // 프로젝트 표준 그라데이션 색상 시스템 (5개 카테고리용)
 const GRADIENT_COLORS = [

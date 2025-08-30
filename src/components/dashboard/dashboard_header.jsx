@@ -8,8 +8,8 @@ import { motion } from 'framer-motion';
 import { Sun, Moon } from 'lucide-react';
 import { usePageStore } from '../../stores/page_store.js';
 import { get_header_info } from '../../utils/dashboard_utils.js';
-import GlassCard from '../ui/glass-card.jsx';
-import Notification from '../ui/notification.jsx';
+import GlassCard from '../../common/ui/glass-card.jsx';
+import Notification from '../../common/ui/notification.jsx';
 
 /**
  * Dashboard Header 컴포넌트

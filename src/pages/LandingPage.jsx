@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { use_dark_mode } from '../hooks/use_dark_mode.js';
-import FloatingNav from '../components/common/FloatingNav.jsx';
+import { use_dark_mode } from '../common/hooks/use_dark_mode.js';
+import FloatingNav from '../common/ui/FloatingNav.jsx';
 import HeroSection from '../components/landing/HeroSection.jsx';
 import FeaturesSection from '../components/landing/FeaturesSection.jsx';
 import TransformSection from '../components/landing/TransformSection.jsx';
 import ReadySection from '../components/landing/ReadySection.jsx';
 import Footer from '../components/landing/Footer.jsx';
-import InfoModal from '../components/common/InfoModal.jsx';
+import InfoModal from '../common/ui/InfoModal.jsx';
 
 /**
  * 랜딩 페이지 메인 컴포넌트

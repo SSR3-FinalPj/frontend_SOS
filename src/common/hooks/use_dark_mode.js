@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { usePageStore } from '../stores/page_store.js';
+import { usePageStore } from '../../stores/page_store.js';
 
 /**
  * 다크모드 상태 관리 및 DOM 적용 커스텀 훅

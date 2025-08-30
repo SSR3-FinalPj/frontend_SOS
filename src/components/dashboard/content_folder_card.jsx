@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import { Card, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
+import { Card, CardContent } from '../../common/ui/card';
+import { Badge } from '../../common/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../common/ui/collapsible';
 import { 
   Folder, 
   FolderOpen, 

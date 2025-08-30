@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, FileText, BarChart3 } from 'lucide-react';
-import GlassCard from '../ui/glass-card.jsx';
+import GlassCard from '../../common/ui/glass-card.jsx';
 
 function DataExportCard() {
   const [selectedPeriod, setSelectedPeriod] = useState('7days');

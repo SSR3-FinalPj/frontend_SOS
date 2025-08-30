@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import Section from '../common/Section.jsx';
+import Section from '../../common/ui/Section.jsx';
 
 /**
  * 최종 CTA 섹션 컴포넌트

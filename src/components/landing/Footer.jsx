@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { LEGAL_TEXTS } from '../../constants/legalTexts.js';
+import { LEGAL_TEXTS } from '../../common/constants/legalTexts.js';
 
 /**
  * Footer 컴포넌트

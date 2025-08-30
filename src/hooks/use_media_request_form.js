@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from './use_content_launch.jsx';
-import { apiFetch } from '../lib/api.js';
+import { apiFetch } from '../common/api/api.js';
 
 /**
  * useMediaRequestForm 커스텀 훅

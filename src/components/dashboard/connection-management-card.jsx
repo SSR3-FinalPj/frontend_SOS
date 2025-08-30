@@ -1,9 +1,9 @@
 
 import { motion } from 'framer-motion';
 import { Link, Unlink } from 'lucide-react';
-import GlassCard from '../ui/glass-card.jsx';
-import ConnectYouTubeButton from '../ui/ConnectYouTubeButton.jsx';
-import ConnectRedditButton from '../ui/ConnectRedditButton.jsx';
+import GlassCard from '../../common/ui/glass-card.jsx';
+import ConnectYouTubeButton from '../../common/ui/ConnectYouTubeButton.jsx';
+import ConnectRedditButton from '../../common/ui/ConnectRedditButton.jsx';
 import { usePlatformStore } from '../../stores/platform_store.js';
 import { useYouTubeStore } from '../../stores/youtube_store.js';
 import { useYouTubeChannelInfo } from '../../hooks/useYouTubeChannelInfo.js';

@@ -5,9 +5,9 @@ import LoginCard from '../components/login/LoginCard.jsx';
 import { User, Lock } from 'lucide-react';
 
 // 🔹 토큰 유틸 + API 호출 가져오기
-import { loginApi } from '../lib/auth_bootstrap.js';
-//import { setAutoLoginEnabled } from '../lib/token.js';
-//import { BASE_API_URL } from '../lib/config.js'; // 없으면 그냥 BASE_API_URL = 'http://localhost:8080';
+import { loginApi } from '../common/lib/auth_bootstrap.js';
+//import { setAutoLoginEnabled } from '../common/api/token.js';
+//import { BASE_API_URL } from '../common/lib/config.js'; // 없으면 그냥 BASE_API_URL = 'http://localhost:8080';
 
 const loginTranslations = {
   ko: {

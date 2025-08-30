@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 
-import { tryRefreshOnBoot } from '@/lib/auth_bootstrap';
+import { tryRefreshOnBoot } from '@/common/lib/auth_bootstrap';
 import { usePageStore } from '@/stores/page_store';
 import { usePlatformStore } from '@/stores/platform_store';
 import { usePlatformInitializer } from '@/hooks/usePlatformInitializer';
 import Router from '@/Router'; 
-import CookieConsentBanner from '@/components/common/CookieConsentBanner';
-import SSEProvider from '@/components/common/SSEProvider';
+import CookieConsentBanner from '@/common/ui/CookieConsentBanner';
+import SSEProvider from '@/common/ui/SSEProvider';
 
 export default function App() {
   const { isDarkMode, setIsDarkMode } = usePageStore();

@@ -7,7 +7,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCircle2, Play, Trash2, Check } from 'lucide-react';
-import { useOnClickOutside } from '../../hooks/use_on_click_outside.js';
+import { useOnClickOutside } from '../hooks/use_on_click_outside.js';
 import { useNotificationStore } from '../../stores/notification_store.js';
 
 /**

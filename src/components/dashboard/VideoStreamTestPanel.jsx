@@ -6,8 +6,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Download, Loader2, AlertCircle, TestTube } from 'lucide-react';
-import { Button } from '../ui/button.jsx';
-import { getVideoStreamUrl, getVideoDownloadUrl } from '../../lib/api.js';
+import { Button } from '../../common/ui/button.jsx';
+import { getVideoStreamUrl, getVideoDownloadUrl } from '../../common/api/api.js';
 
 /**
  * VideoStreamTestPanel 컴포넌트

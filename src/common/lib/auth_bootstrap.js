@@ -2,8 +2,8 @@ import {
   setAccessToken,
   clearAccessToken,
   getAccessToken
-} from './token.js';
-import { refreshAccessToken } from './api.js'; // Import the new refreshAccessToken from api.js
+} from '../api/token.js';
+import { refreshAccessToken } from '../api/api.js'; // Import the new refreshAccessToken from api.js
 
 // export async function tryRefreshOnBoot() {
 //   const autoLoginEnabled = getRememberMe();

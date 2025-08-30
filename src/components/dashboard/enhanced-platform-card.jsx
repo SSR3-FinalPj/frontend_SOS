@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip.jsx';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../common/ui/tooltip.jsx';
 
 function EnhancedPlatformCard({ platform, index }) {
   const Icon = platform.icon;

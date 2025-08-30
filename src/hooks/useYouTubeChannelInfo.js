@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { getYouTubeChannelId } from '../lib/api.js';
+import { getYouTubeChannelId } from '../common/api/api.js';
 import { useYouTubeStore } from '../stores/youtube_store.js';
 import { usePlatformStore } from '../stores/platform_store.js';
 

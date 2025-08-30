@@ -7,11 +7,11 @@ import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { Button } from '../ui/button.jsx';
-import SuccessModal from '../ui/success_modal.jsx';
-import LocationSelector from '../ui/location_selector.jsx';
-import ImageUploader from '../ui/image_uploader.jsx';
-import NaturalPromptInput from '../ui/natural_prompt_input.jsx';
+import { Button } from '../../common/ui/button.jsx';
+import SuccessModal from '../../common/ui/success_modal.jsx';
+import LocationSelector from '../../common/ui/location_selector.jsx';
+import ImageUploader from '../../common/ui/image_uploader.jsx';
+import NaturalPromptInput from '../../common/ui/natural_prompt_input.jsx';
 import { useMediaRequestForm } from '../../hooks/use_media_request_form.js';
 
 /**

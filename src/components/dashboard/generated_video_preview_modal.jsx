@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '../ui/dialog';
-import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '../../common/ui/dialog';
+import { Button } from '../../common/ui/button';
 import { Clock, BarChart2, Download, X as XIcon } from 'lucide-react';
-import { getVideoStreamUrl, getVideoDownloadUrl } from '../../lib/api';
+import { getVideoStreamUrl, getVideoDownloadUrl } from '../../common/api/api';
 
 const GeneratedVideoPreviewModal = ({ 
   is_open, 

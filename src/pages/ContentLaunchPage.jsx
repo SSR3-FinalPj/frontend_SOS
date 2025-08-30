@@ -8,7 +8,7 @@ import Sidebar from '../components/dashboard/sidebar.jsx';
 import DashboardHeader from '../components/dashboard/dashboard_header.jsx';
 import ContentLaunchView from '../components/dashboard/content_launch_view.jsx';
 import VideoStreamTestPanel from '../components/dashboard/VideoStreamTestPanel.jsx';
-import { Button } from '../components/ui/button.jsx';
+import { Button } from '../common/ui/button.jsx';
 
 /**
  * ContentLaunchPage 컴포넌트

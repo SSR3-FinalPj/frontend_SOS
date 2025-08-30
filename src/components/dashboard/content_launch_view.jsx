@@ -9,11 +9,11 @@ import ContentFolderCard from './content_folder_card';
 import GeneratedVideoPreviewModal from './generated_video_preview_modal';
 import ContentPublishModal from './content_publish_modal';
 import AIMediaRequestModal from './ai_media_request_modal.jsx';
-import { Button } from '../ui/button.jsx';
+import { Button } from '../../common/ui/button.jsx';
 import { use_content_launch } from '../../hooks/use_content_launch.jsx';
 import { use_content_modals } from '../../hooks/use_content_modals.jsx';
-import ConfirmationModal from '../ui/confirmation_modal.jsx';
-import SuccessModal from '../ui/success_modal.jsx';
+import ConfirmationModal from '../../common/ui/confirmation_modal.jsx';
+import SuccessModal from '../../common/ui/success_modal.jsx';
 
 /**
  * ContentLaunchView 컴포넌트

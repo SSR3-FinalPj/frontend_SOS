@@ -12,13 +12,13 @@ import {
 } from 'lucide-react';
 
 import { usePageStore } from '../../stores/page_store.js';
-import { Calendar as CalendarComponent } from "../../components/ui/calendar.jsx";
+import { Calendar as CalendarComponent } from "../../common/ui/calendar.jsx";
 import { useAnalyticsStore } from '../../stores/analytics_store.js';
 import { get_kpi_data_from_api } from '../../utils/dashboard_utils.js';
 import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
-import Notification from '../ui/notification.jsx';
-import AudienceDemographicsChart from '../ui/AudienceDemographicsChart.jsx';
-import TrafficSourceChart from '../ui/TrafficSourceChart.jsx';
+import Notification from '../../common/ui/notification.jsx';
+import AudienceDemographicsChart from '../../common/ui/AudienceDemographicsChart.jsx';
+import TrafficSourceChart from '../../common/ui/TrafficSourceChart.jsx';
 import UploadedContentList from './UploadedContentList.jsx';
 
 /**

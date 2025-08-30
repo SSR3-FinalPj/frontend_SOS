@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { apiFetch as api } from "../../lib/api.js";
+import { apiFetch as api } from "../api/api.js";
 import { Button } from "./button.jsx";
 import RedditIcon from "../../assets/images/button/Reddit_Icon.svg";
-import { getRedditStatus } from "../../lib/api.js";
+import { getRedditStatus } from "../api/api.js";
 
 export default function ConnectRedditButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);

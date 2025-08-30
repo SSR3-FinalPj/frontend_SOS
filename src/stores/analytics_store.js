@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { format_date } from '../utils/dashboard_utils.js';
-import { get_youtube_range_summary, get_all_videos, get_traffic_source_summary } from '../lib/api.js';
+import { get_youtube_range_summary, get_all_videos, get_traffic_source_summary } from '../common/api/api.js';
 
 const initialEndDate = new Date();
 // 초기 종료일도 하루 끝까지 확장
