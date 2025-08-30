@@ -1,6 +1,6 @@
 # 🚀 SNS 오케스트레이션 시스템 (S.O.S) - Frontend
 
-- **S.O.S (SNS Orchestration System)**는 **지자체 홍보팀(초기 타겟: 서울시)**을 위한 AI 기반 소셜 미디어 콘텐츠 통합 관리 및 자동화 솔루션입니다. 분산된 SNS 채널의 콘텐츠를 효율적으로 생성, 관리하고 성과를 분석하여 홍보 업무의 효율을 극대화하는 것을 목표로 합니다.
+- **S.O.S (SNS Orchestration System)** 는 **지자체 홍보팀(초기 타겟: 서울시)** 을 위한 AI 기반 소셜 미디어 콘텐츠 통합 관리 및 자동화 솔루션입니다. 분산된 SNS 채널의 콘텐츠를 효율적으로 생성, 관리하고 성과를 분석하여 홍보 업무의 효율을 극대화하는 것을 목표로 합니다.
 
 이 프로젝트는 현대적인 **FSD(Feature-Sliced Design)** 아키텍처를 기반으로 구축되어, 높은 응집도와 낮은 결합도를 통해 장기적인 유지보수성과 확장성을 확보했습니다.
 
@@ -77,17 +77,17 @@ Sheets로 내보내기
 
 ## 🛠️ 시작하기 (Getting Started)
 
-1. **의존성 설치:**Bash
+1. **의존성 설치:** Bash
     
-    `npm install`
+    ```npm install```
     
-2. **개발 서버 실행:**Bash
+2. **개발 서버 실행:** Bash
     
-    `npm run dev`
+    ```npm run dev```
     
-3. **프로덕션 빌드:**Bash
+3. **프로덕션 빌드:** Bash
     
-    `npm run build`
+    ```npm run build```
     
 
 ## 💻 기술 스택 (Tech Stack)
