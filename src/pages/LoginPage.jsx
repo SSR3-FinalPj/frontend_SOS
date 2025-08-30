@@ -1,5 +1,5 @@
-import AuthLayout from '../blocks/AuthLayout';
-import LoginView from '../blocks/LoginView';
+import AuthLayout from '@/containers/AuthLayout';
+import LoginView from '@/containers/LoginView';
 
 /**
  * LoginPage 컴포넌트

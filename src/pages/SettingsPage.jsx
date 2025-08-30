@@ -1,5 +1,5 @@
-import DashboardLayout from '../blocks/DashboardLayout';
-import SettingsView from '../blocks/SettingsView';
+import DashboardLayout from '@/containers/DashboardLayout';
+import SettingsView from '@/containers/SettingsView';
 
 /**
  * SettingsPage 컴포넌트

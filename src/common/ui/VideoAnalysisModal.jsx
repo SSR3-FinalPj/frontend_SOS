@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from './dialog';
+import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/common/ui/dialog';
 import { X as XIcon } from 'lucide-react';
-import { apiFetch, getCommentAnalysis } from '../api/api.js';
+import { apiFetch, getCommentAnalysis } from '@/common/api/api';
 
 const VideoAnalysisModal = ({ videoId, title, onClose }) => {
   const [topComments, setTopComments] = useState([]);

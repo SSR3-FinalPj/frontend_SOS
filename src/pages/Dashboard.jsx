@@ -1,6 +1,6 @@
 // FSD Blocks 조합
-import DashboardLayout from '../blocks/DashboardLayout';
-import MainDashboardView from '../blocks/MainDashboardView';
+import DashboardLayout from '@/containers/DashboardLayout';
+import MainDashboardView from '@/containers/MainDashboardView';
 
 /**
  * Dashboard 페이지

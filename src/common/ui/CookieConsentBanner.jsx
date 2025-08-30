@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cookie } from 'lucide-react';
-import { Button } from '../ui/button.jsx';
+import { Button } from '@/common/ui/button';
 
 /**
  * CookieConsentBanner 컴포넌트

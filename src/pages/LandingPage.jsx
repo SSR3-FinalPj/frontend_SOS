@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { use_dark_mode } from '../common/hooks/use_dark_mode.js';
-import FloatingNav from '../common/ui/FloatingNav.jsx';
-import InfoModal from '../common/ui/InfoModal.jsx';
+import { use_dark_mode } from '@/common/hooks/use-dark-mode';
+import FloatingNav from '@/common/ui/FloatingNav';
+import InfoModal from '@/common/ui/InfoModal';
 
 // FSD Blocks 조합
-import HeroSection from '../blocks/HeroSection';
-import FeaturesSection from '../blocks/FeaturesSection';
-import TransformSection from '../blocks/TransformSection';
-import ReadySection from '../blocks/ReadySection';
-import Footer from '../blocks/Footer';
+import HeroSection from '@/containers/HeroSection';
+import FeaturesSection from '@/containers/FeaturesSection';
+import TransformSection from '@/containers/TransformSection';
+import ReadySection from '@/containers/ReadySection';
+import Footer from '@/containers/Footer';
 
 /**
  * LandingPage 페이지

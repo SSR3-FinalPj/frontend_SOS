@@ -1,6 +1,6 @@
 import {
   getAccessToken, setAccessToken, clearAccessToken
-} from './token.js';
+} from '@/common/api/token';
 
 //  토큰 갱신 상태 관리 변수
 let currentRefreshPromise = null; // 현재 진행 중인 토큰 갱신 Promise

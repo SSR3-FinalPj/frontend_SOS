@@ -1,5 +1,5 @@
-import ErrorLayout from '../blocks/ErrorLayout';
-import NotFoundView from '../blocks/NotFoundView';
+import ErrorLayout from '@/containers/ErrorLayout';
+import NotFoundView from '@/containers/NotFoundView';
 
 /**
  * NotFoundPage 컴포넌트

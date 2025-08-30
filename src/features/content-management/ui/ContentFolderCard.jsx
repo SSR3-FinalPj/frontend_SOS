@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import { Card, CardContent } from '../../../common/ui/card';
-import { Badge } from '../../../common/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../../common/ui/collapsible';
+import { Card, CardContent } from '@/common/ui/card';
+import { Badge } from '@/common/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/common/ui/collapsible';
 import { 
   Folder, 
   FolderOpen, 
@@ -14,7 +14,7 @@ import {
   ChevronRight, 
   Calendar 
 } from 'lucide-react';
-import ContentItemCard from './ContentItemCard.jsx';
+import ContentItemCard from '@/features/content-management/ui/ContentItemCard';
 
 /**
  * ContentFolderCard 컴포넌트

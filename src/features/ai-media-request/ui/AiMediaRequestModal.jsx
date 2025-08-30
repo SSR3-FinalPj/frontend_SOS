@@ -7,12 +7,12 @@ import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { Button } from '../../../common/ui/button.jsx';
-import SuccessModal from '../../../common/ui/success_modal.jsx';
-import LocationSelector from '../../../common/ui/location_selector.jsx';
-import ImageUploader from '../../../common/ui/image_uploader.jsx';
-import NaturalPromptInput from '../../../common/ui/natural_prompt_input.jsx';
-import { useMediaRequestForm } from '../model/useMediaRequestForm.js';
+import { Button } from '@/common/ui/button';
+import SuccessModal from '@/common/ui/success-modal';
+import LocationSelector from '@/common/ui/location-selector';
+import ImageUploader from '@/common/ui/image-uploader';
+import NaturalPromptInput from '@/common/ui/natural-prompt-input';
+import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media-request-form';
 
 /**
  * AI 미디어 제작 요청 모달 컴포넌트

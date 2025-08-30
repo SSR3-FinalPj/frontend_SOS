@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { apiFetch as api } from "../api/api.js";
-import { Button } from "./button.jsx";
-import { usePlatformStore } from "../../domain/platform/model/store.js";
-import { getGoogleStatus } from "../api/api.js";
+import { apiFetch as api } from '@/common/api/api';
+import { Button } from '@/common/ui/button';
+import { usePlatformStore } from '@/domain/platform/logic/store';
+import { getGoogleStatus } from '@/common/api/api';
 
 export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
   const [loading, setLoading] = useState(false);

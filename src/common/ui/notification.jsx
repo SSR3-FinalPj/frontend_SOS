@@ -7,8 +7,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCircle2, Play, Trash2, Check } from 'lucide-react';
-import { useOnClickOutside } from '../hooks/use_on_click_outside.js';
-import { useNotificationStore } from '../../features/real-time-notifications/model/notificationStore.js';
+import { useOnClickOutside } from '@/common/hooks/use-on-click-outside';
+import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 
 /**
  * Premium Notification 컴포넌트

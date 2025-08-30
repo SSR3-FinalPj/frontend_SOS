@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import AnalyticsView from '../blocks/AnalyticsView';
-import VideoAnalysisModal from '../common/ui/VideoAnalysisModal';
-import { mockContentData } from '../common/utils/mockData.js';
+import AnalyticsView from '@/containers/AnalyticsView';
+import VideoAnalysisModal from '@/common/ui/VideoAnalysisModal';
+import { mockContentData } from '@/common/utils/mock-data';
 
 const AnalyticsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();

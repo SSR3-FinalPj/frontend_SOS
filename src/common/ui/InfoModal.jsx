@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check } from 'lucide-react';
-import { Button } from '../ui/button.jsx';
+import { Button } from '@/common/ui/button';
 
 /**
  * InfoModal 컴포넌트

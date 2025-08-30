@@ -4,19 +4,19 @@
  */
 
 import React from 'react';
-import { Card, CardContent } from '../../../common/ui/card';
-import { Button } from '../../../common/ui/button';
-import { Badge } from '../../../common/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../common/ui/tooltip';
+import { Card, CardContent } from '@/common/ui/card';
+import { Button } from '@/common/ui/button';
+import { Badge } from '@/common/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip';
 import { Clock, Upload, CheckCircle2, Loader2, Check } from 'lucide-react';
-import Timer from '../../../common/ui/timer.jsx';
-import jumpCatGif from '/src/assets/images/Jumpcat/jump_cat.gif';
+import Timer from '@/common/ui/timer';
+import jumpCatGif from '@/assets/images/Jumpcat/jump_cat.gif';
 import { 
   get_type_icon, 
   get_platform_color, 
   get_status_icon, 
   get_status_tooltip 
-} from '../lib/contentLaunchUtils.jsx';
+} from '@/features/content-management/lib/content-launch-utils';
 
 /**
  * ContentItemCard 컴포넌트

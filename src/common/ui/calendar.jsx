@@ -8,8 +8,8 @@ import {
   get_weekday_names_kr, 
   is_sunday,
   is_today 
-} from '../utils/calendar-utils.js';
-import { cn } from "../utils/ui_utils";
+} from '@/common/utils/calendar-utils';
+import { cn } from '@/common/utils/ui-utils';
 
 function Calendar({
   selected_date,

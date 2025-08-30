@@ -1,5 +1,5 @@
-import DashboardLayout from '../blocks/DashboardLayout';
-import ContentListView from '../blocks/ContentListView';
+import DashboardLayout from '@/containers/DashboardLayout';
+import ContentListView from '@/containers/ContentListView';
 
 /**
  * Content List Page 컴포넌트

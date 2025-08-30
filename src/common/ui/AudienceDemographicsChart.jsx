@@ -1,8 +1,8 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
-import { audience_demo_data } from '../../domain/dashboard/model/dashboardConstants.js';
-import GlassCard from './glass-card.jsx';
+import { audience_demo_data } from '@/domain/dashboard/logic/dashboard-constants';
+import GlassCard from '@/common/ui/glass-card';
 
 const AudienceDemographicsChart = () => {
   return (

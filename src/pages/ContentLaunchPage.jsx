@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TestTube } from 'lucide-react';
-import { usePageStore } from '../common/stores/pageStore.js';
+import { usePageStore } from '@/common/stores/page-store';
 
 // FSD Blocks & Features 조합
-import DashboardLayout from '../blocks/DashboardLayout';
-import ContentLaunchView from '../features/content-management/ui/ContentLaunchView.jsx';
-import VideoStreamTestPanel from '../blocks/VideoStreamTestPanel';
-import { Button } from '../common/ui/button.jsx';
+import DashboardLayout from '@/containers/DashboardLayout';
+import ContentLaunchView from '@/features/content-management/ui/ContentLaunchView';
+import VideoStreamTestPanel from '@/containers/VideoStreamTestPanel';
+import { Button } from '@/common/ui/button';
 
 /**
  * ContentLaunchPage 페이지
