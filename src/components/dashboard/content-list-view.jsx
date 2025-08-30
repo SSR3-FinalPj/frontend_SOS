@@ -4,8 +4,8 @@ import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image, MessageSquare, Th
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from "../../common/ui/pagination.jsx";
 import GlassCard from '../../common/ui/glass-card.jsx';
 import { getYouTubeVideosByChannelId } from '../../common/api/api.js';
-import { useYouTubeStore } from '../../stores/youtube_store.js';
-import { usePlatformStore } from '../../stores/platform_store.js';
+import { useYouTubeStore } from '../../domain/youtube/model/store.js';
+import { usePlatformStore } from '../../domain/platform/model/store.js';
 import { mockContentData } from '../../utils/mock-data.js';
 import { use_content_modals } from '../../hooks/use_content_modals.jsx';
 import ContentPreviewModal from './content_preview_modal.jsx';

@@ -11,7 +11,7 @@ import {
   BarChart3, 
   Star 
 } from 'lucide-react';
-import { reddit_chart_data } from './dashboard_constants.js';
+import { reddit_chart_data } from './dashboardConstants.js';
 
 /**
  * 날짜를 한국어 형식으로 포맷팅

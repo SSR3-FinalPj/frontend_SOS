@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { usePageStore } from '../stores/page_store.js';
-import { use_dashboard_data } from '../hooks/use_dashboard_data.jsx';
+import { use_dashboard_data } from '../domain/dashboard/model/useDashboardData.jsx';
 
 // 기존 컴포넌트들 import
 import Sidebar from '../components/dashboard/sidebar.jsx';

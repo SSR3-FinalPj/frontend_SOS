@@ -4,8 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import { tryRefreshOnBoot } from '@/common/lib/auth_bootstrap';
 import { usePageStore } from '@/stores/page_store';
-import { usePlatformStore } from '@/stores/platform_store';
-import { usePlatformInitializer } from '@/hooks/usePlatformInitializer';
+import { usePlatformStore } from '@/domain/platform/model/store';
+import { usePlatformInitializer } from '@/domain/platform/model/usePlatformInitializer';
 import Router from '@/Router'; 
 import CookieConsentBanner from '@/common/ui/CookieConsentBanner';
 import SSEProvider from '@/common/ui/SSEProvider';

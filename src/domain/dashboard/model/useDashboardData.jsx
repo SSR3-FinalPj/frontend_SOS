@@ -6,8 +6,8 @@ import { useState, useMemo } from 'react';
 import { 
   latest_content_data, 
   weekly_activity_data 
-} from '../utils/dashboard_constants.js';
-import { get_platform_data, get_kpi_data } from '../utils/dashboard_utils.js';
+} from './dashboardConstants.js';
+import { get_platform_data, get_kpi_data } from './dashboardUtils.js';
 
 /**
  * 대시보드 데이터 관련 상태와 로직을 제공하는 훅

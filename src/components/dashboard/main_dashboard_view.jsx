@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { EnhancedPlatformCard } from "./enhanced-platform-card.jsx";
-import { get_platform_data } from '../../utils/dashboard_utils.js';
+import { get_platform_data } from '../../domain/dashboard/model/dashboardUtils.js';
 import { getDashboardData } from '../../common/api/api.js';
 import { format, subDays } from 'date-fns';
 import { TooltipProvider } from '../../common/ui/tooltip.jsx';

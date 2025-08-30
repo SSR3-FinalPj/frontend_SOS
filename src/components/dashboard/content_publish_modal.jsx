@@ -14,7 +14,7 @@ import {
   get_platform_icon, 
   get_platform_list 
 } from '../../utils/content_launch_utils.jsx';
-import { usePlatformStore } from '../../stores/platform_store.js';
+import { usePlatformStore } from '../../domain/platform/model/store.js';
 
 const ContentPublishModal = ({ 
   is_open, 

@@ -13,8 +13,8 @@ import {
 
 import { usePageStore } from '../../stores/page_store.js';
 import { Calendar as CalendarComponent } from "../../common/ui/calendar.jsx";
-import { useAnalyticsStore } from '../../stores/analytics_store.js';
-import { get_kpi_data_from_api } from '../../utils/dashboard_utils.js';
+import { useAnalyticsStore } from '../../domain/analytics/model/store.js';
+import { get_kpi_data_from_api } from '../../domain/dashboard/model/dashboardUtils.js';
 import AnalyticsFilterSidebar from './analytics_filter_sidebar.jsx';
 import Notification from '../../common/ui/notification.jsx';
 import AudienceDemographicsChart from '../../common/ui/AudienceDemographicsChart.jsx';

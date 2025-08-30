@@ -13,8 +13,8 @@ import {
   ArrowLeft,
   Check 
 } from 'lucide-react';
-import { useAnalyticsStore } from '../../stores/analytics_store.js';
-import { period_options } from '../../utils/dashboard_constants.js';
+import { useAnalyticsStore } from '../../domain/analytics/model/store.js';
+import { period_options } from '../../domain/dashboard/model/dashboardConstants.js';
 
 /**
  * Analytics Filter Sidebar 컴포넌트

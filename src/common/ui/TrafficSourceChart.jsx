@@ -3,8 +3,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import { motion } from 'framer-motion';
 import { PieChart as PieChartIcon, Loader2 } from 'lucide-react';
 import GlassCard from './glass-card.jsx';
-import { traffic_source_data } from '../../utils/dashboard_constants.js';
-import { useAnalyticsStore } from '../../stores/analytics_store.js';
+import { traffic_source_data } from '../../domain/dashboard/model/dashboardConstants.js';
+import { useAnalyticsStore } from '../../domain/analytics/model/store.js';
 import { cn } from '../utils/ui_utils.js';
 
 // 프로젝트 표준 그라데이션 색상 시스템 (5개 카테고리용)

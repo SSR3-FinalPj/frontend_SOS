@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch as api } from "../api/api.js";
 import { Button } from "./button.jsx";
-import { usePlatformStore } from "../../stores/platform_store.js";
+import { usePlatformStore } from "../../domain/platform/model/store.js";
 import { getGoogleStatus } from "../api/api.js";
 
 export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {

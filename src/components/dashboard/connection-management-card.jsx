@@ -4,9 +4,9 @@ import { Link, Unlink } from 'lucide-react';
 import GlassCard from '../../common/ui/glass-card.jsx';
 import ConnectYouTubeButton from '../../common/ui/ConnectYouTubeButton.jsx';
 import ConnectRedditButton from '../../common/ui/ConnectRedditButton.jsx';
-import { usePlatformStore } from '../../stores/platform_store.js';
-import { useYouTubeStore } from '../../stores/youtube_store.js';
-import { useYouTubeChannelInfo } from '../../hooks/useYouTubeChannelInfo.js';
+import { usePlatformStore } from '../../domain/platform/model/store.js';
+import { useYouTubeStore } from '../../domain/youtube/model/store.js';
+import { useYouTubeChannelInfo } from '../../domain/youtube/model/useYouTubeChannelInfo.js';
 
 function ConnectionManagementCard({ platformData }) {
   const { platforms, setPlatformStatus } = usePlatformStore();
