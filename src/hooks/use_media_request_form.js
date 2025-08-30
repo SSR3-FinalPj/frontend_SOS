@@ -221,7 +221,8 @@ const notifyRes = await apiFetch('/api/images/confirm', {
   headers: { 'Content-Type': 'application/json' }, // Authorization은 apiFetch가 자동 추가
   body: JSON.stringify({
     key, // presign에서 받은 key 그대로
-    locationCode: selected_location.poi_id
+    locationCode: selected_location.poi_id,
+    prompt_text: prompt_text && prompt_text.trim() ? prompt_text.trim() : ""
   })
 });
 

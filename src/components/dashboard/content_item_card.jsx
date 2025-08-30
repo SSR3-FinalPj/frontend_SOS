@@ -45,6 +45,9 @@ const ContentItemCard = ({
   // 선택 가능한 상태인지 확인 (업로드 완료된 영상만)
   const is_selectable = item.status === 'uploaded';
   
+  // 미리보기 클릭 가능한 상태인지 확인 (완성된 영상만)
+  const is_clickable_for_preview = item.status === 'ready';
+  
   // creationTime 포매팅 함수
   const formatCreationTime = (creationTime) => {
     if (!creationTime) return '';
@@ -90,13 +93,15 @@ const ContentItemCard = ({
     onClick={is_selectable ? handle_select : undefined}>
       <CardContent className="p-4">
         
-        {/* 썸네일 영역 - 클릭 시 미리보기 */}
+        {/* 썸네일 영역 - 클릭 시 미리보기 (ready 상태만) */}
         <div 
-          className="w-full h-32 rounded-xl mb-4 relative overflow-hidden cursor-pointer"
-          onClick={(e) => {
+          className={`w-full h-32 rounded-xl mb-4 relative overflow-hidden ${
+            is_clickable_for_preview ? 'cursor-pointer' : 'cursor-default'
+          }`}
+          onClick={is_clickable_for_preview ? (e) => {
             e.stopPropagation();
             on_preview(item);
-          }}
+          } : undefined}
         >
           {item.status === 'PROCESSING' ? (
             <>
