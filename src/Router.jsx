@@ -7,14 +7,14 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // 페이지 컴포넌트들 import
-import LandingPage from './pages/LandingPage.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import ContentListPage from './pages/ContentListPage.jsx';
-import ContentLaunchPage from './pages/ContentLaunchPage.jsx';
-import AnalyticsPage from './pages/AnalyticsPage.jsx';
-import SettingsPage from './pages/SettingsPage.jsx';
-import NotFoundPage from './pages/NotFoundPage.jsx';
+import LandingPage from '@/pages/LandingPage';
+import LoginPage from '@/pages/LoginPage';
+import Dashboard from '@/pages/Dashboard';
+import ContentListPage from '@/pages/ContentListPage';
+import ContentLaunchPage from '@/pages/ContentLaunchPage';
+import AnalyticsPage from '@/pages/AnalyticsPage';
+import SettingsPage from '@/pages/SettingsPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 /**
  * Router 컴포넌트
