@@ -140,6 +140,7 @@ export const useNotificationStore = create(
       message: `영상 제작이 완료되었습니다: ${video_data.title || '새 영상'}`,
       data: video_data,
       timestamp: video_data.timestamp || new Date().toISOString(),
+      path: '/contentlaunch' // 클릭 시 이동할 경로 추가
     });
   },
   
@@ -166,6 +167,8 @@ export const useNotificationStore = create(
       read: false,
       timestamp: formatted_timestamp, // 포맷팅된 시간으로 저장
       raw_timestamp: sse_data.timestamp || new Date().toISOString(), // 원본 타임스탬프도 보존
+      // video_completed 타입의 알림에는 contentlaunch 페이지로 이동하는 path 추가
+      ...(sse_data.type === 'video_completed' && { path: '/contentlaunch' })
     };
     
     // 일반 알림을 스토어에 추가 (드롭다운용)

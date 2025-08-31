@@ -6,6 +6,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCircle2, Play, Trash2, Check } from 'lucide-react';
 import { useOnClickOutside } from '@/common/hooks/use-on-click-outside';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
@@ -19,6 +20,9 @@ const Notification = () => {
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
+
+  // React Router 내비게이션 훅
+  const navigate = useNavigate();
 
   // Zustand 스토어에서 알림 데이터 가져오기
   const { 
@@ -53,12 +57,19 @@ const Notification = () => {
     setIsOpen(false);
   }, []);
 
-  // 알림 클릭 핸들러
+  // 알림 클릭 핸들러 (네비게이션 기능 추가)
   const handleNotificationClick = useCallback((notification) => {
+    // 읽지 않은 알림을 읽음 상태로 변경
     if (!notification.read) {
       mark_as_read(notification.id);
     }
-  }, [mark_as_read]);
+    
+    // 알림에 path 속성이 있으면 해당 경로로 이동
+    if (notification.path) {
+      navigate(notification.path);
+      setIsOpen(false); // 드롭다운 닫기
+    }
+  }, [mark_as_read, navigate]);
 
   // 모든 알림 읽음 처리
   const handleMarkAllRead = useCallback(() => {
