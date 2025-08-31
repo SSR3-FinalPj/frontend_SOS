@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/common/ui/card';
 import { Button } from '@/common/ui/button';
 import { Badge } from '@/common/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip';
-import { Clock, Upload, CheckCircle2, Loader2, Check } from 'lucide-react';
+import { Clock, Upload, CheckCircle2, Loader2, Check, AlertTriangle } from 'lucide-react';
 import Timer from '@/common/ui/timer';
 import jumpCatGif from '@/assets/images/Jumpcat/jump_cat.gif';
 import { 
@@ -255,6 +255,36 @@ const ContentItemCard = ({
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               업로드 완료
+            </Button>
+          )}
+          
+          {/* 실패 상태 - 재시도 버튼 */}
+          {item.status === 'failed' && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                // 재시도 로직: localStorage에서 마지막 요청 정보를 가져와서 다시 실행
+                const handleRetry = () => {
+                  try {
+                    const lastRequestData = localStorage.getItem('last_video_request');
+                    if (lastRequestData) {
+                      const lastRequest = JSON.parse(lastRequestData);
+                      // 같은 설정으로 새 요청 생성을 위해 페이지 새로고침 유도
+                      // 실제 구현에서는 모달을 다시 열거나 직접 API 호출 가능
+                      alert(`마지막 요청 정보:\n위치: ${lastRequest.location?.name}\n프롬프트: ${lastRequest.prompt || '없음'}\n\n재시도하려면 새로운 미디어 제작 요청을 해주세요.`);
+                    } else {
+                      alert('재시도할 요청 정보를 찾을 수 없습니다. 새로운 미디어 제작 요청을 해주세요.');
+                    }
+                  } catch (error) {
+                    alert('재시도 중 오류가 발생했습니다. 새로운 미디어 제작 요청을 해주세요.');
+                  }
+                };
+                handleRetry();
+              }}
+              className="w-full bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 hover:from-red-500/30 hover:to-orange-500/30 text-red-600 dark:text-red-400 rounded-xl transition-all duration-300 font-medium shadow-sm hover:shadow-md"
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              재시도
             </Button>
           )}
         </div>

@@ -12,7 +12,8 @@ import {
   Upload, 
   Clock, 
   Loader2,
-  Globe
+  Globe,
+  AlertTriangle
 } from 'lucide-react';
 
 /**
@@ -59,7 +60,7 @@ export const get_platform_icon = (platform) => {
 
 /**
  * 상태에 따른 아이콘 반환
- * @param {string} status - 상태 ('ready', 'uploading', 'uploaded')
+ * @param {string} status - 상태 ('ready', 'uploading', 'uploaded', 'failed')
  * @param {string} item_id - 아이템 ID
  * @param {Array} uploading_items - 업로드 중인 아이템 목록
  * @returns {JSX.Element} 아이콘 컴포넌트
@@ -72,6 +73,7 @@ export const get_status_icon = (status, item_id, uploading_items = []) => {
   switch (status) {
     case 'uploaded': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
     case 'ready': return <Upload className="h-4 w-4 text-blue-500" />;
+    case 'failed': return <AlertTriangle className="h-4 w-4 text-red-500" />;
     default: return <Clock className="h-4 w-4 text-yellow-500" />;
   }
 };
@@ -86,6 +88,7 @@ export const get_status_tooltip = (status) => {
     case 'ready': return '론칭 준비됨';
     case 'uploading': return '업로드 중';
     case 'uploaded': return '업로드 완료';
+    case 'failed': return '생성 실패';
     default: return '상태 불명';
   }
 };

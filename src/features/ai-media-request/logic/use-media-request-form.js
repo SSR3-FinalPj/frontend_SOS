@@ -129,8 +129,10 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creation_date = new Date().toISOString().split('T')[0];
       
-      // 영상 데이터 구성
+      // 영상 데이터 구성 (temp_id 명시적 생성)
+      const video_temp_id = `temp-${Date.now()}`;
       const video_data = {
+        temp_id: video_temp_id,
         title: `${selected_location.name} AI 영상`,
         location_id: selected_location.poi_id,
         location_name: selected_location.name,
@@ -180,15 +182,19 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
           );
           
         } catch (background_error) {
-          // 백그라운드 작업 실패 시 사용자에게 알림
+          // 백그라운드 작업 실패 시 영상을 실패 상태로 전환
+          use_content_launch.getState().transition_to_failed(video_temp_id);
+          
+          // 사용자에게 실패 알림
           useNotificationStore.getState().add_notification({
             type: 'error',
-            message: `미디어 업로드 중 오류가 발생했습니다: ${background_error.message}`,
-            data: { error: background_error.message }
+            message: `영상 업로드에 실패했습니다: ${background_error.message}`,
+            data: { 
+              error: background_error.message,
+              temp_id: video_temp_id,
+              failed_at: new Date().toISOString()
+            }
           });
-          
-          // TODO: 미래 구현 예정 - 실패 상태로 비디오 전환
-          // use_content_launch.getState().transition_to_failed(video_data.temp_id);
         }
       })();
       
