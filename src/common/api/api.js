@@ -482,3 +482,113 @@ export async function getVideoDownloadUrl(resultId) {
 
   return await res.json();
 }
+
+/* ------------------ S3 이미지 업로드 API ------------------ */
+/**
+ * S3 Presigned URL 요청
+ * @param {string} contentType - 업로드할 파일의 Content-Type
+ * @returns {Promise} { url, key, contentType } 포함된 응답 데이터
+ */
+export async function getS3PresignedUrl(contentType) {
+  if (!contentType) {
+    throw new Error('파일의 Content-Type이 필요합니다.');
+  }
+
+  const res = await apiFetch('/api/images/presign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contentType })
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`Presigned URL 요청 실패: ${res.status} ${errorText}`);
+  }
+
+  return await res.json();
+}
+
+/**
+ * S3에 파일 직접 업로드
+ * @param {string} presignedUrl - S3 Presigned URL
+ * @param {File} file - 업로드할 파일 객체
+ * @param {string} contentType - 파일의 Content-Type
+ * @returns {Promise} 업로드 결과
+ */
+export async function uploadFileToS3(presignedUrl, file, contentType) {
+  if (!presignedUrl || !file || !contentType) {
+    throw new Error('업로드에 필요한 매개변수가 누락되었습니다.');
+  }
+
+  const res = await fetch(presignedUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': contentType },
+    body: file
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`S3 업로드 실패: ${res.status} ${errorText}`);
+  }
+
+  return { success: true, status: res.status };
+}
+
+/**
+ * 백엔드에 업로드 완료 알림
+ * @param {string} s3Key - S3 객체 키
+ * @param {string} locationCode - 위치 코드
+ * @param {string} promptText - 프롬프트 텍스트
+ * @returns {Promise} 확인 응답 데이터
+ */
+export async function confirmImageUpload(s3Key, locationCode, promptText = "") {
+  if (!s3Key || !locationCode) {
+    throw new Error('S3 키와 위치 코드가 필요합니다.');
+  }
+
+  const res = await apiFetch('/api/images/confirm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      key: s3Key,
+      locationCode: locationCode,
+      prompt_text: promptText
+    })
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`업로드 완료 알림 실패: ${res.status} ${errorText}`);
+  }
+
+  return await res.json().catch(() => ({}));
+}
+
+/**
+ * S3 이미지 업로드 전체 프로세스 (통합 함수)
+ * @param {File} file - 업로드할 파일
+ * @param {string} locationCode - 위치 코드
+ * @param {string} promptText - 프롬프트 텍스트
+ * @returns {Promise} 전체 업로드 프로세스 결과
+ */
+export async function uploadImageToS3Complete(file, locationCode, promptText = "") {
+  try {
+    // 1단계: Presigned URL 요청
+    const presignData = await getS3PresignedUrl(file.type);
+    const { url, key, contentType } = presignData;
+
+    // 2단계: S3에 파일 업로드
+    await uploadFileToS3(url, file, contentType);
+
+    // 3단계: 백엔드에 업로드 완료 알림
+    const confirmResult = await confirmImageUpload(key, locationCode, promptText);
+
+    return {
+      success: true,
+      s3Key: key,
+      confirmResult: confirmResult
+    };
+  } catch (error) {
+    throw new Error(`이미지 업로드 실패: ${error.message}`);
+  }
+}

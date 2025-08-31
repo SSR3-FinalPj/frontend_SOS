@@ -67,10 +67,14 @@ const ContentLaunchView = ({ dark_mode }) => {
     fetch_folders();
   }, [fetch_folders]);
 
-  // 요청 성공 핸들러
+  // 요청 성공 핸들러 (낙관적 UI 패턴 적용)
   const handleRequestSuccess = (requestData) => {
+    // 기존 로직: 성공 모달 및 펜딩 비디오 데이터 설정
     set_pending_video_data(requestData);
     set_is_success_modal_open(true);
+    
+    // 🚀 낙관적 UI: AI 미디어 요청 모달을 즉시 닫기
+    set_is_request_modal_open(false);
   };
   
   // 성공 모달 닫기 핸들러 - 실제 비디오 카드 추가
