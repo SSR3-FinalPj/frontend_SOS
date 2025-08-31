@@ -11,19 +11,23 @@ import {
   MessageSquare, 
   ChevronDown, 
   ArrowLeft,
-  Check 
+  Check,
+  Lock // Import Lock icon
 } from 'lucide-react';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { period_options } from '@/domain/dashboard/logic/dashboard-constants';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip'; // Import Tooltip
 
 /**
  * Analytics Filter Sidebar 컴포넌트
  * @param {Object} props - 컴포넌트 props
  * @param {string} props.current_view - 현재 뷰
+ * @param {object} props.platforms - Platform connection status
  * @returns {JSX.Element} Analytics Filter Sidebar 컴포넌트
  */
 const AnalyticsFilterSidebar = ({ 
-  current_view
+  current_view,
+  platforms // Receive platforms prop
 }) => {
   const navigate = useNavigate();
   const period_dropdown_ref = React.useRef(null);
@@ -69,20 +73,35 @@ const AnalyticsFilterSidebar = ({
           <div className="space-y-2">
             {platform_options.map((platform) => {
               const Icon = platform.icon;
+              const isConnected = platform.id === 'youtube' ? platforms.google.connected : platforms.reddit.connected;
+              const isSelected = selected_platform === platform.id;
+
+              const buttonClasses = [
+                'w-full',
+                'flex',
+                'items-center',
+                'gap-3',
+                'px-4',
+                'py-3',
+                'rounded-xl',
+                'transition-all',
+                'duration-200',
+                isSelected ? 'bg-blue-500 text-white shadow-lg' : 'text-gray-700 dark:text-gray-300',
+                !isConnected ? 'opacity-50 cursor-not-allowed' : (isSelected ? '' : 'hover:bg-white/30 dark:hover:bg-white/20')
+              ].join(' ');
+
               return (
                 <motion.button
                   key={platform.id}
-                  onClick={() => set_selected_platform(platform.id)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    selected_platform === platform.id
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                  }`}
+                  onClick={() => isConnected && set_selected_platform(platform.id)}
+                  whileHover={{ scale: isConnected ? 1.02 : 1 }}
+                  whileTap={{ scale: isConnected ? 0.98 : 1 }}
+                  className={buttonClasses}
+                  disabled={!isConnected}
                 >
-                  <Icon className={`w-4 h-4 ${selected_platform === platform.id ? 'text-white' : platform.color}`} />
-                  {platform.label}
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : platform.color}`} />
+                  <span>{platform.label}</span>
+                  {!isConnected && <Lock className="w-4 h-4 ml-auto text-gray-500 dark:text-gray-400" />}
                 </motion.button>
               );
             })}
