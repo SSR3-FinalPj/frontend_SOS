@@ -10,21 +10,26 @@ export const useYouTubeChannelInfo = () => {
 
   // 채널 정보 가져오기
   const fetchChannelInfo = useCallback(async () => {
-    if (!platforms.google.connected && !platforms.google.linked) return;
-
-    setLoading(true);
-    try {
-      const channelInfo = await getYouTubeChannelId();
-      if (channelInfo) {
-        setChannelInfo(channelInfo);
-      } else {
+    if (platforms.google.connected || platforms.google.linked) {
+      setLoading(true);
+      try {
+        const channelInfo = await getYouTubeChannelId();
+        if (channelInfo) {
+          setChannelInfo(channelInfo);
+        } else {
+          // 채널 정보가 없으면 초기화
+          setChannelInfo({ channelId: null, channelTitle: null });
+        }
+      } catch (error) {
+        console.error("Error fetching YouTube channel info:", error);
         setChannelInfo({ channelId: null, channelTitle: null });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching YouTube channel info:", error);
+    } else {
+      // 연결이 끊긴 경우 정보 초기화
+      localStorage.removeItem('channelId');
       setChannelInfo({ channelId: null, channelTitle: null });
-    } finally {
-      setLoading(false);
     }
   }, [platforms.google.connected, platforms.google.linked, setChannelInfo]);
 

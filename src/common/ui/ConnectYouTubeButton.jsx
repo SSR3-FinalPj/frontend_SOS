@@ -36,11 +36,30 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
 
       popupTimerRef.current = setInterval(() => {
         const w = popupRef.current;
-        if (w && w.closed) {
-          clearTimers();
-          window.postMessage({ type: "google-oauth-complete", ok: true }, "*");
+        if (!w) return;
+
+        try {
+          if (w.closed) {
+            clearTimers();
+            window.postMessage(
+              { type: "google-oauth-complete", ok: true },
+              oauthOrigin || "*"
+            );
+          }
+        } catch (err) {
+          // Cross-Origin-Opener-Policy 때문에 접근 차단될 때 발생
+          //console.debug("Cross-origin popup check blocked by COOP:", err);
         }
       }, 600);
+
+
+      // popupTimerRef.current = setInterval(() => {
+      //   const w = popupRef.current;
+      //   if (w && w.closed) {
+      //     clearTimers();
+      //     window.postMessage({ type: "google-oauth-complete", ok: true }, "*");
+      //   }
+      // }, 600);
 
       timeoutRef.current = setTimeout(() => {
         clearTimers();
@@ -61,7 +80,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         setLoading(false);
         setTimeout(() => {
           fetchStatus();
-        }, 1000);
+        }, 500);
       }
     };
 
