@@ -160,10 +160,11 @@ export const useRedditRequestForm = (onRequestSuccess = null, isPriority = false
       // 🔄 백그라운드 처리: Reddit 이미지 생성 API 호출
       // (async () => {
       //   try {
-      //     await uploadImageToRedditGenerate(
+      //     await uploadImageToS3Complete(
       //       uploadedFile,
       //       selectedLocation.poi_id,
-      //       promptText && promptText.trim() ? promptText.trim() : ""
+      //       promptText && promptText.trim() ? promptText.trim() : "",
+      //       "REDDIT"
       //     );
       //   } catch (backgroundError) {
       //     use_content_launch.getState().transition_to_failed(imageTempId);
