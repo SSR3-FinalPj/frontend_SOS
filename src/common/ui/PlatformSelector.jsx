@@ -34,7 +34,8 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
       borderColor: 'border-orange-500/30',
       hoverColor: 'hover:from-orange-500/30 hover:to-red-500/30',
       textColor: 'text-orange-600',
-      description: '이미지 생성'
+      description: '이미지 생성',
+      disabled: true
     }
   ];
 
@@ -55,16 +56,19 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
           return (
             <motion.button
               key={platform.id}
-              onClick={() => onPlatformChange(platform.id)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => !platform.disabled && onPlatformChange(platform.id)}
+              whileHover={platform.disabled ? {} : { scale: 1.02 }}
+              whileTap={platform.disabled ? {} : { scale: 0.98 }}
+              disabled={platform.disabled}
               className={`
                 relative p-4 rounded-2xl border-2 transition-all duration-200
-                ${isSelected 
-                  ? `bg-gradient-to-br ${platform.color} ${platform.borderColor} shadow-lg` 
-                  : 'bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                ${platform.disabled 
+                  ? 'bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 cursor-not-allowed opacity-60'
+                  : isSelected 
+                    ? `bg-gradient-to-br ${platform.color} ${platform.borderColor} shadow-lg` 
+                    : 'bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }
-                ${!isSelected && `${platform.hoverColor}`}
+                ${!isSelected && !platform.disabled && `${platform.hoverColor}`}
               `}
             >
               {/* 선택된 상태 표시 */}

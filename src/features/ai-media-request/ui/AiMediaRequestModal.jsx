@@ -46,6 +46,10 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
 
   // 플랫폼 변경 핸들러
   const handlePlatformChange = useCallback((platform) => {
+    // Reddit 플랫폼 선택 방지
+    if (platform === 'reddit') {
+      return;
+    }
     setSelectedPlatform(platform);
   }, []);
 
@@ -175,15 +179,12 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
             {selectedPlatform === 'reddit' && (
               <Button
                 onClick={() => {
-                  const redditSubmitButton = document.getElementById('reddit-form-submit');
-                  if (redditSubmitButton) {
-                    redditSubmitButton.click();
-                  }
+                  // Reddit 기능 비활성화로 인해 아무 동작 안함
                 }}
-                disabled={false} // Reddit 폼 유효성은 내부에서 처리
+                disabled={true} // 항상 비활성화
                 className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
               >
-                이미지 생성 요청 (준비중)
+                이미지 생성 (준비 중)
               </Button>
             )}
           </div>
