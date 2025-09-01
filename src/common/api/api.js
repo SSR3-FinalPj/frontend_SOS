@@ -539,10 +539,9 @@ export async function uploadFileToS3(presignedUrl, file, contentType) {
  * @param {string} s3Key - S3 객체 키
  * @param {string} locationCode - 위치 코드
  * @param {string} promptText - 프롬프트 텍스트
- * @param {string} resultType - 미디어 타입 ('YOUTUBE' 또는 'REDDIT')
  * @returns {Promise} 확인 응답 데이터
  */
-export async function confirmImageUpload(s3Key, locationCode, promptText = "", resultType) {
+export async function confirmImageUpload(s3Key, locationCode, promptText = "") {
   if (!s3Key || !locationCode) {
     throw new Error('S3 키와 위치 코드가 필요합니다.');
   }
@@ -553,8 +552,7 @@ export async function confirmImageUpload(s3Key, locationCode, promptText = "", r
     body: JSON.stringify({
       key: s3Key,
       locationCode: locationCode,
-      prompt_text: promptText,
-      result_type: resultType
+      prompt_text: promptText
     })
   });
 
@@ -571,10 +569,9 @@ export async function confirmImageUpload(s3Key, locationCode, promptText = "", r
  * @param {File} file - 업로드할 파일
  * @param {string} locationCode - 위치 코드
  * @param {string} promptText - 프롬프트 텍스트
- * @param {string} resultType - 미디어 타입 ('YOUTUBE' 또는 'REDDIT')
  * @returns {Promise} 전체 업로드 프로세스 결과
  */
-export async function uploadImageToS3Complete(file, locationCode, promptText = "", resultType) {
+export async function uploadImageToS3Complete(file, locationCode, promptText = "") {
   try {
     // 1단계: Presigned URL 요청
     const presignData = await getS3PresignedUrl(file.type);
@@ -584,7 +581,7 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
     await uploadFileToS3(url, file, contentType);
 
     // 3단계: 백엔드에 업로드 완료 알림
-    const confirmResult = await confirmImageUpload(key, locationCode, promptText, resultType);
+    const confirmResult = await confirmImageUpload(key, locationCode, promptText);
 
     return {
       success: true,

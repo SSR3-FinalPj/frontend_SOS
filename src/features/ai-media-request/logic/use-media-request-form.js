@@ -179,7 +179,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
             uploaded_file,
             selected_location.poi_id,
             prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-            "YOUTUBE"
+            // "YOUTUBE"
           );
           
         } catch (background_error) {
