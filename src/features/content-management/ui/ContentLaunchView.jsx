@@ -3,7 +3,7 @@
  * .env 파일을 사용해 비디오 URL을 관리합니다.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Plus, RefreshCw, TestTube, Code } from 'lucide-react';
 import ContentFolderCard from '@/features/content-management/ui/ContentFolderCard';
 import GeneratedVideoPreviewModal from '@/features/content-modals/ui/GeneratedVideoPreviewModal';
@@ -23,7 +23,7 @@ import SuccessModal from '@/common/ui/success-modal';
  * @param {boolean} props.dark_mode - 다크모드 여부
  * @returns {JSX.Element} ContentLaunchView 컴포넌트
  */
-const ContentLaunchView = ({ dark_mode }) => {
+const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   // AI 미디어 요청 모달 상태
   const [is_request_modal_open, set_is_request_modal_open] = useState(false);
   
@@ -69,6 +69,11 @@ const ContentLaunchView = ({ dark_mode }) => {
     fetch_folders();
   }, [fetch_folders]);
 
+  // ref를 통해 외부에서 접근 가능한 함수들을 노출
+  useImperativeHandle(ref, () => ({
+    handle_open_upload_test_modal
+  }));
+
   // 요청 성공 핸들러 (낙관적 UI 패턴 적용)
   const handleRequestSuccess = (requestData) => {
     // 기존 로직: 성공 모달 및 펜딩 비디오 데이터 설정
@@ -96,6 +101,28 @@ const ContentLaunchView = ({ dark_mode }) => {
   };
 
   /**
+   * YouTube 업로드 테스트 모달 열기 핸들러
+   */
+  const handle_open_upload_test_modal = (jobId, resultId) => {
+    // 가상의 mockItem 객체 생성
+    const mockItem = {
+      job_id: jobId,
+      result_id: resultId,
+      title: `[테스트] Job ${jobId}의 영상`,
+      description: `Result ID: ${resultId}에 대한 업로드 테스트입니다.`,
+      platform: 'youtube',
+      video_id: `test-video-${Date.now()}`,
+      temp_id: `temp-${Date.now()}`,
+      status: 'COMPLETED',
+      created_at: new Date().toISOString(),
+      thumbnail: '/placeholder-thumbnail.jpg' // 플레이스홀더 썸네일
+    };
+    
+    // 기존 게시 모달 열기 함수 사용
+    open_publish_modal(mockItem);
+  };
+
+  /**
    * 게시 완료 핸들러 - 실제 YouTube API 사용
    */
   const handle_final_publish = async () => {
@@ -104,7 +131,7 @@ const ContentLaunchView = ({ dark_mode }) => {
     try {
       // 업로드 시작 표시
       const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
-      start_upload(item_id);
+      simulate_upload(item_id);
       
       // YouTube 플랫폼이 선택된 경우에만 실제 API 호출
       if (publish_form.platforms.includes('youtube')) {
@@ -149,14 +176,14 @@ const ContentLaunchView = ({ dark_mode }) => {
       }
       
       // 업로드 완료 처리
-      finish_upload(item_id);
+      transition_to_uploaded(item_id);
       
     } catch (error) {
       console.error('Upload failed:', error);
       
       // 실패 시 업로드 상태 정리
       const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
-      finish_upload(item_id);
+      transition_to_uploaded(item_id);
       
       // 에러 알림
       useNotificationStore.getState().add_notification({
@@ -350,6 +377,8 @@ const ContentLaunchView = ({ dark_mode }) => {
       />
     </div>
   );
-};
+});
+
+ContentLaunchView.displayName = 'ContentLaunchView';
 
 export default React.memo(ContentLaunchView);
