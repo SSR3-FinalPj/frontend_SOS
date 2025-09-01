@@ -1,3 +1,8 @@
+/*
+분석탭에서 영상 클릭했을때 나오는 모달
+*/ 
+
+
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/common/ui/dialog';
 import { X as XIcon } from 'lucide-react';
