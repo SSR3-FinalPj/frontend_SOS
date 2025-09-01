@@ -5,7 +5,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
-import { apiFetch } from '@/common/api/api';
+import { uploadImageToS3Complete } from '@/common/api/api';
+import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 
 /**
  * useMediaRequestForm 커스텀 훅
@@ -97,7 +98,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     }
   }, [selectedVideoData, reset_form]);
 
-  // 폼 제출 핸들러
+  // 폼 제출 핸들러 (낙관적 UI 패턴 적용)
   const handle_submit = useCallback(async () => {
     // 필수 항목 검증
     if (!selected_location) {
@@ -113,21 +114,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     set_is_submitting(true);
 
     try {
-      // 백엔드 전송 데이터 구성
-      const form_data = new FormData();
-      form_data.append('location_id', selected_location.poi_id);
-      
-      // 프롬프트가 있을 때만 user_request에 포함
-      if (prompt_text && prompt_text.trim()) {
-        form_data.append('user_request', JSON.stringify({ prompt: prompt_text.trim() }));
-      } else {
-        // 프롬프트 없을 시에는 빈 객체 전송
-        form_data.append('user_request', JSON.stringify({}));
-      }
-      
-      form_data.append('reference_image', uploaded_file);
-
-      // 이미지를 Base64로 변환
+      // 이미지를 Base64로 변환 (UI 표시용)
       const convert_to_base64 = (file) => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -142,8 +129,10 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creation_date = new Date().toISOString().split('T')[0];
       
-      // 영상 데이터 구성
+      // 영상 데이터 구성 (temp_id 명시적 생성)
+      const video_temp_id = `temp-${Date.now()}`;
       const video_data = {
+        temp_id: video_temp_id,
         title: `${selected_location.name} AI 영상`,
         location_id: selected_location.poi_id,
         location_name: selected_location.name,
@@ -154,15 +143,14 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
       const last_request_info = {
         location: selected_location,
-        image_url: image_url, // base64 이미지 URL 저장 (파일 객체 대신)
+        image_url: image_url,
         prompt: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
-      // on_request_success 콜백이 있으면 호출, 없으면 기존 로직 사용
+      // 🚀 낙관적 UI: on_request_success 콜백을 즉시 실행하여 UI가 먼저 반응
       if (on_request_success) {
-        // 새로운 방식: 성공 콜백으로 데이터 전달
         on_request_success({
           video_data,
           creation_date,
@@ -175,77 +163,48 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         } else {
           use_content_launch.getState().add_pending_video(video_data, creation_date);
         }
-      }
-      
-      // S3 Presigned URL을 이용한 2단계 업로드
-      // 1단계: 백엔드에서 presigned URL 가져오기
-// 1) presign 호출
-const presignRes = await apiFetch('/api/images/presign', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' }, // Authorization은 apiFetch가 자동 추가
-  body: JSON.stringify({ contentType: uploaded_file.type })
-});
-
-if (!presignRes.ok) {
-  const errText = await presignRes.text().catch(() => '');
-  throw new Error(`Presigned URL 요청 실패: ${presignRes.status} ${errText}`);
-}
-
-// 2) presign 결과 파싱 + 로그
-const presign = await presignRes.json(); // { url, key, contentType }
-const { url, key, contentType } = presign;
-
-// 보안상 쿼리(서명) 없이 경로만 보고 싶으면:
-try {
-  const u = new URL(url);
-} catch { /* url 파싱 실패해도 무시 */ }
-
-// 표로 깔끔하게 보고 싶으면:
-
-
-      // 2단계: S3에 직접 파일 업로드
-const uploadRes = await fetch(url, {
-  method: 'PUT',
-  headers: { 'Content-Type': contentType }, // presign에 사용한 값과 완전히 동일!
-  body: uploaded_file
-});
-
-if (!uploadRes.ok) {
-  const errText = await uploadRes.text().catch(() => '');
-  throw new Error(`S3 업로드 실패: ${uploadRes.status} ${errText}`);
-}
-
-      // 3단계: 백엔드에 업로드 완료 알림
-const notifyRes = await apiFetch('/api/images/confirm', {
-  method: 'POST', // ✅ 서버는 POST로 받음
-  headers: { 'Content-Type': 'application/json' }, // Authorization은 apiFetch가 자동 추가
-  body: JSON.stringify({
-    key, // presign에서 받은 key 그대로
-    locationCode: selected_location.poi_id,
-    prompt_text: prompt_text && prompt_text.trim() ? prompt_text.trim() : ""
-  })
-});
-
-if (!notifyRes.ok) {
-  const errText = await notifyRes.text().catch(() => '');
-  throw new Error(`업로드 완료 알림 실패: ${notifyRes.status} ${errText}`);
-}
-
-const confirmJson = await notifyRes.json().catch(() => ({}));
-
-      // 성공 처리
-      if (!on_request_success) {
-        // 기존 방식: 직접 성공 모달 표시
+        
+        // 기존 방식에서도 성공 모달 즉시 표시
         set_is_success_modal_open(true);
       }
+      
+      // 폼 초기화
       reset_form();
+      
+      // 🔄 백그라운드 처리: S3 업로드를 비동기로 실행
+      (async () => {
+        try {
+          // S3 통합 업로드 함수 사용
+          await uploadImageToS3Complete(
+            uploaded_file,
+            selected_location.poi_id,
+            prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
+            // "YOUTUBE"
+          );
+          
+        } catch (background_error) {
+          // 백그라운드 작업 실패 시 영상을 실패 상태로 전환
+          use_content_launch.getState().transition_to_failed(video_temp_id);
+          
+          // 사용자에게 실패 알림
+          useNotificationStore.getState().add_notification({
+            type: 'error',
+            message: `영상 업로드에 실패했습니다: ${background_error.message}`,
+            data: { 
+              error: background_error.message,
+              temp_id: video_temp_id,
+              failed_at: new Date().toISOString()
+            }
+          });
+        }
+      })();
       
     } catch (error) {
       alert('요청 전송에 실패했습니다. 다시 시도해주세요.');
     } finally {
       set_is_submitting(false);
     }
-  }, [selected_location, uploaded_file, prompt_text, reset_form]);
+  }, [selected_location, uploaded_file, prompt_text, reset_form, on_request_success, isPriority]);
 
   // 폼 검증 상태
   const is_form_valid = selected_location && uploaded_file && !is_submitting;

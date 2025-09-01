@@ -16,6 +16,32 @@ import {
 } from '@/features/content-management/lib/content-launch-utils';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 
+// YouTube 카테고리 목록
+const YOUTUBE_CATEGORIES = {
+  "1": "Film & Animation",
+  "2": "Autos & Vehicles", 
+  "10": "Music",
+  "15": "Pets & Animals",
+  "17": "Sports",
+  "19": "Travel & Events",
+  "20": "Gaming",
+  "22": "People & Blogs",
+  "23": "Comedy",
+  "24": "Entertainment",
+  "25": "News & Politics",
+  "26": "Howto & Style",
+  "27": "Education",
+  "28": "Science & Technology",
+  "29": "Nonprofits & Activism"
+};
+
+// 공개 상태 옵션
+const PRIVACY_OPTIONS = [
+  { value: 'private', label: '비공개', description: '나만 볼 수 있음' },
+  { value: 'unlisted', label: '일부 공개', description: '링크를 아는 사람만' },
+  { value: 'public', label: '공개', description: '모든 사람이 볼 수 있음' }
+];
+
 const ContentPublishModal = ({ 
   is_open, 
   item, 
@@ -162,9 +188,114 @@ const ContentPublishModal = ({
               className={`${
                 dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
               } backdrop-blur-sm rounded-xl`}
-              placeholder="#태그1 #태그2 #태그3"
+              placeholder="태그1, 태그2, 태그3 (쉼표로 구분)"
             />
           </div>
+
+          {/* YouTube 전용 설정 */}
+          {publish_form.platforms.includes('youtube') && (
+            <>
+              {/* 공개 상태 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
+                  공개 상태
+                </label>
+                <div className="space-y-2">
+                  {PRIVACY_OPTIONS.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                        publish_form.privacyStatus === option.value
+                          ? dark_mode
+                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
+                            : 'bg-blue-50 border-blue-200 text-blue-700'
+                          : dark_mode
+                            ? 'bg-gray-800/30 border-gray-600/60 hover:bg-gray-700/60'
+                            : 'bg-white/30 border-gray-300/60 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="privacyStatus"
+                        value={option.value}
+                        checked={publish_form.privacyStatus === option.value}
+                        onChange={(e) => on_update_form('privacyStatus', e.target.value)}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <div>
+                        <div className="font-medium">{option.label}</div>
+                        <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {option.description}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* 카테고리 선택 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  카테고리
+                </label>
+                <select
+                  value={publish_form.categoryId}
+                  onChange={(e) => on_update_form('categoryId', e.target.value)}
+                  className={`w-full p-3 rounded-xl border ${
+                    dark_mode 
+                      ? 'bg-gray-800/60 border-gray-600/60 text-white' 
+                      : 'bg-white/60 border-gray-300/60 text-gray-900'
+                  } backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  {Object.entries(YOUTUBE_CATEGORIES).map(([id, name]) => (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 아동용 여부 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
+                  아동용 콘텐츠
+                </label>
+                <div className="flex items-center gap-4">
+                  <label className={`flex items-center gap-2 cursor-pointer p-2 rounded-lg transition-colors ${
+                    !publish_form.madeForKids ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                  }`}>
+                    <input
+                      type="radio"
+                      name="madeForKids"
+                      checked={!publish_form.madeForKids}
+                      onChange={() => on_update_form('madeForKids', false)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className={dark_mode ? 'text-gray-300' : 'text-gray-700'}>
+                      아니오
+                    </span>
+                  </label>
+                  <label className={`flex items-center gap-2 cursor-pointer p-2 rounded-lg transition-colors ${
+                    publish_form.madeForKids ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                  }`}>
+                    <input
+                      type="radio"
+                      name="madeForKids"
+                      checked={publish_form.madeForKids}
+                      onChange={() => on_update_form('madeForKids', true)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className={dark_mode ? 'text-gray-300' : 'text-gray-700'}>
+                      예
+                    </span>
+                  </label>
+                </div>
+                <p className={`text-xs mt-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  13세 이하를 대상으로 제작된 콘텐츠인지 선택해주세요.
+                </p>
+              </div>
+            </>
+          )}
 
           {/* 액션 버튼 */}
           <div className="flex items-center gap-3 pt-4 sticky bottom-0 bg-inherit">

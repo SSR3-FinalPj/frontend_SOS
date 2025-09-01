@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TestTube } from 'lucide-react';
 import { usePageStore } from '@/common/stores/page-store';
@@ -16,6 +16,7 @@ import { Button } from '@/common/ui/button';
 const ContentLaunchPage = () => {
   const { isDarkMode } = usePageStore();
   const [showTestPanel, setShowTestPanel] = useState(false);
+  const contentLaunchViewRef = useRef(null);
 
   return (
     <DashboardLayout currentView="contentLaunch" title="AI 콘텐츠 론칭">
@@ -37,21 +38,32 @@ const ContentLaunchPage = () => {
       </div>
 
       <div className="px-8 py-6">
-        {/* 테스트 패널 (조건부 렌더링) */}
-        <AnimatePresence>
-          {showTestPanel && (
-            <VideoStreamTestPanel dark_mode={isDarkMode} />
-          )}
-        </AnimatePresence>
-        
         {/* 콘텐츠 론칭 뷰 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <ContentLaunchView dark_mode={isDarkMode} />
+          <ContentLaunchView 
+            ref={contentLaunchViewRef}
+            dark_mode={isDarkMode}
+          />
         </motion.div>
+        
+        {/* 테스트 패널 (조건부 렌더링) */}
+        <AnimatePresence>
+          {showTestPanel && (
+            <VideoStreamTestPanel 
+              dark_mode={isDarkMode}
+              on_upload_test={(jobId, resultId) => {
+                // ContentLaunchView의 핸들러 함수를 직접 호출
+                if (contentLaunchViewRef.current) {
+                  contentLaunchViewRef.current.handle_open_upload_test_modal(jobId, resultId);
+                }
+              }}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   );

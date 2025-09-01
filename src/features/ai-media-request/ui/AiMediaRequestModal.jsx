@@ -1,17 +1,19 @@
 /**
- * AI 미디어 제작 요청 모달 컴포넌트 (리팩토링됨)
- * 재사용 가능한 컴포넌트들로 구성되어 더 나은 유지보수성과 재사용성을 제공
+ * AI 미디어 제작 요청 모달 컴포넌트 (플랫폼 지원 확장)
+ * YouTube와 Reddit 플랫폼을 지원하는 통합 미디어 제작 요청 모달
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/common/ui/button';
 import SuccessModal from '@/common/ui/success-modal';
+import PlatformSelector from '@/common/ui/PlatformSelector';
 import LocationSelector from '@/common/ui/location-selector';
 import ImageUploader from '@/common/ui/image-uploader';
 import NaturalPromptInput from '@/common/ui/natural-prompt-input';
+import RedditRequestForm from '@/features/reddit-media-request/ui/RedditRequestForm';
 import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media-request-form';
 
 /**
@@ -24,7 +26,10 @@ import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
 const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null }) => {
-  // 폼 상태 관리 커스텀 훅 사용
+  // 플랫폼 선택 상태
+  const [selectedPlatform, setSelectedPlatform] = useState('youtube');
+
+  // YouTube 폼 상태 관리 커스텀 훅 사용
   const {
     selected_location,
     uploaded_file,
@@ -39,9 +44,19 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     handle_success_modal_close
   } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success);
 
+  // 플랫폼 변경 핸들러
+  const handlePlatformChange = useCallback((platform) => {
+    // Reddit 플랫폼 선택 방지
+    if (platform === 'reddit') {
+      return;
+    }
+    setSelectedPlatform(platform);
+  }, []);
+
   // 모달 닫기 핸들러
   const handle_close = useCallback(() => {
     if (is_submitting) return;
+    setSelectedPlatform('youtube'); // 플랫폼 초기화
     on_close();
   }, [is_submitting, on_close]);
 
@@ -100,23 +115,43 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
 
           {/* 컨텐츠 */}
           <div className="p-6 space-y-5 max-h-[calc(95vh-140px)] overflow-y-auto">
-            {/* 위치 선택 컴포넌트 */}
-            <LocationSelector
-              selected_location={selected_location}
-              on_location_select={handle_location_select}
+            {/* 플랫폼 선택 컴포넌트 */}
+            <PlatformSelector
+              selectedPlatform={selectedPlatform}
+              onPlatformChange={handlePlatformChange}
             />
 
-            {/* 이미지 업로드 컴포넌트 */}
-            <ImageUploader
-              uploaded_file={uploaded_file}
-              on_file_change={handle_file_change}
-            />
+            {/* 플랫폼별 조건부 폼 렌더링 */}
+            {selectedPlatform === 'youtube' && (
+              <>
+                {/* YouTube 폼 - 기존 컴포넌트들 */}
+                <LocationSelector
+                  selected_location={selected_location}
+                  on_location_select={handle_location_select}
+                />
 
-            {/* 자연어 프롬프트 입력 컴포넌트 */}
-            <NaturalPromptInput
-              prompt_text={prompt_text}
-              on_prompt_change={handle_prompt_change}
-            />
+                <ImageUploader
+                  uploaded_file={uploaded_file}
+                  on_file_change={handle_file_change}
+                />
+
+                <NaturalPromptInput
+                  prompt_text={prompt_text}
+                  on_prompt_change={handle_prompt_change}
+                />
+              </>
+            )}
+
+            {selectedPlatform === 'reddit' && (
+              <>
+                {/* Reddit 폼 - 새로운 컴포넌트 */}
+                <RedditRequestForm
+                  onRequestSuccess={on_request_success}
+                  selectedVideoData={selectedVideoData}
+                  isPriority={isPriority}
+                />
+              </>
+            )}
           </div>
 
           {/* 푸터 */}
@@ -129,13 +164,29 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
               취소
             </Button>
             
-            <Button
-              onClick={handle_submit}
-              disabled={!is_form_valid}
-              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
-            >
-              {is_submitting ? '요청 중...' : '제작 요청하기'}
-            </Button>
+            {/* YouTube 제출 버튼 */}
+            {selectedPlatform === 'youtube' && (
+              <Button
+                onClick={handle_submit}
+                disabled={!is_form_valid}
+                className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
+              >
+                {is_submitting ? '요청 중...' : '동영상 생성 요청'}
+              </Button>
+            )}
+
+            {/* Reddit 제출 버튼 */}
+            {selectedPlatform === 'reddit' && (
+              <Button
+                onClick={() => {
+                  // Reddit 기능 비활성화로 인해 아무 동작 안함
+                }}
+                disabled={true} // 항상 비활성화
+                className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
+              >
+                이미지 생성 (준비 중)
+              </Button>
+            )}
           </div>
         </motion.div>
       </motion.div>

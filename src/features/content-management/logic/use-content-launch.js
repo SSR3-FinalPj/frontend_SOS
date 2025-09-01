@@ -375,6 +375,27 @@ export const use_content_launch = create(
       },
       
       /**
+       * 영상을 '실패' 상태로 전환하는 함수
+       * @param {string} temp_id - 임시 ID
+       */
+      transition_to_failed: (temp_id) => {
+        set((state) => ({
+          pending_videos: state.pending_videos.map(video => 
+            video.temp_id === temp_id 
+              ? { 
+                  ...video, 
+                  status: 'failed',
+                  failed_at: new Date().toISOString()
+                }
+              : video
+          )
+        }));
+        
+        // 상태 업데이트 후 폴더 목록 갱신
+        get().fetch_folders();
+      },
+      
+      /**
        * 백엔드에 완료 알림 및 다음 영상 자동 생성 요청
        * @param {string} temp_id - 완료된 영상의 임시 ID
        */

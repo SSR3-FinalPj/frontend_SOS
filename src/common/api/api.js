@@ -482,3 +482,183 @@ export async function getVideoDownloadUrl(resultId) {
 
   return await res.json();
 }
+
+/* ------------------ S3 이미지 업로드 API ------------------ */
+/**
+ * S3 Presigned URL 요청
+ * @param {string} contentType - 업로드할 파일의 Content-Type
+ * @returns {Promise} { url, key, contentType } 포함된 응답 데이터
+ */
+export async function getS3PresignedUrl(contentType) {
+  if (!contentType) {
+    throw new Error('파일의 Content-Type이 필요합니다.');
+  }
+
+  const res = await apiFetch('/api/images/presign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contentType })
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`Presigned URL 요청 실패: ${res.status} ${errorText}`);
+  }
+
+  return await res.json();
+}
+
+/**
+ * S3에 파일 직접 업로드
+ * @param {string} presignedUrl - S3 Presigned URL
+ * @param {File} file - 업로드할 파일 객체
+ * @param {string} contentType - 파일의 Content-Type
+ * @returns {Promise} 업로드 결과
+ */
+export async function uploadFileToS3(presignedUrl, file, contentType) {
+  if (!presignedUrl || !file || !contentType) {
+    throw new Error('업로드에 필요한 매개변수가 누락되었습니다.');
+  }
+
+  const res = await fetch(presignedUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': contentType },
+    body: file
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`S3 업로드 실패: ${res.status} ${errorText}`);
+  }
+
+  return { success: true, status: res.status };
+}
+
+/**
+ * 백엔드에 업로드 완료 알림
+ * @param {string} s3Key - S3 객체 키
+ * @param {string} locationCode - 위치 코드
+ * @param {string} promptText - 프롬프트 텍스트
+ * @returns {Promise} 확인 응답 데이터
+ */
+export async function confirmImageUpload(s3Key, locationCode, promptText = "") {
+  if (!s3Key || !locationCode) {
+    throw new Error('S3 키와 위치 코드가 필요합니다.');
+  }
+
+  const res = await apiFetch('/api/images/confirm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      key: s3Key,
+      locationCode: locationCode,
+      prompt_text: promptText
+    })
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`업로드 완료 알림 실패: ${res.status} ${errorText}`);
+  }
+
+  return await res.json().catch(() => ({}));
+}
+
+/**
+ * S3 이미지 업로드 전체 프로세스 (통합 함수)
+ * @param {File} file - 업로드할 파일
+ * @param {string} locationCode - 위치 코드
+ * @param {string} promptText - 프롬프트 텍스트
+ * @returns {Promise} 전체 업로드 프로세스 결과
+ */
+export async function uploadImageToS3Complete(file, locationCode, promptText = "") {
+  try {
+    // 1단계: Presigned URL 요청
+    const presignData = await getS3PresignedUrl(file.type);
+    const { url, key, contentType } = presignData;
+
+    // 2단계: S3에 파일 업로드
+    await uploadFileToS3(url, file, contentType);
+
+    // 3단계: 백엔드에 업로드 완료 알림
+    const confirmResult = await confirmImageUpload(key, locationCode, promptText);
+
+    return {
+      success: true,
+      s3Key: key,
+      confirmResult: confirmResult
+    };
+  } catch (error) {
+    throw new Error(`이미지 업로드 실패: ${error.message}`);
+  }
+}
+
+/* ------------------ YouTube 업로드 API ------------------ */
+/**
+ * YouTube에 비디오를 업로드하는 함수
+ * @param {string} jobId - 작업 ID
+ * @param {string} resultId - 결과 ID
+ * @param {Object} videoDetails - 비디오 상세 정보
+ * @param {string} videoDetails.title - 비디오 제목
+ * @param {string} videoDetails.description - 비디오 설명
+ * @param {string|Array} videoDetails.tags - 태그 (문자열 또는 배열)
+ * @param {string} videoDetails.privacyStatus - 공개 상태 ('private', 'unlisted', 'public')
+ * @param {string} videoDetails.categoryId - 카테고리 ID
+ * @param {boolean} videoDetails.madeForKids - 아동용 여부
+ * @returns {Promise<Object>} 업로드 결과
+ */
+export async function uploadToYouTube(jobId, resultId, videoDetails) {
+  try {
+    // 태그를 배열로 변환 (문자열인 경우 쉼표로 분리)
+    let processedTags = [];
+    if (videoDetails.tags) {
+      if (typeof videoDetails.tags === 'string') {
+        processedTags = videoDetails.tags
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0);
+      } else if (Array.isArray(videoDetails.tags)) {
+        processedTags = videoDetails.tags;
+      }
+    }
+
+    // API 요청 바디 구성
+    const requestBody = {
+      title: videoDetails.title || '',
+      description: videoDetails.description || '',
+      tags: processedTags,
+      privacyStatus: videoDetails.privacyStatus || 'private',
+      categoryId: videoDetails.categoryId || '22', // 기본값: People & Blogs
+      madeForKids: Boolean(videoDetails.madeForKids)
+    };
+
+    console.log('YouTube upload request:', {
+      jobId,
+      resultId,
+      requestBody
+    });
+
+    // YouTube 업로드 API 호출
+    const response = await apiFetch(`/api/youtube/upload/${jobId}/result/${resultId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('YouTube upload failed:', response.status, errorText);
+      throw new Error(`YouTube upload failed: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('YouTube upload success:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('YouTube upload error:', error);
+    throw error;
+  }
+}

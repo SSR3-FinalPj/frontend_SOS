@@ -24,7 +24,11 @@ export const use_content_modals = () => {
     title: '',
     description: '',
     tags: '',
-    scheduled_time: ''
+    scheduled_time: '',
+    // YouTube API 새로운 필드들
+    privacyStatus: 'private',
+    categoryId: '22', // People & Blogs
+    madeForKids: false
   });
 
   /**
@@ -52,7 +56,11 @@ export const use_content_modals = () => {
       title: item.title,
       description: item.description || '',
       tags: '',
-      scheduled_time: ''
+      scheduled_time: '',
+      // YouTube API 새로운 필드들
+      privacyStatus: 'private',
+      categoryId: '22', // People & Blogs
+      madeForKids: false
     });
     set_publish_modal({ open: true, item });
   };
@@ -67,7 +75,11 @@ export const use_content_modals = () => {
       title: '',
       description: '',
       tags: '',
-      scheduled_time: ''
+      scheduled_time: '',
+      // YouTube API 새로운 필드들 초기화
+      privacyStatus: 'private',
+      categoryId: '22', // People & Blogs
+      madeForKids: false
     });
   };
 

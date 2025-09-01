@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Download, Loader2, AlertCircle, TestTube } from 'lucide-react';
+import { Play, Download, Loader2, AlertCircle, TestTube, Upload } from 'lucide-react';
 import { Button } from '@/common/ui/button';
 import { getVideoStreamUrl, getVideoDownloadUrl } from '@/common/api/api';
 
@@ -13,15 +13,20 @@ import { getVideoStreamUrl, getVideoDownloadUrl } from '@/common/api/api';
  * VideoStreamTestPanel 컴포넌트
  * @param {Object} props - 컴포넌트 props
  * @param {boolean} props.dark_mode - 다크모드 여부
+ * @param {Function} props.on_upload_test - YouTube 업로드 테스트 핸들러
  * @returns {JSX.Element} VideoStreamTestPanel 컴포넌트
  */
-const VideoStreamTestPanel = ({ dark_mode }) => {
+const VideoStreamTestPanel = ({ dark_mode, on_upload_test }) => {
   // 상태 관리
   const [resultId, setResultId] = useState('81');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  
+  // YouTube 업로드 테스트용 상태
+  const [jobId, setJobId] = useState('test-job-001');
+  const [uploadResultId, setUploadResultId] = useState('81');
 
   // 에러 메시지 초기화
   const clearMessages = () => {
@@ -80,6 +85,21 @@ const VideoStreamTestPanel = ({ dark_mode }) => {
   const handleResultIdChange = (e) => {
     setResultId(e.target.value);
     clearMessages();
+  };
+  
+  // YouTube 업로드 테스트 핸들러
+  const handleUploadTest = () => {
+    if (!jobId.trim() || !uploadResultId.trim()) {
+      setError('업로드 테스트를 위해 jobId와 resultId를 모두 입력해주세요.');
+      return;
+    }
+    
+    if (on_upload_test) {
+      on_upload_test(jobId, uploadResultId);
+      setSuccessMessage(`업로드 테스트 모달을 열었습니다. (Job: ${jobId}, Result: ${uploadResultId})`);
+    } else {
+      setError('업로드 테스트 핸들러가 설정되지 않았습니다.');
+    }
   };
 
   return (
@@ -212,6 +232,84 @@ const VideoStreamTestPanel = ({ dark_mode }) => {
           </div>
         </motion.div>
       )}
+
+      {/* YouTube 업로드 테스트 섹션 */}
+      <div className="mt-8 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-lg bg-gradient-to-r from-red-500/20 to-pink-500/20">
+            <Upload className="w-5 h-5 text-red-600 dark:text-red-400" />
+          </div>
+          <div>
+            <h3 className={`text-lg font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+              YouTube 업로드 테스트
+            </h3>
+            <p className={`text-sm ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+              jobId와 resultId로 직접 업로드 모달 열기
+            </p>
+          </div>
+        </div>
+
+        {/* YouTube 테스트 입력 및 컨트롤 영역 */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* JobID 입력 */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              dark_mode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Job ID
+            </label>
+            <input
+              type="text"
+              value={jobId}
+              onChange={(e) => {
+                setJobId(e.target.value);
+                clearMessages();
+              }}
+              className={`w-full px-3 py-2 rounded-lg border transition-colors ${
+                dark_mode 
+                  ? 'bg-gray-700/50 border-gray-600 text-white focus:border-red-400' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-red-500'
+              } focus:outline-none focus:ring-2 focus:ring-red-500/20`}
+              placeholder="예: test-job-001"
+            />
+          </div>
+          
+          {/* Upload ResultID 입력 */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              dark_mode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Result ID
+            </label>
+            <input
+              type="text"
+              value={uploadResultId}
+              onChange={(e) => {
+                setUploadResultId(e.target.value);
+                clearMessages();
+              }}
+              className={`w-full px-3 py-2 rounded-lg border transition-colors ${
+                dark_mode 
+                  ? 'bg-gray-700/50 border-gray-600 text-white focus:border-red-400' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-red-500'
+              } focus:outline-none focus:ring-2 focus:ring-red-500/20`}
+              placeholder="예: 81"
+            />
+          </div>
+
+          {/* 업로드 테스트 버튼 */}
+          <div className="lg:col-span-2 flex items-end">
+            <Button
+              onClick={handleUploadTest}
+              disabled={!jobId.trim() || !uploadResultId.trim()}
+              className="w-full bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 hover:from-red-500/30 hover:to-pink-500/30 text-gray-800 dark:text-white rounded-lg"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              업로드 테스트 모달 열기
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* 로딩 오버레이 */}
       {isLoading && (

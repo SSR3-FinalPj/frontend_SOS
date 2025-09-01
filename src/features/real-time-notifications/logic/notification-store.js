@@ -6,40 +6,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-/**
- * 날짜를 yy-mm-dd hh:mm 형식으로 포맷팅하는 함수
- * @param {string|Date} dateString - ISO 문자열 또는 Date 객체
- * @returns {string} yy-mm-dd hh:mm 형식의 날짜 문자열
- */
-function format_date_time(dateString) {
-  try {
-    const date = new Date(dateString);
-    
-    // 유효한 날짜인지 확인
-    if (isNaN(date.getTime())) {
-      return new Date().toLocaleDateString('ko-KR', {
-        year: '2-digit',
-        month: '2-digit', 
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).replace(/\./g, '-').replace(' ', ' ');
-    }
-    
-    // yy-mm-dd hh:mm 형식으로 포맷팅
-    const year = String(date.getFullYear()).slice(-2);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
-  } catch (error) {
-    console.error('날짜 포맷팅 실패:', error);
-    return format_date_time(new Date()); // 현재 시간으로 대체
-  }
-}
-
 export const useNotificationStore = create(
   persist(
     (set, get) => ({
@@ -62,8 +28,8 @@ export const useNotificationStore = create(
       message: notification.message,
       data: notification.data || {},
       read: false,
-      timestamp: format_date_time(timestamp), // 포맷팅된 시간으로 저장
-      raw_timestamp: timestamp, // 원본 타임스탬프 보존
+      timestamp: timestamp, // 원본 ISO 형식 타임스탬프 저장
+      raw_timestamp: timestamp, // 호환성을 위해 보존
     };
     
     set((state) => ({
@@ -140,6 +106,7 @@ export const useNotificationStore = create(
       message: `영상 제작이 완료되었습니다: ${video_data.title || '새 영상'}`,
       data: video_data,
       timestamp: video_data.timestamp || new Date().toISOString(),
+      path: '/contentlaunch' // 클릭 시 이동할 경로 추가
     });
   },
   
@@ -155,8 +122,8 @@ export const useNotificationStore = create(
   
   // SSE 전용 알림 추가 메서드 (다른 스토어와 연동)
   add_sse_notification: (sse_data) => {
-    // 서버로부터 받은 timestamp를 yy-mm-dd hh:mm 형식으로 포맷팅
-    const formatted_timestamp = format_date_time(sse_data.timestamp || new Date().toISOString());
+    // 원본 ISO 형식 타임스탬프 사용
+    const timestamp = sse_data.timestamp || new Date().toISOString();
     
     const new_notification = {
       id: Date.now().toString(),
@@ -164,8 +131,10 @@ export const useNotificationStore = create(
       message: sse_data.message,
       data: sse_data.data || {},
       read: false,
-      timestamp: formatted_timestamp, // 포맷팅된 시간으로 저장
-      raw_timestamp: sse_data.timestamp || new Date().toISOString(), // 원본 타임스탬프도 보존
+      timestamp: timestamp, // 원본 ISO 형식 타임스탬프 저장
+      raw_timestamp: timestamp, // 호환성을 위해 보존
+      // video_completed 타입의 알림에는 contentlaunch 페이지로 이동하는 path 추가
+      ...(sse_data.type === 'video_completed' && { path: '/contentlaunch' })
     };
     
     // 일반 알림을 스토어에 추가 (드롭다운용)
@@ -214,7 +183,7 @@ export const useNotificationStore = create(
     get().add_sse_notification({
       type: 'video_completed_sse',
       message: message,
-      timestamp: timestamp, // format_date_time은 add_sse_notification에서 처리
+      timestamp: timestamp, // 원본 ISO 형식 사용
       data: { source: 'sse' },
     });
   },
