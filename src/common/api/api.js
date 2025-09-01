@@ -592,3 +592,73 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
     throw new Error(`이미지 업로드 실패: ${error.message}`);
   }
 }
+
+/* ------------------ YouTube 업로드 API ------------------ */
+/**
+ * YouTube에 비디오를 업로드하는 함수
+ * @param {string} jobId - 작업 ID
+ * @param {string} resultId - 결과 ID
+ * @param {Object} videoDetails - 비디오 상세 정보
+ * @param {string} videoDetails.title - 비디오 제목
+ * @param {string} videoDetails.description - 비디오 설명
+ * @param {string|Array} videoDetails.tags - 태그 (문자열 또는 배열)
+ * @param {string} videoDetails.privacyStatus - 공개 상태 ('private', 'unlisted', 'public')
+ * @param {string} videoDetails.categoryId - 카테고리 ID
+ * @param {boolean} videoDetails.madeForKids - 아동용 여부
+ * @returns {Promise<Object>} 업로드 결과
+ */
+export async function uploadToYouTube(jobId, resultId, videoDetails) {
+  try {
+    // 태그를 배열로 변환 (문자열인 경우 쉼표로 분리)
+    let processedTags = [];
+    if (videoDetails.tags) {
+      if (typeof videoDetails.tags === 'string') {
+        processedTags = videoDetails.tags
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0);
+      } else if (Array.isArray(videoDetails.tags)) {
+        processedTags = videoDetails.tags;
+      }
+    }
+
+    // API 요청 바디 구성
+    const requestBody = {
+      title: videoDetails.title || '',
+      description: videoDetails.description || '',
+      tags: processedTags,
+      privacyStatus: videoDetails.privacyStatus || 'private',
+      categoryId: videoDetails.categoryId || '22', // 기본값: People & Blogs
+      madeForKids: Boolean(videoDetails.madeForKids)
+    };
+
+    console.log('YouTube upload request:', {
+      jobId,
+      resultId,
+      requestBody
+    });
+
+    // YouTube 업로드 API 호출
+    const response = await apiFetch(`/api/youtube/upload/${jobId}/result/${resultId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('YouTube upload failed:', response.status, errorText);
+      throw new Error(`YouTube upload failed: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('YouTube upload success:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('YouTube upload error:', error);
+    throw error;
+  }
+}

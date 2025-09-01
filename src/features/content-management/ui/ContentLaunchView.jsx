@@ -12,6 +12,8 @@ import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestMo
 import { Button } from '@/common/ui/button';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
+import { uploadToYouTube } from '@/common/api/api';
+import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 import ConfirmationModal from '@/common/ui/confirmation-modal';
 import SuccessModal from '@/common/ui/success-modal';
 
@@ -94,16 +96,80 @@ const ContentLaunchView = ({ dark_mode }) => {
   };
 
   /**
-   * 게시 완료 핸들러
+   * 게시 완료 핸들러 - 실제 YouTube API 사용
    */
   const handle_final_publish = async () => {
-    if (!publish_modal.item) return;
+    if (!publish_modal.item || !publish_form) return;
     
-    // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
-    const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
-    
-    close_publish_modal();
-    await simulate_upload(item_id);
+    try {
+      // 업로드 시작 표시
+      const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
+      start_upload(item_id);
+      
+      // YouTube 플랫폼이 선택된 경우에만 실제 API 호출
+      if (publish_form.platforms.includes('youtube')) {
+        // jobId와 resultId 추출
+        const jobId = publish_modal.item.job_id || publish_modal.item.jobId;
+        const resultId = publish_modal.item.result_id || publish_modal.item.resultId;
+        
+        if (!jobId || !resultId) {
+          throw new Error('YouTube 업로드에 필요한 jobId 또는 resultId가 없습니다.');
+        }
+        
+        // YouTube API 호출
+        console.log('Calling YouTube API:', {
+          jobId,
+          resultId,
+          videoDetails: publish_form
+        });
+        
+        const result = await uploadToYouTube(jobId, resultId, publish_form);
+        
+        // 성공 알림
+        useNotificationStore.getState().add_notification({
+          type: 'success',
+          message: `YouTube에 "${publish_form.title}" 영상이 성공적으로 업로드되었습니다!`,
+          data: { 
+            ...result,
+            platform: 'youtube',
+            item_id
+          }
+        });
+        
+        console.log('YouTube upload completed:', result);
+      } else {
+        // 다른 플랫폼의 경우 기존 시뮬레이션 사용
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
+        
+        useNotificationStore.getState().add_notification({
+          type: 'info',
+          message: `${publish_form.platforms.join(', ')} 플랫폼 업로드가 완료되었습니다.`,
+          data: { item_id }
+        });
+      }
+      
+      // 업로드 완료 처리
+      finish_upload(item_id);
+      
+    } catch (error) {
+      console.error('Upload failed:', error);
+      
+      // 실패 시 업로드 상태 정리
+      const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
+      finish_upload(item_id);
+      
+      // 에러 알림
+      useNotificationStore.getState().add_notification({
+        type: 'error',
+        message: `업로드에 실패했습니다: ${error.message}`,
+        data: { 
+          error: error.message,
+          item_id
+        }
+      });
+    } finally {
+      close_publish_modal();
+    }
   };
 
   return (
