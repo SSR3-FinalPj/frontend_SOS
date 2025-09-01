@@ -396,6 +396,28 @@ export const use_content_launch = create(
       },
       
       /**
+       * 영상의 jobId 정보를 업데이트하는 함수
+       * @param {string} temp_id - 업데이트할 영상의 temp_id
+       * @param {Object} jobInfo - 업데이트할 job 정보 (jobId, job_id, s3Key 등)
+       */
+      update_video_job_info: (temp_id, jobInfo) => {
+        set((state) => ({
+          pending_videos: state.pending_videos.map(video => 
+            video.temp_id === temp_id 
+              ? { 
+                  ...video, 
+                  ...jobInfo, // jobId, job_id, s3Key 등 추가
+                  updated_at: new Date().toISOString()
+                }
+              : video
+          )
+        }));
+        
+        // 상태 업데이트 후 폴더 목록 갱신
+        get().fetch_folders();
+      },
+      
+      /**
        * 백엔드에 완료 알림 및 다음 영상 자동 생성 요청
        * @param {string} temp_id - 완료된 영상의 임시 ID
        */
@@ -586,6 +608,8 @@ export const use_content_launch = create(
                 id: completedVideoData.resultId,
                 video_id: completedVideoData.resultId,
                 resultId: completedVideoData.resultId,
+                jobId: completedVideoData.jobId, // ✅ 백엔드에서 받은 jobId 추가
+                job_id: completedVideoData.jobId, // ✅ YouTube 업로드용 필드명
                 title: `완성된 영상 ${completedVideoData.resultId}`,
                 status: 'ready',
                 type: 'video',
@@ -607,6 +631,8 @@ export const use_content_launch = create(
               id: completedVideoData.resultId,
               video_id: completedVideoData.resultId,
               resultId: completedVideoData.resultId,
+              jobId: completedVideoData.jobId, // ✅ 백엔드에서 받은 jobId 추가
+              job_id: completedVideoData.jobId, // ✅ YouTube 업로드용 필드명
               status: 'ready',
               createdAt: parsedCreatedAt.toISOString(),
               created_at: parsedCreatedAt.toISOString(),

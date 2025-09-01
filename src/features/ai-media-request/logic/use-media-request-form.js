@@ -174,13 +174,22 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 🔄 백그라운드 처리: S3 업로드를 비동기로 실행
       (async () => {
         try {
-          // S3 통합 업로드 함수 사용
-          await uploadImageToS3Complete(
+          // S3 통합 업로드 함수 사용 - jobId 받아오기
+          const uploadResult = await uploadImageToS3Complete(
             uploaded_file,
             selected_location.poi_id,
             prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
             // "YOUTUBE"
           );
+          
+          // ✅ jobId를 영상 데이터에 추가 (백엔드에서 받은 jobId 사용)
+          if (uploadResult.jobId) {
+            use_content_launch.getState().update_video_job_info(video_temp_id, {
+              jobId: uploadResult.jobId,
+              job_id: uploadResult.jobId, // YouTube 업로드에서 사용하는 필드명
+              s3Key: uploadResult.s3Key
+            });
+          }
           
         } catch (background_error) {
           // 백그라운드 작업 실패 시 영상을 실패 상태로 전환

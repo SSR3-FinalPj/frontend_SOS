@@ -135,12 +135,34 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
       
       // YouTube 플랫폼이 선택된 경우에만 실제 API 호출
       if (publish_form.platforms.includes('youtube')) {
-        // jobId와 resultId 추출
+        // jobId와 resultId 추출 및 상세 디버그
         const jobId = publish_modal.item.job_id || publish_modal.item.jobId;
         const resultId = publish_modal.item.result_id || publish_modal.item.resultId;
         
+        console.log('🔍 YouTube 업로드 데이터 검증:', {
+          item: publish_modal.item,
+          jobId: jobId,
+          resultId: resultId,
+          hasJobId: !!jobId,
+          hasResultId: !!resultId,
+          jobIdType: typeof jobId,
+          resultIdType: typeof resultId
+        });
+        
         if (!jobId || !resultId) {
-          throw new Error('YouTube 업로드에 필요한 jobId 또는 resultId가 없습니다.');
+          const errorMsg = `YouTube 업로드에 필요한 데이터가 누락되었습니다: ${
+            !jobId ? 'jobId 누락' : ''
+          }${!jobId && !resultId ? ', ' : ''}${
+            !resultId ? 'resultId 누락' : ''
+          }`;
+          
+          console.error('❌ YouTube 업로드 실패 - 누락된 데이터:', {
+            jobId: jobId,
+            resultId: resultId,
+            videoItem: publish_modal.item
+          });
+          
+          throw new Error(errorMsg);
         }
         
         // YouTube API 호출

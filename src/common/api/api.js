@@ -573,6 +573,7 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
     return {
       success: true,
       s3Key: key,
+      jobId: confirmResult.jobId, // ✅ 백엔드에서 받은 jobId 추출
       confirmResult: confirmResult
     };
   } catch (error) {
