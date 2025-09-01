@@ -17,6 +17,7 @@ import {
   get_status_icon, 
   get_status_tooltip 
 } from '@/features/content-management/lib/content-launch-utils';
+import { formatCreationTime } from '@/common/utils/date-utils';
 
 /**
  * ContentItemCard 컴포넌트
@@ -48,17 +49,7 @@ const ContentItemCard = ({
   // 미리보기 클릭 가능한 상태인지 확인 (완성된 영상만)
   const is_clickable_for_preview = item.status === 'ready';
   
-  // creationTime 포매팅 함수
-  const formatCreationTime = (creationTime) => {
-    if (!creationTime) return '';
-    const date = new Date(creationTime);
-    return date.toLocaleString('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-  };
+  // formatCreationTime은 이제 date-utils에서 import하여 사용
   
   // console.log('ContentItemCard render:', {
   //   title: item.title,

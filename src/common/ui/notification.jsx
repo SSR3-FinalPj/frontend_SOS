@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCircle2, Play, Trash2, Check } from 'lucide-react';
 import { useOnClickOutside } from '@/common/hooks/use-on-click-outside';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
+import { formatToKST } from '@/common/utils/date-utils';
 
 /**
  * Premium Notification 컴포넌트
@@ -85,15 +86,7 @@ const Notification = () => {
   // 외부 클릭 감지
   useOnClickOutside(dropdownRef, closeDropdown);
 
-  // UTC 타임스탬프를 KST '오전/오후 HH:MM' 형식으로 변환
-  const formatToKST = useCallback((utcTimestamp) => {
-    return new Date(utcTimestamp).toLocaleString('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      hour12: true,
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }, []);
+  // formatToKST는 이제 date-utils에서 import하여 사용
 
   // 알림 타입별 아이콘 매핑
   const getNotificationIcon = (type) => {
