@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { format_date } from '@/domain/dashboard/logic/dashboard-utils';
-import { get_youtube_range_summary, get_all_videos, get_traffic_source_summary } from '@/common/api/api';
+import { getYouTubeUploadsByRange, get_traffic_source_summary, getYouTubeChannelId } from '@/common/api/api';
+import { usePlatformStore } from '@/domain/platform/logic/store';
 
 const initialEndDate = new Date();
 initialEndDate.setHours(23, 59, 59, 999);
@@ -39,6 +40,7 @@ export const useAnalyticsStore = create(
         period_dropdown_open: false,
         
         summaryData: null,
+        uploadedVideos: [],
         isLoading: false,
         error: null,
         
