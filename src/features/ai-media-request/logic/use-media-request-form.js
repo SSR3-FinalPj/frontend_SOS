@@ -178,7 +178,8 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
           await uploadImageToS3Complete(
             uploaded_file,
             selected_location.poi_id,
-            prompt_text && prompt_text.trim() ? prompt_text.trim() : ""
+            prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
+            "YOUTUBE"
           );
           
         } catch (background_error) {
