@@ -179,7 +179,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
             uploaded_file,
             selected_location.poi_id,
             prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-            "YOUTUBE" // 대문자로 고정하여 전달
+            "youtube" // 대문자로 고정하여 전달
           );
           
           // ✅ jobId를 영상 데이터에 추가 (백엔드에서 받은 jobId 사용)

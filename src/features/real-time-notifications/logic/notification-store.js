@@ -148,6 +148,16 @@ export const useNotificationStore = create(
     if (sse_data.type === 'video_completed' || sse_data.type === 'video_ready') {
       get().handle_video_ready_event(sse_data);
     }
+    
+    // YouTube 업로드 완료 이벤트 처리
+    if (sse_data.type === 'youtube_completed') {
+      get().handle_youtube_completed_event(sse_data);
+    }
+    
+    // Reddit 게시 완료 이벤트 처리
+    if (sse_data.type === 'reddit_completed') {
+      get().handle_reddit_completed_event(sse_data);
+    }
   },
   
   // video-ready 이벤트 전용 처리 (use_content_launch 스토어와 연동)
@@ -178,6 +188,41 @@ export const useNotificationStore = create(
     }
   },
   
+  // YouTube 업로드 완료 이벤트 처리
+  handle_youtube_completed_event: (sse_data) => {
+    try {
+      console.log('YouTube 업로드 완료 이벤트 처리:', sse_data);
+      
+      // YouTube 관련 추가 로직이 필요한 경우 여기에 구현
+      // 예: 업로드된 영상 정보를 content-launch 스토어에 업데이트
+      if (sse_data.videoId || sse_data.videoUrl) {
+        console.log('YouTube 업로드 정보:', {
+          videoId: sse_data.videoId,
+          videoUrl: sse_data.videoUrl
+        });
+      }
+    } catch (error) {
+      console.error('YouTube 완료 이벤트 처리 중 오류:', error);
+    }
+  },
+
+  // Reddit 게시 완료 이벤트 처리
+  handle_reddit_completed_event: (sse_data) => {
+    try {
+      console.log('Reddit 게시 완료 이벤트 처리:', sse_data);
+      
+      // Reddit 관련 추가 로직이 필요한 경우 여기에 구현
+      // 예: 게시된 포스트 정보를 content-launch 스토어에 업데이트
+      if (sse_data.postUrl) {
+        console.log('Reddit 게시 정보:', {
+          postUrl: sse_data.postUrl
+        });
+      }
+    } catch (error) {
+      console.error('Reddit 완료 이벤트 처리 중 오류:', error);
+    }
+  },
+
   // SSE 영상 생성 완료 전용 처리
   handle_sse_video_completed: (message, timestamp) => {
     get().add_sse_notification({
