@@ -55,10 +55,10 @@ const ContentLaunchPage = () => {
           {showTestPanel && (
             <VideoStreamTestPanel 
               dark_mode={isDarkMode}
-              on_upload_test={(jobId, resultId) => {
-                // ContentLaunchView의 핸들러 함수를 직접 호출
+              on_upload_test={(_, resultId) => {
+                // ContentLaunchView의 핸들러 함수를 직접 호출 (resultId만 전달)
                 if (contentLaunchViewRef.current) {
-                  contentLaunchViewRef.current.handle_open_upload_test_modal(jobId, resultId);
+                  contentLaunchViewRef.current.handle_open_upload_test_modal(resultId);
                 }
               }}
             />

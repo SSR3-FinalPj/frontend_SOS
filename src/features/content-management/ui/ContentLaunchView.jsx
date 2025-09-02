@@ -103,12 +103,11 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   /**
    * YouTube 업로드 테스트 모달 열기 핸들러
    */
-  const handle_open_upload_test_modal = (jobId, resultId) => {
+  const handle_open_upload_test_modal = (resultId) => {
     // 가상의 mockItem 객체 생성
     const mockItem = {
-      job_id: jobId,
       result_id: resultId,
-      title: `[테스트] Job ${jobId}의 영상`,
+      title: `[테스트] Result ${resultId}의 영상`,
       description: `Result ID: ${resultId}에 대한 업로드 테스트입니다.`,
       platform: 'youtube',
       video_id: `test-video-${Date.now()}`,
@@ -135,36 +134,25 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
       
       // YouTube 플랫폼이 선택된 경우에만 실제 API 호출
       if (publish_form.platforms.includes('youtube')) {
-        // jobId와 resultId 추출 (백엔드 JobResult 개선에 따른 안전한 처리)
-        const jobId = publish_modal.item.job_id || publish_modal.item.jobId;
+        // resultId 추출 (백엔드 API는 resultId만 필요)
         const resultId = publish_modal.item.result_id || publish_modal.item.resultId || publish_modal.item.id;
         
-        console.log('🔍 YouTube 업로드 데이터 검증 (백엔드 JobResult 개선 적용):', {
+        console.log('🔍 YouTube 업로드 데이터 검증:', {
           item: publish_modal.item,
-          jobId: jobId,
           resultId: resultId,
-          hasJobId: !!jobId,
           hasResultId: !!resultId,
-          jobIdType: typeof jobId,
           resultIdType: typeof resultId,
           fallbackFields: {
-            job_id: publish_modal.item.job_id,
-            jobId: publish_modal.item.jobId,
             result_id: publish_modal.item.result_id,
             resultId: publish_modal.item.resultId,
             id: publish_modal.item.id
           }
         });
         
-        if (!jobId || !resultId) {
-          const errorMsg = `YouTube 업로드에 필요한 데이터가 누락되었습니다: ${
-            !jobId ? 'jobId 누락' : ''
-          }${!jobId && !resultId ? ', ' : ''}${
-            !resultId ? 'resultId 누락' : ''
-          }`;
+        if (!resultId) {
+          const errorMsg = `YouTube 업로드에 필요한 resultId가 누락되었습니다.`;
           
           console.error('❌ YouTube 업로드 실패 - 누락된 데이터:', {
-            jobId: jobId,
             resultId: resultId,
             videoItem: publish_modal.item
           });
@@ -174,12 +162,11 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         
         // YouTube API 호출
         console.log('Calling YouTube API:', {
-          jobId,
           resultId,
           videoDetails: publish_form
         });
         
-        const result = await uploadToYouTube(jobId, resultId, publish_form);
+        const result = await uploadToYouTube(resultId, publish_form);
         
         // 성공 알림
         useNotificationStore.getState().add_notification({

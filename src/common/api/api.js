@@ -610,7 +610,6 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
 /* ------------------ YouTube 업로드 API ------------------ */
 /**
  * YouTube에 비디오를 업로드하는 함수
- * @param {string} jobId - 작업 ID
  * @param {string} resultId - 결과 ID
  * @param {Object} videoDetails - 비디오 상세 정보
  * @param {string} videoDetails.title - 비디오 제목
@@ -621,7 +620,7 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
  * @param {boolean} videoDetails.madeForKids - 아동용 여부
  * @returns {Promise<Object>} 업로드 결과
  */
-export async function uploadToYouTube(jobId, resultId, videoDetails) {
+export async function uploadToYouTube(resultId, videoDetails) {
   try {
     // 태그를 배열로 변환 (문자열인 경우 쉼표로 분리)
     let processedTags = [];
@@ -647,13 +646,12 @@ export async function uploadToYouTube(jobId, resultId, videoDetails) {
     };
 
     console.log('YouTube upload request:', {
-      jobId,
       resultId,
       requestBody
     });
 
     // YouTube 업로드 API 호출
-    const response = await apiFetch(`/api/youtube/upload/${jobId}/result/${resultId}`, {
+    const response = await apiFetch(`/api/youtube/upload/${resultId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
