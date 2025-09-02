@@ -437,6 +437,7 @@ function ContentListView({
         item={preview_modal.item}
         dark_mode={isDarkMode}
         on_close={close_preview_modal}
+        viewMode="simple"
       />
     </div>
   );
