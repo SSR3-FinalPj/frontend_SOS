@@ -135,18 +135,25 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
       
       // YouTube 플랫폼이 선택된 경우에만 실제 API 호출
       if (publish_form.platforms.includes('youtube')) {
-        // jobId와 resultId 추출 및 상세 디버그
+        // jobId와 resultId 추출 (백엔드 JobResult 개선에 따른 안전한 처리)
         const jobId = publish_modal.item.job_id || publish_modal.item.jobId;
-        const resultId = publish_modal.item.result_id || publish_modal.item.resultId;
+        const resultId = publish_modal.item.result_id || publish_modal.item.resultId || publish_modal.item.id;
         
-        console.log('🔍 YouTube 업로드 데이터 검증:', {
+        console.log('🔍 YouTube 업로드 데이터 검증 (백엔드 JobResult 개선 적용):', {
           item: publish_modal.item,
           jobId: jobId,
           resultId: resultId,
           hasJobId: !!jobId,
           hasResultId: !!resultId,
           jobIdType: typeof jobId,
-          resultIdType: typeof resultId
+          resultIdType: typeof resultId,
+          fallbackFields: {
+            job_id: publish_modal.item.job_id,
+            jobId: publish_modal.item.jobId,
+            result_id: publish_modal.item.result_id,
+            resultId: publish_modal.item.resultId,
+            id: publish_modal.item.id
+          }
         });
         
         if (!jobId || !resultId) {

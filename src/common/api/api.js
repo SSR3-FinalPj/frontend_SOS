@@ -279,7 +279,19 @@ export async function get_traffic_source_summary(videoId) {
 /**
  * 완료된 영상의 실제 데이터를 조회하는 함수
  * SSE video_ready 이벤트 수신 시 사전 로딩에 사용
- * @returns {Promise} 영상 결과 데이터 (resultId, createdAt 포함)
+ * @returns {Promise} 영상 결과 데이터 (JobResultDto 배열)
+ * 
+ * 응답 구조 개선 (백엔드 FixedJobResultService 적용):
+ * List<JobResultDto>에서 각 항목은 jobId 필드를 포함합니다.
+ * {
+ *   resultId: number,
+ *   jobId: number,       // ✅ YouTube 업로드에 필요한 작업 ID
+ *   status: string,
+ *   resultType: string,
+ *   resultKey: string,
+ *   promptText: string,
+ *   createdAt: string
+ * }
  */
 export async function getVideoResultId() {
   const res = await apiFetch('/api/dashboard/result_id', {
@@ -299,6 +311,17 @@ export async function getVideoResultId() {
  * 완성된 영상 결과 목록에서 가장 최신 영상을 찾는 함수
  * SSE video_ready 이벤트 수신 시 실시간 업데이트에 사용
  * @returns {Promise} 최신 완성 영상 데이터 또는 null
+ * 
+ * 예상 응답 구조 (JobResultDto):
+ * {
+ *   resultId: 123,
+ *   jobId: 456,          // ✅ 백엔드 개선으로 추가된 필드
+ *   status: "COMPLETED",
+ *   resultType: "video",
+ *   resultKey: "video/example_00001_.mp4",
+ *   promptText: "영상 생성 요청",
+ *   createdAt: "2024-01-01T12:00:00"
+ * }
  */
 export async function get_latest_completed_video() {
   try {

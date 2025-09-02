@@ -608,8 +608,8 @@ export const use_content_launch = create(
                 id: completedVideoData.resultId,
                 video_id: completedVideoData.resultId,
                 resultId: completedVideoData.resultId,
-                jobId: completedVideoData.jobId, // ✅ 백엔드에서 받은 jobId 추가
-                job_id: completedVideoData.jobId, // ✅ YouTube 업로드용 필드명
+                jobId: completedVideoData.jobId || null, // ✅ 백엔드에서 받은 jobId (안전한 처리)
+                job_id: completedVideoData.jobId || null, // ✅ YouTube 업로드용 필드명 (안전한 처리)
                 title: `완성된 영상 ${completedVideoData.resultId}`,
                 status: 'ready',
                 type: 'video',
@@ -631,8 +631,8 @@ export const use_content_launch = create(
               id: completedVideoData.resultId,
               video_id: completedVideoData.resultId,
               resultId: completedVideoData.resultId,
-              jobId: completedVideoData.jobId, // ✅ 백엔드에서 받은 jobId 추가
-              job_id: completedVideoData.jobId, // ✅ YouTube 업로드용 필드명
+              jobId: completedVideoData.jobId || null, // ✅ 백엔드에서 받은 jobId (안전한 처리)
+              job_id: completedVideoData.jobId || null, // ✅ YouTube 업로드용 필드명 (안전한 처리)
               status: 'ready',
               createdAt: parsedCreatedAt.toISOString(),
               created_at: parsedCreatedAt.toISOString(),
