@@ -103,12 +103,11 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   /**
    * YouTube 업로드 테스트 모달 열기 핸들러
    */
-  const handle_open_upload_test_modal = (jobId, resultId) => {
+  const handle_open_upload_test_modal = (resultId) => {
     // 가상의 mockItem 객체 생성
     const mockItem = {
-      job_id: jobId,
       result_id: resultId,
-      title: `[테스트] Job ${jobId}의 영상`,
+      title: `[테스트] Result ${resultId}의 영상`,
       description: `Result ID: ${resultId}에 대한 업로드 테스트입니다.`,
       platform: 'youtube',
       video_id: `test-video-${Date.now()}`,
@@ -135,22 +134,39 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
       
       // YouTube 플랫폼이 선택된 경우에만 실제 API 호출
       if (publish_form.platforms.includes('youtube')) {
-        // jobId와 resultId 추출
-        const jobId = publish_modal.item.job_id || publish_modal.item.jobId;
-        const resultId = publish_modal.item.result_id || publish_modal.item.resultId;
+        // resultId 추출 (백엔드 API는 resultId만 필요)
+        const resultId = publish_modal.item.result_id || publish_modal.item.resultId || publish_modal.item.id;
         
-        if (!jobId || !resultId) {
-          throw new Error('YouTube 업로드에 필요한 jobId 또는 resultId가 없습니다.');
+        console.log('🔍 YouTube 업로드 데이터 검증:', {
+          item: publish_modal.item,
+          resultId: resultId,
+          hasResultId: !!resultId,
+          resultIdType: typeof resultId,
+          fallbackFields: {
+            result_id: publish_modal.item.result_id,
+            resultId: publish_modal.item.resultId,
+            id: publish_modal.item.id
+          }
+        });
+        
+        if (!resultId) {
+          const errorMsg = `YouTube 업로드에 필요한 resultId가 누락되었습니다.`;
+          
+          console.error('❌ YouTube 업로드 실패 - 누락된 데이터:', {
+            resultId: resultId,
+            videoItem: publish_modal.item
+          });
+          
+          throw new Error(errorMsg);
         }
         
         // YouTube API 호출
         console.log('Calling YouTube API:', {
-          jobId,
           resultId,
           videoDetails: publish_form
         });
         
-        const result = await uploadToYouTube(jobId, resultId, publish_form);
+        const result = await uploadToYouTube(resultId, publish_form);
         
         // 성공 알림
         useNotificationStore.getState().add_notification({

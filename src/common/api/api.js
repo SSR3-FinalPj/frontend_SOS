@@ -279,7 +279,19 @@ export async function get_traffic_source_summary(videoId) {
 /**
  * 완료된 영상의 실제 데이터를 조회하는 함수
  * SSE video_ready 이벤트 수신 시 사전 로딩에 사용
- * @returns {Promise} 영상 결과 데이터 (resultId, createdAt 포함)
+ * @returns {Promise} 영상 결과 데이터 (JobResultDto 배열)
+ * 
+ * 응답 구조 개선 (백엔드 FixedJobResultService 적용):
+ * List<JobResultDto>에서 각 항목은 jobId 필드를 포함합니다.
+ * {
+ *   resultId: number,
+ *   jobId: number,       // ✅ YouTube 업로드에 필요한 작업 ID
+ *   status: string,
+ *   resultType: string,
+ *   resultKey: string,
+ *   promptText: string,
+ *   createdAt: string
+ * }
  */
 export async function getVideoResultId() {
   const res = await apiFetch('/api/dashboard/result_id', {
@@ -299,6 +311,17 @@ export async function getVideoResultId() {
  * 완성된 영상 결과 목록에서 가장 최신 영상을 찾는 함수
  * SSE video_ready 이벤트 수신 시 실시간 업데이트에 사용
  * @returns {Promise} 최신 완성 영상 데이터 또는 null
+ * 
+ * 예상 응답 구조 (JobResultDto):
+ * {
+ *   resultId: 123,
+ *   jobId: 456,          // ✅ 백엔드 개선으로 추가된 필드
+ *   status: "COMPLETED",
+ *   resultType: "video",
+ *   resultKey: "video/example_00001_.mp4",
+ *   promptText: "영상 생성 요청",
+ *   createdAt: "2024-01-01T12:00:00"
+ * }
  */
 export async function get_latest_completed_video() {
   try {
@@ -526,9 +549,10 @@ export async function uploadFileToS3(presignedUrl, file, contentType) {
  * @param {string} s3Key - S3 객체 키
  * @param {string} locationCode - 위치 코드
  * @param {string} promptText - 프롬프트 텍스트
+ * @param {string} platform - 플랫폼 정보 ('YOUTUBE' 또는 'REDDIT')
  * @returns {Promise} 확인 응답 데이터
  */
-export async function confirmImageUpload(s3Key, locationCode, promptText = "") {
+export async function confirmImageUpload(s3Key, locationCode, promptText = "", platform = "YOUTUBE") {
   if (!s3Key || !locationCode) {
     throw new Error('S3 키와 위치 코드가 필요합니다.');
   }
@@ -539,7 +563,8 @@ export async function confirmImageUpload(s3Key, locationCode, promptText = "") {
     body: JSON.stringify({
       key: s3Key,
       locationCode: locationCode,
-      prompt_text: promptText
+      prompt_text: promptText,
+      platform: platform // ✅ PostgreSQL NOT NULL 제약조건 해결을 위한 platform 필드 추가
     })
   });
 
@@ -556,9 +581,10 @@ export async function confirmImageUpload(s3Key, locationCode, promptText = "") {
  * @param {File} file - 업로드할 파일
  * @param {string} locationCode - 위치 코드
  * @param {string} promptText - 프롬프트 텍스트
+ * @param {string} platform - 플랫폼 정보 ('YOUTUBE' 또는 'REDDIT')
  * @returns {Promise} 전체 업로드 프로세스 결과
  */
-export async function uploadImageToS3Complete(file, locationCode, promptText = "") {
+export async function uploadImageToS3Complete(file, locationCode, promptText = "", platform = "YOUTUBE") {
   try {
     // 1단계: Presigned URL 요청
     const presignData = await getS3PresignedUrl(file.type);
@@ -567,12 +593,13 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
     // 2단계: S3에 파일 업로드
     await uploadFileToS3(url, file, contentType);
 
-    // 3단계: 백엔드에 업로드 완료 알림
-    const confirmResult = await confirmImageUpload(key, locationCode, promptText);
+    // 3단계: 백엔드에 업로드 완료 알림 (PostgreSQL NOT NULL 제약조건 해결을 위한 platform 전달)
+    const confirmResult = await confirmImageUpload(key, locationCode, promptText, platform);
 
     return {
       success: true,
       s3Key: key,
+      jobId: confirmResult.jobId, // ✅ 백엔드에서 받은 jobId 추출
       confirmResult: confirmResult
     };
   } catch (error) {
@@ -583,7 +610,6 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
 /* ------------------ YouTube 업로드 API ------------------ */
 /**
  * YouTube에 비디오를 업로드하는 함수
- * @param {string} jobId - 작업 ID
  * @param {string} resultId - 결과 ID
  * @param {Object} videoDetails - 비디오 상세 정보
  * @param {string} videoDetails.title - 비디오 제목
@@ -594,7 +620,7 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
  * @param {boolean} videoDetails.madeForKids - 아동용 여부
  * @returns {Promise<Object>} 업로드 결과
  */
-export async function uploadToYouTube(jobId, resultId, videoDetails) {
+export async function uploadToYouTube(resultId, videoDetails) {
   try {
     // 태그를 배열로 변환 (문자열인 경우 쉼표로 분리)
     let processedTags = [];
@@ -620,13 +646,12 @@ export async function uploadToYouTube(jobId, resultId, videoDetails) {
     };
 
     console.log('YouTube upload request:', {
-      jobId,
       resultId,
       requestBody
     });
 
     // YouTube 업로드 API 호출
-    const response = await apiFetch(`/api/youtube/upload/${jobId}/result/${resultId}`, {
+    const response = await apiFetch(`/api/youtube/upload/${resultId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
