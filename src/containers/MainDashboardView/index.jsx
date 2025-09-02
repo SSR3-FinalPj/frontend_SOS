@@ -1,59 +1,77 @@
-/**
- * Main Dashboard View 컴포넌트
- * 메인 대시보드 뷰 (플랫폼 카드들)
- */
-
 import React, { useState, useEffect } from 'react';
 import { EnhancedPlatformCard } from "@/containers/EnhancedPlatformCard";
 import { get_platform_data } from '@/domain/dashboard/logic/dashboard-utils';
-import { getDashboardData } from '@/common/api/api';
+import { getDashboardData, getGoogleStatus, getRedditStatus } from '@/common/api/api';
 import { format, subDays } from 'date-fns';
 import { TooltipProvider } from '@/common/ui/tooltip';
+import NoconnectView from '../NoconnectView';
 
-/**
- * Main Dashboard View 컴포넌트
- * @returns {JSX.Element} Main Dashboard View 컴포넌트
- */
 const MainDashboardView = () => {
   const [youtubeData, setYoutubeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isYoutubeConnected, setIsYoutubeConnected] = useState(false);
+  const [isRedditConnected, setIsRedditConnected] = useState(false);
 
   useEffect(() => {
-    const fetchYoutubeData = async () => {
+    const fetchPlatformStatusAndData = async () => {
       try {
         setLoading(true);
-        const endDate = format(new Date(), 'yyyy-MM-dd');
-        const startDate = format(subDays(new Date(), 6), 'yyyy-MM-dd'); // Last 7 days including today
+        const [googleStatus, redditStatus] = await Promise.all([
+          getGoogleStatus(),
+          getRedditStatus(),
+        ]);
 
-        const data = await getDashboardData({ type: 'range', startDate, endDate });
-        setYoutubeData(data.youtube.data); // Assuming data.youtube.data contains the relevant info
+        setIsYoutubeConnected(googleStatus.connected);
+        setIsRedditConnected(redditStatus.connected);
+
+        if (googleStatus.connected) {
+          const endDate = format(new Date(), 'yyyy-MM-dd');
+          const startDate = format(subDays(new Date(), 6), 'yyyy-MM-dd');
+          const data = await getDashboardData({ type: 'range', startDate, endDate });
+          setYoutubeData(data.youtube.data);
+        }
       } catch (err) {
         setError(err);
-        console.error("Failed to fetch YouTube dashboard data:", err);
+        console.error("Failed to fetch platform status or data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchYoutubeData();
+    fetchPlatformStatusAndData();
   }, []);
 
-  const platform_data = get_platform_data(youtubeData);
+  const all_platform_data = get_platform_data(youtubeData);
+
+  const connected_platforms = all_platform_data.filter(platform => {
+    if (platform.name === 'YouTube') {
+      return isYoutubeConnected;
+    }
+    if (platform.name === 'Reddit') {
+      return isRedditConnected;
+    }
+    return false;
+  });
 
   if (loading) {
     return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading dashboard data...</div>;
   }
 
   if (error) {
-    return <div className="p-6 text-center text-red-500 dark:text-red-400">Error: {error.message}</div>;
+    // You might want to show a more specific error message
+    return <NoconnectView />;
+  }
+
+  if (connected_platforms.length === 0) {
+    return <NoconnectView />;
   }
 
   return (
     <TooltipProvider>
       <div className="p-6 relative z-10">
-        <div className="grid grid-cols-2 gap-6 h-[calc(100vh-200px)]">
-          {platform_data.map((platform, index) => (
+        <div className={`grid ${connected_platforms.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-6 h-[calc(100vh-200px)]`}>
+          {connected_platforms.map((platform, index) => (
             <EnhancedPlatformCard 
               key={platform.name} 
               platform={platform} 

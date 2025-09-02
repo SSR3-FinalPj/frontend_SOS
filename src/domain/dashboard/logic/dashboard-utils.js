@@ -45,6 +45,18 @@ export const format_number_korean = (num) => {
 };
 
 /**
+ * 날짜를 YYYY-MM-DD 형식으로 포맷팅 (API 전송용)
+ * @param {Date} date - 포맷팅할 날짜
+ * @returns {string} YYYY-MM-DD 형식의 날짜 문자열
+ */
+export const format_date_for_api = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
  * API 데이터를 기반으로 KPI 데이터 생성
  * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
  * @param {Object} summaryData - API에서 받은 요약 데이터

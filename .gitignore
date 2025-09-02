@@ -4,3 +4,4 @@ CLAUDE.md
 .DS_store
 .env
 .claude
+.dockerignore

@@ -221,6 +221,25 @@ export async function getYouTubeChannelId() {
   }
 }
 
+/* ------------------ 로그아웃 ------------------ */
+export async function logout() {
+  try {
+    const res = await apiFetch('/api/auth/logout', {
+      method: 'POST',
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Logout failed: ${res.status} - ${errorText}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Logout failed:', error);
+    throw error;
+  }
+}
+
 /* ------------------ Analytics API 연동 ------------------ */
 /**
  * 유튜브 업로드 범위별 데이터 조회 (신규 API)

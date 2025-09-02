@@ -21,17 +21,6 @@ const loginTranslations = {
     passwordPlaceholder: "비밀번호를 입력하세요",
     forgotPassword: "비밀번호를 잊으셨나요?",
     loginButton: "로그인",
-  },
-  en: {
-    brandName: "ContentBoost",
-    welcomeBack: "Welcome Back",
-    subtitle: "Sign in to your account to start AI content management",
-    name: "Name",
-    placeholder: "Enter your name",
-    password: "Password",
-    passwordPlaceholder: "Enter your password",
-    forgotPassword: "Forgot your password?",
-    loginButton: "Sign In",
   }
 };
 

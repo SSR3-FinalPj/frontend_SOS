@@ -13,12 +13,12 @@ import { BarChart3, Calendar, Zap, PieChart, Settings, ArrowLeft } from 'lucide-
  * @param {string} props.current_view - 현재 뷰 (사용하지 않음, URL로 판단)
  * @returns {JSX.Element} Sidebar 컴포넌트
  */
-const Sidebar = ({ current_view }) => {
+const Sidebar = ({ current_view, isYoutubeConnected, isRedditConnected, isLoading }) => {
   const location = useLocation();
 
   const menu_items = [
     { id: 'dashboard', label: '대시보드', icon: BarChart3, path: '/dashboard' },
-    { id: 'contentList', label: '콘텐츠 목록', icon: Calendar, path: '/contents' },
+    { id: 'contentList', label: '콘텐츠 목록', icon: Calendar, path: '/contents', disabled: !isYoutubeConnected && !isRedditConnected },
     { id: 'contentLaunch', label: 'AI 콘텐츠 론칭', icon: Zap, path: '/contentlaunch' },
     { id: 'analytics', label: '분석', icon: PieChart, path: '/analytics' },
     { id: 'settings', label: '환경설정', icon: Settings, path: '/settings' }
@@ -47,21 +47,32 @@ const Sidebar = ({ current_view }) => {
             {menu_items.map((item) => {
               const Icon = item.icon;
               const is_active = get_active_item(item);
-              
-              return (
+              const is_disabled = item.disabled || (isLoading && item.id === 'contentList');
+
+              const link_content = (
+                <motion.div
+                  whileHover={!is_disabled ? { x: 4 } : {}}
+                  whileTap={!is_disabled ? { scale: 0.98 } : {}}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    is_active
+                      ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white shadow-lg'
+                      : is_disabled
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/5 hover:text-gray-800 dark:hover:text-white'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </motion.div>
+              );
+
+              return is_disabled ? (
+                <div key={item.id} className="cursor-not-allowed">
+                  {link_content}
+                </div>
+              ) : (
                 <Link key={item.id} to={item.path}>
-                  <motion.div
-                    whileHover={{ x: 4 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                      is_active
-                        ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white shadow-lg'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/5 hover:text-gray-800 dark:hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </motion.div>
+                  {link_content}
                 </Link>
               );
             })}

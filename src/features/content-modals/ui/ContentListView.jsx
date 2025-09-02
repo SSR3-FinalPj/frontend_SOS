@@ -33,6 +33,29 @@ function ContentListView({
   const authLoading = platforms.google.loading;
   const ITEMS_PER_PAGE = 6;
 
+  const platformOptions = [
+    { id: 'all', label: '모든 채널' },
+    { id: 'youtube', label: 'YouTube' },
+    { id: 'reddit', label: 'Reddit' }
+  ];
+
+  const availablePlatforms = platformOptions.filter(p => {
+    if (p.id === 'all') return platforms.google.connected && platforms.reddit.connected;
+    if (p.id === 'youtube') return platforms.google.connected;
+    if (p.id === 'reddit') return platforms.reddit.connected;
+    return false;
+  });
+
+  useEffect(() => {
+    if (platforms.google.connected && !platforms.reddit.connected) {
+      setSelectedPlatform('youtube');
+    } else if (!platforms.google.connected && platforms.reddit.connected) {
+      setSelectedPlatform('reddit');
+    } else if (platforms.google.connected && platforms.reddit.connected) {
+      setSelectedPlatform('all');
+    }
+  }, [platforms.google.connected, platforms.reddit.connected, setSelectedPlatform]);
+
   useEffect(() => {
     const fetchContent = async () => {
       setLoading(true);
@@ -201,11 +224,7 @@ function ContentListView({
       {/* Filter Section */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-6">
-          {[
-            { id: 'all', label: '모든 채널' },
-            { id: 'youtube', label: 'YouTube' },
-            { id: 'reddit', label: 'Reddit' }
-          ].map((platform) => (
+          {availablePlatforms.map((platform) => (
             <motion.button
               key={platform.id}
               onClick={() => setSelectedPlatform(platform.id)}
@@ -418,6 +437,7 @@ function ContentListView({
         item={preview_modal.item}
         dark_mode={isDarkMode}
         on_close={close_preview_modal}
+        viewMode="simple"
       />
     </div>
   );

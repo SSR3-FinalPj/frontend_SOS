@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { format_date } from '@/domain/dashboard/logic/dashboard-utils';
+import { format_date, format_date_for_api } from '@/domain/dashboard/logic/dashboard-utils';
 import { getYouTubeUploadsByRange, get_traffic_source_summary, getYouTubeChannelId } from '@/common/api/api';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 
@@ -145,14 +145,26 @@ export const useAnalyticsStore = create(
           set({ isLoading: true, error: null });
 
           try {
-            const startDate = date_range.from.toISOString().split('T')[0];
-            const endDate = date_range.to.toISOString().split('T')[0];
+            const channelInfo = await getYouTubeChannelId();
+            if (!channelInfo || !channelInfo.channelId) {
+              throw new Error('YouTube 채널 정보를 찾을 수 없습니다.');
+            }
+            const channelId = channelInfo.channelId;
+
+            const startDate = format_date_for_api(date_range.from);
+            const endDate = format_date_for_api(date_range.to);
+
+            //console.log('Fetching summary data for:', { startDate, endDate, channelId });
             
-            const response = await get_youtube_range_summary(startDate, endDate);
+            const response = await getYouTubeUploadsByRange(startDate, endDate, channelId);
             
+            //console.log('Raw API response:', response);
+
             let extractedData = null;
             
-            if (response?.youtube?.data) {
+            if (response?.summary) { // Assuming the summary data is directly under 'summary'
+              extractedData = response.summary;
+            } else if (response?.youtube?.data) {
               extractedData = response.youtube.data;
             } else if (response?.data) {
               extractedData = response.data;
@@ -160,6 +172,8 @@ export const useAnalyticsStore = create(
               extractedData = response;
             }
             
+            //console.log('Extracted data:', extractedData);
+
             set({ 
               summaryData: extractedData,
               isLoading: false,
