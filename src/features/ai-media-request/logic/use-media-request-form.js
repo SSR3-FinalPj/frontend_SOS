@@ -174,12 +174,12 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 🔄 백그라운드 처리: S3 업로드를 비동기로 실행
       (async () => {
         try {
-          // S3 통합 업로드 함수 사용 - jobId 받아오기
+          // S3 통합 업로드 함수 사용 - PostgreSQL NOT NULL 제약조건 해결을 위한 platform 전달
           const uploadResult = await uploadImageToS3Complete(
             uploaded_file,
             selected_location.poi_id,
             prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-            // "YOUTUBE"
+            "YOUTUBE" // 대문자로 고정하여 전달
           );
           
           // ✅ jobId를 영상 데이터에 추가 (백엔드에서 받은 jobId 사용)
