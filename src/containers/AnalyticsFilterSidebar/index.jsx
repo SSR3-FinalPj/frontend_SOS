@@ -15,6 +15,8 @@ import {
   Lock // Import Lock icon
 } from 'lucide-react';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
+import { MeaireLogo } from '@/common/ui/meaire-logo';
+import { usePageStore } from '@/common/stores/page-store';
 import { period_options } from '@/domain/dashboard/logic/dashboard-constants';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip'; // Import Tooltip
 
@@ -30,6 +32,7 @@ const AnalyticsFilterSidebar = ({
   platforms // Receive platforms prop
 }) => {
   const navigate = useNavigate();
+  const { isDarkMode } = usePageStore();
   const period_dropdown_ref = React.useRef(null);
   const {
     selected_platform,
@@ -57,12 +60,7 @@ const AnalyticsFilterSidebar = ({
       <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border-r border-white/30 dark:border-white/10 h-full flex flex-col shadow-xl p-6">
         {/* Header - 로고만 표시 */}
         <div className="pb-6 border-b border-gray-200/40 dark:border-white/10 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
-              <span className="text-white text-sm font-semibold">AI</span>
-            </div>
-            <span className="text-xl font-light text-gray-800 dark:text-white">콘텐츠부스트</span>
-          </div>
+          <MeaireLogo size={32} showText={true} variant={isDarkMode ? 'dark' : 'light'} />
         </div>
 
         {/* 플랫폼 선택 */}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/common/ui/dialog';
-import { X as XIcon, Loader2, BarChart2, MessageSquareText } from 'lucide-react';
+import { X as XIcon, Loader2, BarChart2, MessageSquare } from 'lucide-react';
 import { getCommentAnalysis, get_traffic_source_summary } from '@/common/api/api';
 import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import CommentAnalysisView from '@/features/content-modals/ui/CommentAnalysisView';
@@ -97,7 +97,7 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
               <GlassCard>
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <MessageSquareText className="w-6 h-6 text-green-500" />
+                        <MessageSquare className="w-6 h-6 text-green-500" />
                         <h3 className="text-lg font-semibold">댓글 반응 분석</h3>
                     </div>
                     {loading ? (
