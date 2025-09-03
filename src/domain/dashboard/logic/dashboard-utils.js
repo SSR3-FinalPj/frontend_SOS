@@ -119,6 +119,41 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         iconBg: "bg-green-100 dark:bg-green-900/30"
       }
     ];
+  } else if (selectedPlatform === 'reddit' && summaryData) {
+    const totalData = summaryData.total || summaryData;
+
+    const totalUpvotes = totalData?.total_upvote_count || 
+                         totalData?.totalUpvotes || 
+                         totalData?.upvotes || 0;
+    const totalComments = totalData?.total_comment_count || 
+                          totalData?.totalComments || 
+                          totalData?.comments || 0;
+    const averageScore = totalData?.average_score || 
+                         totalData?.averageScore || 0;
+
+    return [
+      {
+        icon: TrendingUp,
+        label: "총 업보트",
+        value: format_number_korean(totalUpvotes),
+        bgColor: "bg-orange-50/80 dark:bg-orange-950/20",
+        iconBg: "bg-orange-100 dark:bg-orange-900/30"
+      },
+      {
+        icon: MessageSquare,
+        label: "총 댓글",
+        value: format_number_korean(totalComments),
+        bgColor: "bg-green-50/80 dark:bg-green-950/20",
+        iconBg: "bg-green-100 dark:bg-green-900/30"
+      },
+      {
+        icon: Star,
+        label: "평균 점수",
+        value: format_number_korean(averageScore),
+        bgColor: "bg-purple-50/80 dark:bg-purple-950/20",
+        iconBg: "bg-purple-100 dark:bg-purple-900/30"
+      }
+    ];
   }
   
   // Fallback to mock data for reddit or when no data available
@@ -195,7 +230,7 @@ export const get_kpi_data = (selectedPlatform) => {
  * 플랫폼 데이터 생성
  * @returns {Array} 플랫폼 데이터 배열
  */
-export const get_platform_data = (youtubeData) => {
+export const get_platform_data = (youtubeData, redditData) => {
   let totalViews = youtubeData?.total?.total_view_count || 0;
   let totalLikes = youtubeData?.total?.total_like_count || 0;
   let totalComments = youtubeData?.total?.total_comment_count || 0;
@@ -241,6 +276,21 @@ export const get_platform_data = (youtubeData) => {
     }
   };
 
+  let totalUpvotes = redditData?.total?.total_upvote_count || 0;
+  let totalRedditComments = redditData?.total?.total_comment_count || 0;
+  let avgUpvoteRatio = redditData?.total?.total_upvote_ratio || 0;
+  let processedRedditChartData = [];
+
+  if (redditData && Array.isArray(redditData.daily)) {
+    redditData.daily.forEach(dayData => {
+      processedRedditChartData.push({
+        day: dayData.date ? dayData.date.substring(5) : '',
+        upvotes: dayData.upvote_count || 0,
+        comments: dayData.comment_count || 0,
+      });
+    });
+  }
+
   const redditPlatform = { 
     name: "Reddit", 
     description: "커뮤니티 플랫폼",
@@ -252,16 +302,16 @@ export const get_platform_data = (youtubeData) => {
     borderColor: "border-orange-200/40 dark:border-orange-800/30",
     accentColor: "text-orange-600 dark:text-orange-400",
     metrics: {
-      upvotes: { value: "1.9K", label: "업보트", icon: TrendingUp },
-      comments: { value: "567", label: "댓글", icon: MessageSquare },
-      upvoteRatio: { value: "77%", label: "업보트 비율", icon: BarChart3 }
+      upvotes: { value: totalUpvotes.toLocaleString(), label: "업보트", icon: TrendingUp },
+      comments: { value: totalRedditComments.toLocaleString(), label: "댓글", icon: MessageSquare },
+      upvoteRatio: { value: `${(avgUpvoteRatio * 100).toFixed(0)}%`, label: "업보트 비율", icon: BarChart3 }
     },
     growth: {
-      value: "평균 스코어 234",
+      value: `총 포스트 ${redditData?.total?.total_post_count?.toLocaleString() || 0}`,
       period: "지난 7일",
       isPositive: true
     },
-    chartData: reddit_chart_data,
+    chartData: processedRedditChartData.length > 0 ? processedRedditChartData : reddit_chart_data,
     chartMetrics: {
       primary: { key: "upvotes", label: "업보트", color: "#ea580c" },
       secondary: { key: "comments", label: "댓글", color: "#16a34a" }

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { format_date, format_date_for_api } from '@/domain/dashboard/logic/dashboard-utils';
-import { getYouTubeUploadsByRange, get_traffic_source_summary, getYouTubeChannelId } from '@/common/api/api';
+import { getYouTubeUploadsByRange, get_traffic_source_summary, getYouTubeChannelId, getRedditChannelInfo, getRedditUploadsByRange, getYouTubeVideosByChannelId } from '@/common/api/api';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 
 const initialEndDate = new Date();
@@ -138,44 +138,50 @@ export const useAnalyticsStore = create(
         fetchSummaryData: async () => {
           const { date_range, selected_platform } = get();
           
-          if (selected_platform !== 'youtube' || !date_range?.from || !date_range?.to) {
+          if (!date_range?.from || !date_range?.to) {
+            set({ summaryData: null, isLoading: false, error: '날짜 범위가 필요합니다.' });
             return;
           }
 
-          set({ isLoading: true, error: null });
+          set({ isLoading: true, error: null, summaryData: null }); // Reset summaryData on new fetch
+
+          const startDate = format_date_for_api(date_range.from);
+          const endDate = format_date_for_api(date_range.to);
 
           try {
-            const channelInfo = await getYouTubeChannelId();
-            if (!channelInfo || !channelInfo.channelId) {
-              throw new Error('YouTube 채널 정보를 찾을 수 없습니다.');
+            let channelId = null;
+            let response = null;
+            let errorMessage = '';
+
+            if (selected_platform === 'youtube') {
+              const channelInfo = await getYouTubeChannelId();
+              if (!channelInfo || !channelInfo.channelId) {
+                errorMessage = 'YouTube 채널 정보를 찾을 수 없습니다.';
+              } else {
+                channelId = channelInfo.channelId;
+                response = await getYouTubeUploadsByRange(startDate, endDate, channelId);
+              }
+            } else if (selected_platform === 'reddit') {
+              const channelInfo = await getRedditChannelInfo();
+              if (!channelInfo || !channelInfo.channelId) { // Assuming Reddit API also returns channelId
+                errorMessage = 'Reddit 채널 정보를 찾을 수 없습니다.';
+              } else {
+                channelId = channelInfo.channelId; // Use channelId for Reddit API too
+                response = await getRedditUploadsByRange(startDate, endDate, channelId);
+              }
+            } else {
+              errorMessage = '지원하지 않는 플랫폼입니다.';
             }
-            const channelId = channelInfo.channelId;
 
-            const startDate = format_date_for_api(date_range.from);
-            const endDate = format_date_for_api(date_range.to);
-
-            //console.log('Fetching summary data for:', { startDate, endDate, channelId });
-            
-            const response = await getYouTubeUploadsByRange(startDate, endDate, channelId);
-            
-            //console.log('Raw API response:', response);
-
-            let extractedData = null;
-            
-            if (response?.summary) { // Assuming the summary data is directly under 'summary'
-              extractedData = response.summary;
-            } else if (response?.youtube?.data) {
-              extractedData = response.youtube.data;
-            } else if (response?.data) {
-              extractedData = response.data;
-            } else if (response && typeof response === 'object') {
-              extractedData = response;
+            if (errorMessage) {
+              throw new Error(errorMessage);
             }
-            
-            //console.log('Extracted data:', extractedData);
+            if (!response) {
+                throw new Error('데이터를 불러오는데 실패했습니다.');
+            }
 
             set({ 
-              summaryData: extractedData,
+              summaryData: response, // Pass the whole response object
               isLoading: false,
               error: null
             });
@@ -198,7 +204,15 @@ export const useAnalyticsStore = create(
           set({ isTrafficLoading: true, trafficError: null });
 
           try {
-            const videosResponse = await get_all_videos();
+            // Fetch channelId here
+            const channelInfo = await getYouTubeChannelId();
+            if (!channelInfo || !channelInfo.channelId) {
+              throw new Error('YouTube 채널 정보를 찾을 수 없습니다.');
+            }
+            const channelId = channelInfo.channelId;
+
+            // Replace get_all_videos() with getYouTubeVideosByChannelId
+            const videosResponse = await getYouTubeVideosByChannelId(channelId, { sortBy: 'latest', limit: 100 }); // Fetch all relevant videos
             
             const videos = videosResponse?.videos || videosResponse || [];
             if (!Array.isArray(videos)) {

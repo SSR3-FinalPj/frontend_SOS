@@ -158,7 +158,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
                 })}
               </div>
 
-              <UploadedContentList startDate={date_range?.from} endDate={date_range?.to} onVideoCardClick={onVideoCardClick} />
+              <UploadedContentList startDate={date_range?.from} endDate={date_range?.to} onVideoCardClick={onVideoCardClick} selectedPlatform={selected_platform} />
               
 
               <div className="grid grid-cols-2 gap-8">

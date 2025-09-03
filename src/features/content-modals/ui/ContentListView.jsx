@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image, MessageSquare, ThumbsUp, ArrowBigUp, Eye } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/common/ui/pagination';
 import GlassCard from '@/common/ui/glass-card';
-import { getYouTubeVideosByChannelId } from '@/common/api/api';
+import { getYouTubeVideosByChannelId, getRedditChannelPosts } from '@/common/api/api';
 import { useYouTubeStore } from '@/domain/youtube/logic/store';
+import { useRedditStore } from '@/domain/reddit/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import { mockContentData } from '@/common/utils/mock-data';
+import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
 import ContentPreviewModal from '@/features/content-modals/ui/ContentPreviewModal';
 import { usePageStore } from '@/common/stores/page-store';
@@ -26,7 +28,8 @@ function ContentListView({
   const [error, setError] = useState(null);
 
   const sortDropdownRef = useRef(null);
-  const { channelId } = useYouTubeStore();
+  const { channelId: youtubeChannelId } = useYouTubeStore();
+  const { channelTitle: redditChannelTitle } = useRedditStore();
   const { platforms } = usePlatformStore();
   const { isDarkMode } = usePageStore();
   const { preview_modal, open_preview_modal, close_preview_modal } = use_content_modals();
@@ -70,8 +73,8 @@ function ContentListView({
         let allData = [];
 
         if (selectedPlatform === 'youtube' || selectedPlatform === 'all') {
-          if (channelId) {
-            const ytData = await getYouTubeVideosByChannelId(channelId, {
+          if (youtubeChannelId) {
+            const ytData = await getYouTubeVideosByChannelId(youtubeChannelId, {
               sortBy: sortOrder,
               // No pagination here, fetch all and paginate after merge
             });
@@ -83,8 +86,23 @@ function ContentListView({
         }
 
         if (selectedPlatform === 'reddit' || selectedPlatform === 'all') {
-          const redditData = mockContentData.filter(item => item.platform === 'Reddit');
-          allData.push(...redditData);
+          if (redditChannelTitle) {
+            const redditData = await getRedditChannelPosts(redditChannelTitle);
+            const formattedRedditData = redditData.posts.map(p => ({
+              id: p.post_id,
+              title: p.title,
+              thumbnail: p.thumbnail,
+              platform: 'Reddit',
+              uploadDate: p.upload_date,
+              upvotes: p.score,
+              comments: p.comment_count,
+              url: p.url,
+              sub_reddit: p.sub_reddit,
+            }));
+            allData.push(...formattedRedditData);
+          } else if (selectedPlatform === 'reddit') {
+            setError('Reddit 채널이 연결되지 않았습니다.');
+          }
         }
 
         if (sortOrder === 'latest') {
@@ -114,7 +132,7 @@ function ContentListView({
     };
 
     fetchContent();
-  }, [selectedPlatform, sortOrder, currentPage, channelId, authLoading]);
+  }, [selectedPlatform, sortOrder, currentPage, youtubeChannelId, redditChannelTitle, authLoading]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -320,11 +338,18 @@ function ContentListView({
                   className="cursor-pointer backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col"
                 >
                   <div className="aspect-video overflow-hidden bg-gray-200 dark:bg-gray-700">
-                    <img
-                      src={content.thumbnail}
-                      alt={content.title}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
+                    {content.platform === 'Reddit' && !content.thumbnail ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-4 text-center">
+                        <img src={RedditIcon} alt="Reddit Icon" className="w-12 h-12 mb-2" />
+                        <span className="font-semibold text-lg line-clamp-2">{content.sub_reddit}</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={content.thumbnail}
+                        alt={content.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    )}
                   </div>
                   <div className="p-4 flex flex-col flex-grow">
                     <div className="mb-3">

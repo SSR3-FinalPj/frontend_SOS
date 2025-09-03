@@ -6,12 +6,17 @@ import ConnectYouTubeButton from '@/common/ui/ConnectYouTubeButton';
 import ConnectRedditButton from '@/common/ui/ConnectRedditButton';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import { useYouTubeStore } from '@/domain/youtube/logic/store';
+import { useRedditStore } from '@/domain/reddit/logic/store';
 import { useYouTubeChannelInfo } from '@/domain/youtube/logic/use-youtube-channel-info';
+import { useRedditChannelInfo } from '@/domain/reddit/logic/use-reddit-channel-info';
 
 function ConnectionManagementCard({ platformData }) {
   const { platforms, setPlatformStatus } = usePlatformStore();
-  const { channelId, channelTitle } = useYouTubeStore();
+  const { channelId: youtubeChannelId, channelTitle: youtubeChannelTitle } = useYouTubeStore();
+  const { channelId: redditChannelId, channelTitle: redditChannelTitle } = useRedditStore();
+
   useYouTubeChannelInfo(); // Fetches channel info if Google is connected
+  useRedditChannelInfo(); // Fetches channel info if Reddit is connected
 
   const handleStatusChange = (platformName, status) => {
     setPlatformStatus(platformName.toLowerCase(), status);
@@ -38,9 +43,15 @@ function ConnectionManagementCard({ platformData }) {
           {platformData.map((platform, index) => {
             const Icon = platform.icon;
             const platformNameLower = platform.name.toLowerCase();
-            const status = platformNameLower === 'youtube' 
-              ? { connected: platforms.google.connected, channelTitle: channelTitle }
-              : platforms[platformNameLower];
+            let status;
+
+            if (platformNameLower === 'youtube') {
+              status = { connected: platforms.google.connected, channelTitle: youtubeChannelTitle };
+            } else if (platformNameLower === 'reddit') {
+              status = { connected: platforms.reddit.connected, channelTitle: redditChannelTitle };
+            } else {
+              status = platforms[platformNameLower];
+            }
 
             const renderConnectButton = () => {
               switch (platform.name) {
