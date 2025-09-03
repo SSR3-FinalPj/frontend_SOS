@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { EnhancedPlatformCard } from "@/containers/EnhancedPlatformCard";
 import { get_platform_data } from '@/domain/dashboard/logic/dashboard-utils';
-import { getDashboardData, getGoogleStatus, getRedditStatus } from '@/common/api/api';
+import { getDashboardData, getGoogleStatus, getRedditStatus, getRedditDashboardData } from '@/common/api/api';
 import { format, subDays } from 'date-fns';
 import { TooltipProvider } from '@/common/ui/tooltip';
 import NoconnectView from '../NoconnectView';
 
 const MainDashboardView = () => {
   const [youtubeData, setYoutubeData] = useState(null);
+  const [redditData, setRedditData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isYoutubeConnected, setIsYoutubeConnected] = useState(false);
@@ -25,12 +26,31 @@ const MainDashboardView = () => {
         setIsYoutubeConnected(googleStatus.connected);
         setIsRedditConnected(redditStatus.connected);
 
+        const endDate = format(new Date(), 'yyyy-MM-dd');
+        const startDate = format(subDays(new Date(), 6), 'yyyy-MM-dd');
+
+        const dataPromises = [];
         if (googleStatus.connected) {
-          const endDate = format(new Date(), 'yyyy-MM-dd');
-          const startDate = format(subDays(new Date(), 6), 'yyyy-MM-dd');
-          const data = await getDashboardData({ type: 'range', startDate, endDate });
-          setYoutubeData(data.youtube.data);
+          dataPromises.push(getDashboardData({ type: 'range', startDate, endDate }));
+        } else {
+          dataPromises.push(Promise.resolve(null)); // Maintain order
         }
+
+        if (redditStatus.connected) {
+          dataPromises.push(getRedditDashboardData({ startDate, endDate }));
+        } else {
+          dataPromises.push(Promise.resolve(null)); // Maintain order
+        }
+
+        const [youtubeResult, redditResult] = await Promise.all(dataPromises);
+
+        if (youtubeResult) {
+          setYoutubeData(youtubeResult.youtube.data);
+        }
+        if (redditResult) {
+          setRedditData(redditResult);
+        }
+
       } catch (err) {
         setError(err);
         console.error("Failed to fetch platform status or data:", err);
@@ -42,7 +62,7 @@ const MainDashboardView = () => {
     fetchPlatformStatusAndData();
   }, []);
 
-  const all_platform_data = get_platform_data(youtubeData);
+  const all_platform_data = get_platform_data(youtubeData, redditData);
 
   const connected_platforms = all_platform_data.filter(platform => {
     if (platform.name === 'YouTube') {
