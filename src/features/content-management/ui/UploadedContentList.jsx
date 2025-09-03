@@ -134,7 +134,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-2 text-center">
                     <img src={RedditIcon} alt="Reddit Icon" className="w-6 h-6 mb-1" />
-                    <span className="font-semibold text-xs line-clamp-2">{content.sub_reddit}</span>
+                    <span className="font-semibold text-[0.6rem] line-clamp-2">{content.sub_reddit}</span>
                   </div>
                 )
               )}
