@@ -6,6 +6,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BarChart3, Calendar, Zap, PieChart, Settings, ArrowLeft } from 'lucide-react';
+import { usePageStore } from '@/common/stores/page-store';
+import { MeaireLogo } from '@/common/ui/meaire-logo';
 
 /**
  * Sidebar 컴포넌트
@@ -15,6 +17,7 @@ import { BarChart3, Calendar, Zap, PieChart, Settings, ArrowLeft } from 'lucide-
  */
 const Sidebar = ({ current_view, isYoutubeConnected, isRedditConnected, isLoading }) => {
   const location = useLocation();
+  const { isDarkMode } = usePageStore();
 
   const menu_items = [
     { id: 'dashboard', label: '대시보드', icon: BarChart3, path: '/dashboard' },
@@ -35,10 +38,7 @@ const Sidebar = ({ current_view, isYoutubeConnected, isRedditConnected, isLoadin
       <div className="backdrop-blur-xl bg-white/20 dark:bg-white/5 border-r border-white/30 dark:border-white/10 h-full flex flex-col shadow-xl p-6">
         {/* Logo */}
         <div className="flex items-center gap-3 pb-6 border-b border-gray-200/40 dark:border-white/10">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
-            <span className="text-white text-sm font-semibold">AI</span>
-          </div>
-          <span className="text-xl font-light text-gray-800 dark:text-white">콘텐츠부스트</span>
+          <MeaireLogo size={32} showText={true} variant={isDarkMode ? 'dark' : 'light'} />
         </div>
 
         {/* Navigation */}

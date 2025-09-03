@@ -12,7 +12,7 @@ import { loginApi } from '@/common/lib/auth-bootstrap';
 
 const loginTranslations = {
   ko: {
-    brandName: "콘텐츠부스트",
+    brandName: "Meaire",
     welcomeBack: "다시 오신 것을 환영합니다",
     subtitle: "계정에 로그인하여 AI 콘텐츠 관리를 시작하세요",
     name: "아이디",

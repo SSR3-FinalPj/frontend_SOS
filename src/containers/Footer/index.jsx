@@ -5,6 +5,8 @@
 
 import { motion } from 'framer-motion';
 import { LEGAL_TEXTS } from '@/common/constants/legal-texts';
+import { MeaireLogo } from '@/common/ui/meaire-logo';
+import { usePageStore } from '@/common/stores/page-store';
 
 /**
  * Footer 컴포넌트
@@ -12,6 +14,8 @@ import { LEGAL_TEXTS } from '@/common/constants/legal-texts';
  * @returns {JSX.Element} Footer 컴포넌트
  */
 export default function Footer({ on_open_modal }) {
+  const { isDarkMode } = usePageStore();
+  
   // 모달 열기 핸들러들
   const handle_terms_click = () => {
     on_open_modal(LEGAL_TEXTS.TERMS_OF_SERVICE.title, LEGAL_TEXTS.TERMS_OF_SERVICE.content);
@@ -40,11 +44,8 @@ export default function Footer({ on_open_modal }) {
     >
       <div className="text-center">
         {/* 로고 및 브랜드 */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-            <span className="text-white text-sm font-semibold">AI</span>
-          </div>
-          <span className="text-2xl font-light text-gray-800 dark:text-white">콘텐츠부스트</span>
+        <div className="flex items-center justify-center mb-6">
+          <MeaireLogo size={32} showText={true} variant={isDarkMode ? 'dark' : 'light'} />
         </div>
 
         {/* 법적 링크들 */}
@@ -80,7 +81,7 @@ export default function Footer({ on_open_modal }) {
 
         {/* 저작권 정보 */}
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          © 2025 콘텐츠부스트. 모든 권리 보유.
+          © 2025 Meaire. 모든 권리 보유.
         </p>
 
         {/* 프로젝트 정보 */}

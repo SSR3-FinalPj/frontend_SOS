@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
 import { usePageStore } from '@/common/stores/page-store';
+import { MeaireLogo } from '@/common/ui/meaire-logo';
 
 /**
  * 플로팅 네비게이션 컴포넌트
@@ -90,10 +91,7 @@ export default function FloatingNav() {
                   transition: { duration: 0.1 }
                 }}
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-sm">
-                  <span className="text-white text-sm font-semibold">AI</span>
-                </div>
-                <span className="text-xl font-semibold text-gray-800 dark:text-white">콘텐츠부스트</span>
+                <MeaireLogo size={32} showText={true} variant={is_dark_mode ? 'dark' : 'light'} />
               </motion.div>
 
               {/* Navigation */}
@@ -149,7 +147,7 @@ export default function FloatingNav() {
                     transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
                   }}
                   whileTap={{ scale: 0.97 }}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium"
+                  className="backdrop-blur-xl bg-gradient-to-r from-blue-500/90 to-purple-500/90 hover:from-blue-500/95 hover:to-purple-500/95 border border-white/30 dark:border-white/20 hover:border-white/40 dark:hover:border-white/30 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium"
                 >
                   시작하기
                 </motion.button>

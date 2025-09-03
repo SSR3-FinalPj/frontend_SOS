@@ -10,7 +10,7 @@ export function use_dark_mode() {
 
   // localStorage에서 다크모드 설정 로드
   useEffect(() => {
-    const saved_dark_mode = localStorage.getItem('contentboost-dark-mode');
+    const saved_dark_mode = localStorage.getItem('meaire-dark-mode');
     
     if (saved_dark_mode !== null) {
       set_is_dark_mode(JSON.parse(saved_dark_mode));
@@ -25,7 +25,7 @@ export function use_dark_mode() {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('contentboost-dark-mode', JSON.stringify(is_dark_mode));
+    localStorage.setItem('meaire-dark-mode', JSON.stringify(is_dark_mode));
   }, [is_dark_mode]);
 
   return {
