@@ -36,7 +36,7 @@ export default function HeroSection() {
                 ease: [0.16, 1, 0.3, 1] 
               }}
             >
-              콘텐츠의
+              콘텐츠의 진화
             </motion.span>
             <br />
             <motion.span 
@@ -49,7 +49,7 @@ export default function HeroSection() {
                 ease: [0.16, 1, 0.3, 1] 
               }}
             >
-              진화
+              Meaire
             </motion.span>
           </h1>
           
@@ -63,7 +63,7 @@ export default function HeroSection() {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            당신의 반응이 완성합니다.
+            세상의 반응을 듣고 완성합니다.
           </motion.p>
           
           <motion.p 

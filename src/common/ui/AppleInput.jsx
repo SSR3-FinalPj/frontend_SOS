@@ -27,7 +27,7 @@ export default function AppleInput({
       {/* 좌측 장식(아이콘 대체용) 필요 없으면 제거 가능 */}
       {Icon && (
         <motion.div 
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10"
+          className="absolute left-4 top-0 h-full flex items-center justify-center z-10"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -53,7 +53,7 @@ export default function AppleInput({
           onClick={onTogglePassword}
           whileHover={{ scale: 1.1, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } }}
           whileTap={{ scale: 0.9 }}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10"
+          className="absolute right-4 top-0 h-full flex items-center justify-center z-10"
           aria-label="Toggle password visibility"
         >
           {isPasswordHidden ? (
