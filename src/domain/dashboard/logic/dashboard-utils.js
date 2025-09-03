@@ -119,6 +119,41 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         iconBg: "bg-green-100 dark:bg-green-900/30"
       }
     ];
+  } else if (selectedPlatform === 'reddit' && summaryData) {
+    const totalData = summaryData.total || summaryData;
+
+    const totalUpvotes = totalData?.total_upvote_count || 
+                         totalData?.totalUpvotes || 
+                         totalData?.upvotes || 0;
+    const totalComments = totalData?.total_comment_count || 
+                          totalData?.totalComments || 
+                          totalData?.comments || 0;
+    const averageScore = totalData?.average_score || 
+                         totalData?.averageScore || 0;
+
+    return [
+      {
+        icon: TrendingUp,
+        label: "총 업보트",
+        value: format_number_korean(totalUpvotes),
+        bgColor: "bg-orange-50/80 dark:bg-orange-950/20",
+        iconBg: "bg-orange-100 dark:bg-orange-900/30"
+      },
+      {
+        icon: MessageSquare,
+        label: "총 댓글",
+        value: format_number_korean(totalComments),
+        bgColor: "bg-green-50/80 dark:bg-green-950/20",
+        iconBg: "bg-green-100 dark:bg-green-900/30"
+      },
+      {
+        icon: Star,
+        label: "평균 점수",
+        value: format_number_korean(averageScore),
+        bgColor: "bg-purple-50/80 dark:bg-purple-950/20",
+        iconBg: "bg-purple-100 dark:bg-purple-900/30"
+      }
+    ];
   }
   
   // Fallback to mock data for reddit or when no data available
