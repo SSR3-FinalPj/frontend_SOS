@@ -12,7 +12,9 @@ import {
   ChevronDown, 
   ArrowLeft,
   Check,
-  Lock // Import Lock icon
+  Lock, // Import Lock icon
+  BarChart3,
+  PieChart
 } from 'lucide-react';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { MeaireLogo } from '@/common/ui/meaire-logo';
@@ -37,6 +39,8 @@ const AnalyticsFilterSidebar = ({
   const {
     selected_platform,
     set_selected_platform,
+    view_type,
+    set_view_type,
     selected_period,
     is_calendar_visible,
     period_dropdown_open,
@@ -63,8 +67,47 @@ const AnalyticsFilterSidebar = ({
           <MeaireLogo size={32} showText={true} variant={isDarkMode ? 'dark' : 'light'} />
         </div>
 
-        {/* 플랫폼 선택 */}
+        {/* 분석 유형 선택 */}
         <div className="mb-8">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+            분석 유형
+          </h3>
+          <div className="space-y-2">
+            {[
+              { id: 'detailed', label: '개별 분석', icon: PieChart, description: '플랫폼별 상세 분석' },
+              { id: 'integrated', label: '통합 분석', icon: BarChart3, description: '플랫폼 간 비교 분석' }
+            ].map((viewOption) => {
+              const Icon = viewOption.icon;
+              const isSelected = view_type === viewOption.id;
+
+              return (
+                <motion.button
+                  key={viewOption.id}
+                  onClick={() => set_view_type(viewOption.id)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    isSelected 
+                      ? 'bg-blue-500 text-white shadow-lg' 
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-blue-500'}`} />
+                  <div className="text-left">
+                    <div className="font-medium">{viewOption.label}</div>
+                    <div className={`text-xs ${isSelected ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {viewOption.description}
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 플랫폼 선택 - 개별 분석일 때만 표시 */}
+        {view_type === 'detailed' && (
+          <div className="mb-8">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
             플랫폼
           </h3>
@@ -105,8 +148,10 @@ const AnalyticsFilterSidebar = ({
             })}
           </div>
         </div>
+        )}
 
-        {/* 분석 기간 - 조건부 렌더링 */}
+        {/* 분석 기간 - 개별 분석일 때만 표시 */}
+        {view_type === 'detailed' && (
         <div className="mb-8 flex-1">
           {!is_calendar_visible ? (
             // 필터 목록 표시
@@ -173,6 +218,7 @@ const AnalyticsFilterSidebar = ({
             </div>
           )}
         </div>
+        )}
 
         {/* 뒤로가기 버튼 - 최하단에 위치 */}
         <div className="pt-6 border-t border-gray-200/40 dark:border-white/10">
