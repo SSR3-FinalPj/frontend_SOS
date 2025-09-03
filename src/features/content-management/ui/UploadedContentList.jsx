@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Eye, Heart, MessageSquare, VideoOff, TrendingUp, Star } from 'lucide-react';
+import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { 
   getYouTubeChannelId, 
   getYouTubeVideosByChannelId,
@@ -131,7 +132,10 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-xs text-gray-500">No Image</div>
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-2 text-center">
+                    <img src={RedditIcon} alt="Reddit Icon" className="w-6 h-6 mb-1" />
+                    <span className="font-semibold text-xs line-clamp-2">{content.sub_reddit}</span>
+                  </div>
                 )
               )}
             </div>
