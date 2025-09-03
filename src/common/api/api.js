@@ -293,6 +293,90 @@ export async function get_traffic_source_summary(videoId) {
   
   return responseData;
 }
+/* ------------------ Reddit 대시보드 데이터 조회 ------------------ */
+/**
+ * @param {string} startDate - 시작일 (YYYY-MM-DD)
+ * @param {string} endDate - 종료일 (YYYY-MM-DD)
+ * @param {string} [region] - 지역 필터
+ * @param {string} [channelId] - Reddit 채널 ID
+ * @returns {Promise} 집계 통계 및 일별 데이터
+ */
+export async function getRedditDashboardData({ startDate, endDate, region, channelId }) {
+  if (!startDate || !endDate) {
+    throw new Error("Start date and end date are required.");
+  }
+
+  const params = new URLSearchParams({ startDate, endDate });
+  if (region) params.append("region", region);
+  if (channelId) params.append("channel_id", channelId);
+
+  const res = await apiFetch(`/api/dashboard/reddit/range?${params.toString()}`);
+
+  if (!res.ok) {
+    throw new Error(`Reddit 대시보드 데이터 조회 실패: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+/* ------------------ Reddit 채널 정보 조회 ------------------ */
+/**
+ * 현재 Reddit 채널 기본 정보를 가져옴
+ * @returns {Promise<{channelId: string, channelTitle: string}>}
+ */
+export async function getRedditChannelInfo() {
+  const res = await apiFetch("/api/reddit/channelId", { method: "GET" });
+
+  if (!res.ok) {
+    throw new Error(`Reddit 채널 정보 조회 실패: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+/* ------------------ Reddit 채널 게시글 목록 조회 ------------------ */
+/**
+ * @param {string} channelName - Reddit 채널 이름
+ * @returns {Promise} 게시글 목록
+ */
+export async function getRedditChannelPosts(channelName) {
+  if (!channelName) {
+    throw new Error("Channel name is required.");
+  }
+
+  const res = await apiFetch(`/api/reddit/channel/${channelName}/posts`);
+
+  if (!res.ok) {
+    throw new Error(`Reddit 채널 게시글 조회 실패: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+/* ------------------ Reddit 업로드/통계 조회 ------------------ */
+/**
+ * @param {string} startDate - 시작일 (YYYY-MM-DD)
+ * @param {string} endDate - 종료일 (YYYY-MM-DD)
+ * @param {string} channelId - Reddit 채널 ID
+ * @returns {Promise} 총계 및 포스트 목록
+ */
+export async function getRedditUploadsByRange(startDate, endDate, channelId) {
+  if (!startDate || !endDate || !channelId) {
+    throw new Error("startDate, endDate, and channelId are required.");
+  }
+
+  const params = new URLSearchParams({ startDate, endDate, channelId });
+
+  const res = await apiFetch(`/api/reddit/uploadRange?${params.toString()}`);
+
+  if (!res.ok) {
+    throw new Error(`Reddit 업로드 데이터 조회 실패: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+
 
 /* ------------------ 영상 데이터 조회 (SSE 사전 로딩용) ------------------ */
 /**
