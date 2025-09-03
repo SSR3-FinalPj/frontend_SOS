@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Lock } from 'lucide-react';
 import AppleInput from '@/common/ui/AppleInput';
+import { MeaireLogo } from '@/common/ui/meaire-logo';
+import { usePageStore } from '@/common/stores/page-store';
 
 export default function LoginCard({
   t,
@@ -16,6 +18,7 @@ export default function LoginCard({
   nameIcon, // New prop for name input icon
   passwordIcon // New prop for password input icon
 }) {
+  const { isDarkMode } = usePageStore();
   return (
     <motion.div
       initial={{ opacity: 0, y: 40, scale: 0.95 }}
@@ -67,17 +70,14 @@ export default function LoginCard({
               ease: [0.16, 1, 0.3, 1]
             }}
           >
-            <motion.div 
-              className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg"
+            <motion.div
               whileHover={{ 
-                scale: 1.1, 
-                rotate: 5,
+                scale: 1.05,
                 transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
               }}
             >
-              <span className="text-white font-semibold text-lg">AI</span>
+              <MeaireLogo size={48} showText={true} variant={isDarkMode ? 'dark' : 'light'} />
             </motion.div>
-            <span className="text-2xl font-light text-gray-800 dark:text-white">{t.brandName}</span>
           </motion.div>
 
           {/* Welcome Text */}

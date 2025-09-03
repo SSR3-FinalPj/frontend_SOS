@@ -44,7 +44,7 @@ export default function ReadySection() {
                 scale: 0.95,
                 transition: { duration: 0.1 }
               }}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-6 rounded-2xl text-xl font-medium transition-all duration-300 shadow-2xl hover:shadow-3xl"
+              className="backdrop-blur-xl bg-gradient-to-r from-blue-500/90 to-purple-500/90 hover:from-blue-500/95 hover:to-purple-500/95 border border-white/30 dark:border-white/20 hover:border-white/40 dark:hover:border-white/30 text-white px-12 py-6 rounded-2xl text-xl font-medium transition-all duration-300 shadow-2xl hover:shadow-3xl"
             >
               지금 시작하기
             </motion.button>
