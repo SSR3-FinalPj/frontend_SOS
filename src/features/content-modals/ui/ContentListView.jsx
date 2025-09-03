@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image, MessageSquare, ThumbsUp, ArrowBigUp, Eye } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/common/ui/pagination';
 import GlassCard from '@/common/ui/glass-card';
-import { getYouTubeVideosByChannelId } from '@/common/api/api';
+import { getYouTubeVideosByChannelId, getRedditChannelPosts } from '@/common/api/api';
 import { useYouTubeStore } from '@/domain/youtube/logic/store';
+import { useRedditStore } from '@/domain/reddit/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import { mockContentData } from '@/common/utils/mock-data';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
@@ -26,7 +27,8 @@ function ContentListView({
   const [error, setError] = useState(null);
 
   const sortDropdownRef = useRef(null);
-  const { channelId } = useYouTubeStore();
+  const { channelId: youtubeChannelId } = useYouTubeStore();
+  const { channelTitle: redditChannelTitle } = useRedditStore();
   const { platforms } = usePlatformStore();
   const { isDarkMode } = usePageStore();
   const { preview_modal, open_preview_modal, close_preview_modal } = use_content_modals();
@@ -70,8 +72,8 @@ function ContentListView({
         let allData = [];
 
         if (selectedPlatform === 'youtube' || selectedPlatform === 'all') {
-          if (channelId) {
-            const ytData = await getYouTubeVideosByChannelId(channelId, {
+          if (youtubeChannelId) {
+            const ytData = await getYouTubeVideosByChannelId(youtubeChannelId, {
               sortBy: sortOrder,
               // No pagination here, fetch all and paginate after merge
             });
@@ -83,8 +85,22 @@ function ContentListView({
         }
 
         if (selectedPlatform === 'reddit' || selectedPlatform === 'all') {
-          const redditData = mockContentData.filter(item => item.platform === 'Reddit');
-          allData.push(...redditData);
+          if (redditChannelTitle) {
+            const redditData = await getRedditChannelPosts(redditChannelTitle);
+            const formattedRedditData = redditData.posts.map(p => ({
+              id: p.post_id,
+              title: p.title,
+              thumbnail: p.thumbnail,
+              platform: 'Reddit',
+              uploadDate: p.upload_date,
+              upvotes: p.score,
+              comments: p.comment_count,
+              url: p.url,
+            }));
+            allData.push(...formattedRedditData);
+          } else if (selectedPlatform === 'reddit') {
+            setError('Reddit 채널이 연결되지 않았습니다.');
+          }
         }
 
         if (sortOrder === 'latest') {
@@ -114,7 +130,7 @@ function ContentListView({
     };
 
     fetchContent();
-  }, [selectedPlatform, sortOrder, currentPage, channelId, authLoading]);
+  }, [selectedPlatform, sortOrder, currentPage, youtubeChannelId, redditChannelTitle, authLoading]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
