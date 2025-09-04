@@ -22,12 +22,12 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
       setLoading(true);
       setError(null);
       try {
-        const [commentData, trafficData] = await Promise.all([
+        const [commentData] = await Promise.all([
           getCommentAnalysis(videoId),
-          get_traffic_source_summary(videoId)
+          //get_traffic_source_summary(videoId)
         ]);
         setCommentAnalysisData(commentData);
-        setTrafficSourceData(trafficData);
+        //setTrafficSourceData(trafficData);
       } catch (err) {
         setError(String(err));
       } finally {
@@ -59,7 +59,7 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
                 <div className="text-white">비디오 ID가 없습니다.</div>
               )}
             </div>
-            <GlassCard>
+            {/* <GlassCard>
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <BarChart2 className="w-6 h-6 text-blue-500" />
@@ -73,7 +73,7 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
                   <TrafficSourceChart data={trafficSourceData} />
                 )}
               </div>
-            </GlassCard>
+            </GlassCard> */}
           </div>
           <div className="col-span-1">
             <DialogClose asChild>

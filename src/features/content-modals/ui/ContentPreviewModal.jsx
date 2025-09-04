@@ -35,7 +35,7 @@ const ContentPreviewModal = ({
         } else if (item.platform === 'Reddit') {
           const [redditData, commentData] = await Promise.all([
             getRedditContentById(item.id),
-            viewMode === 'detailed' ? getRedditCommentAnalysis(item.id) : Promise.resolve(null)
+                        viewMode === 'detailed' ? getRedditCommentAnalysis(item.id) : Promise.resolve(null)
           ]);
           setRedditContent(redditData);
           if(commentData) setCommentAnalysisData(commentData);
