@@ -54,7 +54,7 @@ export const use_content_modals = () => {
    */
   const open_publish_modal = (item) => {
     set_publish_form({
-      platforms: [], // 사용자가 직접 플랫폼을 선택하도록 빈 배열로 초기화
+      platforms: ['youtube'], // YouTube를 기본 플랫폼으로 선택하여 즉시 사용 가능한 폼 제공
       title: item.title || '',
       description: item.description || '',
       tags: '',
