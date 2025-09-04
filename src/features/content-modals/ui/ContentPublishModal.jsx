@@ -192,6 +192,29 @@ const ContentPublishModal = ({
             />
           </div>
 
+          {/* Reddit 전용 설정 */}
+          {publish_form.platforms.includes('reddit') && (
+            <>
+              {/* Subreddit 입력 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  서브레딧 (Subreddit)
+                </label>
+                <Input
+                  value={publish_form.subreddit}
+                  onChange={(e) => on_update_form('subreddit', e.target.value)}
+                  className={`${
+                    dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                  } backdrop-blur-sm rounded-xl`}
+                  placeholder="예: r/videos (r/ 없이 입력하세요)"
+                />
+                <p className={`text-xs mt-1 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  게시할 서브레딧의 이름을 입력하세요. 예: videos, funny, gaming
+                </p>
+              </div>
+            </>
+          )}
+
           {/* YouTube 전용 설정 */}
           {publish_form.platforms.includes('youtube') && (
             <>
@@ -311,7 +334,11 @@ const ContentPublishModal = ({
             
             <Button
               onClick={on_publish}
-              disabled={publish_form.platforms.length === 0 || !publish_form.title.trim()}
+              disabled={
+                publish_form.platforms.length === 0 || 
+                !publish_form.title.trim() ||
+                (publish_form.platforms.includes('reddit') && !publish_form.subreddit.trim())
+              }
               className="flex-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl disabled:opacity-50"
             >
               <Upload className="h-4 w-4 mr-2" />

@@ -777,3 +777,50 @@ export async function uploadToYouTube(resultId, videoDetails) {
     throw error;
   }
 }
+
+/* ------------------ Reddit 업로드 API ------------------ */
+/**
+ * Reddit에 콘텐츠를 업로드하는 함수
+ * @param {string|number} resultId - 결과 ID
+ * @param {Object} redditData - Reddit 업로드 정보
+ * @param {string} redditData.subreddit - 대상 subreddit 이름
+ * @param {string} redditData.title - 게시물 제목
+ * @returns {Promise<Object>} 업로드 결과
+ */
+export async function uploadToReddit(resultId, redditData) {
+  try {
+    // API 요청 바디 구성
+    const requestBody = {
+      subreddit: redditData.subreddit || '',
+      title: redditData.title || ''
+    };
+
+    console.log('Reddit upload request:', {
+      resultId,
+      requestBody
+    });
+
+    // Reddit 업로드 API 호출
+    const response = await apiFetch(`/api/reddit/upload/${resultId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Reddit upload failed:', response.status, errorText);
+      throw new Error(`Reddit upload failed: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('Reddit upload success:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('Reddit upload error:', error);
+    throw error;
+  }
+}

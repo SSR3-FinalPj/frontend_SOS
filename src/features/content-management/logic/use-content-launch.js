@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '@/common/api/api';
+import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId, uploadToYouTube, uploadToReddit } from '@/common/api/api';
 
 /**
  * 백엔드에서 오는 날짜 형식을 안전하게 파싱하는 함수
@@ -1185,6 +1185,96 @@ export const use_content_launch = create(
           selected_video_id: null,
           selected_video_data: null
         });
+      },
+
+      /**
+       * 멀티 플랫폼 게시 처리 함수
+       * @param {Object} item - 게시할 아이템 정보
+       * @param {Object} publishForm - 게시 폼 데이터
+       * @returns {Promise<Object>} 게시 결과
+       */
+      handle_multi_platform_publish: async (item, publishForm) => {
+        if (!item || !publishForm) {
+          throw new Error('게시 아이템 또는 폼 데이터가 누락되었습니다.');
+        }
+
+        const { start_upload, finish_upload } = get();
+        const item_id = item.video_id || item.temp_id || item.id;
+        const results = [];
+        
+        try {
+          // 업로드 시작 표시
+          start_upload(item_id);
+          
+          // 선택된 플랫폼별로 순차 처리
+          for (const platform of publishForm.platforms) {
+            if (platform === 'youtube') {
+              // YouTube 업로드 처리
+              const resultId = item.result_id || item.resultId || item.id;
+              
+              if (!resultId) {
+                throw new Error('YouTube 업로드에 필요한 resultId가 누락되었습니다.');
+              }
+              
+              const youtubeResult = await uploadToYouTube(resultId, publishForm);
+              results.push({
+                platform: 'youtube',
+                success: true,
+                data: youtubeResult
+              });
+              
+            } else if (platform === 'reddit') {
+              // Reddit 업로드 처리
+              const resultId = item.result_id || item.resultId || item.id;
+              
+              if (!resultId) {
+                throw new Error('Reddit 업로드에 필요한 resultId가 누락되었습니다.');
+              }
+              
+              if (!publishForm.subreddit.trim()) {
+                throw new Error('Reddit 업로드에 필요한 subreddit이 누락되었습니다.');
+              }
+              
+              const redditData = {
+                subreddit: publishForm.subreddit.trim(),
+                title: publishForm.title.trim()
+              };
+              
+              const redditResult = await uploadToReddit(resultId, redditData);
+              results.push({
+                platform: 'reddit',
+                success: true,
+                data: redditResult
+              });
+              
+            } else {
+              // 미지원 플랫폼 처리 (향후 확장용)
+              console.warn(`지원하지 않는 플랫폼: ${platform}`);
+              results.push({
+                platform,
+                success: false,
+                error: `지원하지 않는 플랫폼: ${platform}`
+              });
+            }
+          }
+          
+          // 업로드 완료 처리
+          finish_upload(item_id);
+          
+          return {
+            success: true,
+            results: results,
+            item_id: item_id
+          };
+          
+        } catch (error) {
+          console.error('멀티 플랫폼 게시 실패:', error);
+          
+          // 실패 시 업로드 상태 정리
+          finish_upload(item_id);
+          
+          throw error;
+        }
       },
 
     }),

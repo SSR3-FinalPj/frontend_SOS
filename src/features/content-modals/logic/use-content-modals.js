@@ -28,7 +28,9 @@ export const use_content_modals = () => {
     // YouTube API 새로운 필드들
     privacyStatus: 'private',
     categoryId: '22', // People & Blogs
-    madeForKids: false
+    madeForKids: false,
+    // Reddit API 필드
+    subreddit: ''
   });
 
   /**
@@ -60,7 +62,9 @@ export const use_content_modals = () => {
       // YouTube API 새로운 필드들
       privacyStatus: 'private',
       categoryId: '22', // People & Blogs
-      madeForKids: false
+      madeForKids: false,
+      // Reddit API 필드
+      subreddit: ''
     });
     set_publish_modal({ open: true, item });
   };
@@ -79,7 +83,9 @@ export const use_content_modals = () => {
       // YouTube API 새로운 필드들 초기화
       privacyStatus: 'private',
       categoryId: '22', // People & Blogs
-      madeForKids: false
+      madeForKids: false,
+      // Reddit API 필드 초기화
+      subreddit: ''
     });
   };
 

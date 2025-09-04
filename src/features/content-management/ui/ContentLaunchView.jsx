@@ -12,7 +12,6 @@ import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestMo
 import { Button } from '@/common/ui/button';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
-import { uploadToYouTube } from '@/common/api/api';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 import ConfirmationModal from '@/common/ui/confirmation-modal';
 import SuccessModal from '@/common/ui/success-modal';
@@ -49,7 +48,8 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
     transition_to_uploaded,
     add_pending_video,
     replace_processing_video,
-    select_video
+    select_video,
+    handle_multi_platform_publish
   } = use_content_launch();
 
   const {
@@ -122,92 +122,54 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   };
 
   /**
-   * 게시 완료 핸들러 - 실제 YouTube API 사용
+   * 게시 완료 핸들러 - 멀티 플랫폼 지원 (리팩토링됨)
    */
   const handle_final_publish = async () => {
     if (!publish_modal.item || !publish_form) return;
     
     try {
-      // 업로드 시작 표시
-      const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
-      simulate_upload(item_id);
+      // Logic 레이어의 멀티 플랫폼 게시 액션 호출
+      const result = await handle_multi_platform_publish(publish_modal.item, publish_form);
       
-      // YouTube 플랫폼이 선택된 경우에만 실제 API 호출
-      if (publish_form.platforms.includes('youtube')) {
-        // resultId 추출 (백엔드 API는 resultId만 필요)
-        const resultId = publish_modal.item.result_id || publish_modal.item.resultId || publish_modal.item.id;
-        
-        console.log('🔍 YouTube 업로드 데이터 검증:', {
-          item: publish_modal.item,
-          resultId: resultId,
-          hasResultId: !!resultId,
-          resultIdType: typeof resultId,
-          fallbackFields: {
-            result_id: publish_modal.item.result_id,
-            resultId: publish_modal.item.resultId,
-            id: publish_modal.item.id
-          }
-        });
-        
-        if (!resultId) {
-          const errorMsg = `YouTube 업로드에 필요한 resultId가 누락되었습니다.`;
-          
-          console.error('❌ YouTube 업로드 실패 - 누락된 데이터:', {
-            resultId: resultId,
-            videoItem: publish_modal.item
-          });
-          
-          throw new Error(errorMsg);
-        }
-        
-        // YouTube API 호출
-        console.log('Calling YouTube API:', {
-          resultId,
-          videoDetails: publish_form
-        });
-        
-        const result = await uploadToYouTube(resultId, publish_form);
-        
-        // 성공 알림
+      // 성공 알림 생성
+      const successfulPlatforms = result.results
+        .filter(r => r.success)
+        .map(r => r.platform);
+      
+      const failedPlatforms = result.results
+        .filter(r => !r.success)
+        .map(r => `${r.platform}: ${r.error}`);
+      
+      if (successfulPlatforms.length > 0) {
         useNotificationStore.getState().add_notification({
           type: 'success',
-          message: `YouTube에 "${publish_form.title}" 영상이 성공적으로 업로드되었습니다!`,
-          data: { 
+          message: `"${publish_form.title}" 영상이 ${successfulPlatforms.join(', ')}에 성공적으로 업로드되었습니다!`,
+          data: {
             ...result,
-            platform: 'youtube',
-            item_id
+            successful_platforms: successfulPlatforms
           }
-        });
-        
-        console.log('YouTube upload completed:', result);
-      } else {
-        // 다른 플랫폼의 경우 기존 시뮬레이션 사용
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
-        
-        useNotificationStore.getState().add_notification({
-          type: 'info',
-          message: `${publish_form.platforms.join(', ')} 플랫폼 업로드가 완료되었습니다.`,
-          data: { item_id }
         });
       }
       
-      // 업로드 완료 처리
-      transition_to_uploaded(item_id);
+      if (failedPlatforms.length > 0) {
+        useNotificationStore.getState().add_notification({
+          type: 'warning',
+          message: `일부 플랫폼 업로드에 실패했습니다: ${failedPlatforms.join(', ')}`,
+          data: {
+            failed_platforms: failedPlatforms
+          }
+        });
+      }
       
     } catch (error) {
-      console.error('Upload failed:', error);
-      
-      // 실패 시 업로드 상태 정리
-      const item_id = publish_modal.item.video_id || publish_modal.item.temp_id || publish_modal.item.id;
-      transition_to_uploaded(item_id);
+      console.error('멀티 플랫폼 게시 실패:', error);
       
       // 에러 알림
       useNotificationStore.getState().add_notification({
         type: 'error',
-        message: `업로드에 실패했습니다: ${error.message}`,
+        message: `게시에 실패했습니다: ${error.message}`,
         data: { 
-          error: error.message,
-          item_id
+          error: error.message
         }
       });
     } finally {
