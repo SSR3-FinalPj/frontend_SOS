@@ -34,8 +34,7 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
       borderColor: 'border-orange-500/30',
       hoverColor: 'hover:from-orange-500/30 hover:to-red-500/30',
       textColor: 'text-orange-600',
-      description: '이미지 생성',
-      disabled: true
+      description: '이미지 생성'
     }
   ];
 
@@ -56,19 +55,16 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
           return (
             <motion.button
               key={platform.id}
-              onClick={() => !platform.disabled && onPlatformChange(platform.id)}
-              whileHover={platform.disabled ? {} : { scale: 1.02 }}
-              whileTap={platform.disabled ? {} : { scale: 0.98 }}
-              disabled={platform.disabled}
+              onClick={() => onPlatformChange(platform.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className={`
                 relative p-4 rounded-2xl border-2 transition-all duration-200
-                ${platform.disabled 
-                  ? 'bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 cursor-not-allowed opacity-60'
-                  : isSelected 
-                    ? `bg-gradient-to-br ${platform.color} ${platform.borderColor} shadow-lg` 
-                    : 'bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                ${isSelected 
+                  ? `bg-gradient-to-br ${platform.color} ${platform.borderColor} shadow-lg` 
+                  : 'bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }
-                ${!isSelected && !platform.disabled && `${platform.hoverColor}`}
+                ${!isSelected && `${platform.hoverColor}`}
               `}
             >
               {/* 선택된 상태 표시 */}
@@ -122,15 +118,6 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
                   </p>
                 </div>
               </div>
-              
-              {/* Reddit 준비 중 배지 */}
-              {platform.id === 'reddit' && (
-                <div className="absolute top-2 left-2">
-                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full">
-                    준비중
-                  </span>
-                </div>
-              )}
             </motion.button>
           );
         })}
@@ -147,10 +134,7 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
             <span className="font-semibold">
               {platforms.find(p => p.id === selectedPlatform)?.name}
             </span>
-            {selectedPlatform === 'youtube' 
-              ? ' 플랫폼이 선택되었습니다. 아래 정보를 입력해주세요.'
-              : ' 플랫폼이 선택되었습니다. (현재 준비 중인 기능입니다)'
-            }
+            {' 플랫폼이 선택되었습니다. 아래 정보를 입력해주세요.'}
           </p>
         </motion.div>
       )}

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 import { Button } from '@/common/ui/button';
 import { Input } from '@/common/ui/input';
 import { Textarea } from '@/common/ui/textarea';
-import { Upload, X as XIcon } from 'lucide-react';
+import { Upload, X as XIcon, Play, MessageSquare } from 'lucide-react';
 import { 
   get_type_icon, 
   get_platform_icon, 
@@ -60,6 +60,28 @@ const ContentPublishModal = ({
   const isPlatformConnected = (platform) => {
     const storeKey = platform === 'youtube' ? 'google' : platform;
     return platforms[storeKey]?.connected;
+  };
+
+  // 플랫폼 선택 상황별 렌더링 결정
+  const hasYoutube = publish_form.platforms.includes('youtube');
+  const hasReddit = publish_form.platforms.includes('reddit');
+  const isMultiPlatform = publish_form.platforms.length > 1;
+  const isYouTubeOnly = hasYoutube && !hasReddit;
+  const isRedditOnly = hasReddit && !hasYoutube;
+
+  // 시나리오별 폼 유효성 검사 로직
+  const getFormValidation = () => {
+    // 기본 조건: 플랫폼 선택과 제목 입력
+    const basicValid = publish_form.platforms.length > 0 && publish_form.title.trim();
+    
+    if (!basicValid) return false;
+    
+    // Reddit이 포함된 경우 subreddit 필수
+    if (hasReddit && !publish_form.subreddit.trim()) {
+      return false;
+    }
+    
+    return true;
   };
 
   return (
@@ -147,54 +169,56 @@ const ContentPublishModal = ({
             </div>
           </div>
 
-          {/* 제목 편집 */}
-          <div>
-            <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-              제목
-            </label>
-            <Input
-              value={publish_form.title}
-              onChange={(e) => on_update_form('title', e.target.value)}
-              className={`${
-                dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
-              } backdrop-blur-sm rounded-xl`}
-              placeholder="게시물 제목을 입력하세요"
-            />
-          </div>
-
-          {/* 설명 편집 */}
-          <div>
-            <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-              설명
-            </label>
-            <Textarea
-              value={publish_form.description}
-              onChange={(e) => on_update_form('description', e.target.value)}
-              className={`${
-                dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
-              } backdrop-blur-sm rounded-xl min-h-[100px] resize-none`}
-              placeholder="게시물 설명을 입력하세요"
-            />
-          </div>
-
-          {/* 태그 */}
-          <div>
-            <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-              태그
-            </label>
-            <Input
-              value={publish_form.tags}
-              onChange={(e) => on_update_form('tags', e.target.value)}
-              className={`${
-                dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
-              } backdrop-blur-sm rounded-xl`}
-              placeholder="태그1, 태그2, 태그3 (쉼표로 구분)"
-            />
-          </div>
-
-          {/* YouTube 전용 설정 */}
-          {publish_form.platforms.includes('youtube') && (
+          {/* 시나리오별 폼 렌더링 */}
+          {/* Case 1: YouTube 단독 선택 */}
+          {isYouTubeOnly && (
             <>
+              {/* 제목 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  제목
+                </label>
+                <Input
+                  value={publish_form.title}
+                  onChange={(e) => on_update_form('title', e.target.value)}
+                  className={`${
+                    dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                  } backdrop-blur-sm rounded-xl`}
+                  placeholder="YouTube 영상 제목을 입력하세요"
+                />
+              </div>
+
+              {/* 설명 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  설명
+                </label>
+                <Textarea
+                  value={publish_form.description}
+                  onChange={(e) => on_update_form('description', e.target.value)}
+                  className={`${
+                    dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                  } backdrop-blur-sm rounded-xl min-h-[100px] resize-none`}
+                  placeholder="YouTube 영상 설명을 입력하세요"
+                />
+              </div>
+
+              {/* 태그 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  태그
+                </label>
+                <Input
+                  value={publish_form.tags}
+                  onChange={(e) => on_update_form('tags', e.target.value)}
+                  className={`${
+                    dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                  } backdrop-blur-sm rounded-xl`}
+                  placeholder="태그1, 태그2, 태그3 (쉼표로 구분)"
+                />
+              </div>
+
+              {/* YouTube 전용 설정들 */}
               {/* 공개 상태 */}
               <div>
                 <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
@@ -233,7 +257,7 @@ const ContentPublishModal = ({
                 </div>
               </div>
 
-              {/* 카테고리 선택 */}
+              {/* 카테고리 */}
               <div>
                 <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
                   카테고리
@@ -297,6 +321,245 @@ const ContentPublishModal = ({
             </>
           )}
 
+          {/* Case 2: Reddit 단독 선택 */}
+          {isRedditOnly && (
+            <>
+              {/* 제목 */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  제목
+                </label>
+                <Input
+                  value={publish_form.title}
+                  onChange={(e) => on_update_form('title', e.target.value)}
+                  className={`${
+                    dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                  } backdrop-blur-sm rounded-xl`}
+                  placeholder="Reddit 게시물 제목을 입력하세요"
+                />
+              </div>
+
+              {/* Subreddit */}
+              <div>
+                <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  서브레딧 (Subreddit)
+                </label>
+                <Input
+                  value={publish_form.subreddit}
+                  onChange={(e) => on_update_form('subreddit', e.target.value)}
+                  className={`${
+                    dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                  } backdrop-blur-sm rounded-xl`}
+                  placeholder="예: videos, funny, gaming (r/ 없이 입력)"
+                />
+                <p className={`text-xs mt-1 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  게시할 서브레딧의 이름을 입력하세요.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Case 3: 멀티 플랫폼 선택 */}
+          {isMultiPlatform && (
+            <>
+              {/* 공통 섹션 */}
+              <div className={`p-4 rounded-xl border ${
+                dark_mode ? 'bg-gray-800/30 border-gray-600/60' : 'bg-gray-50/60 border-gray-300/60'
+              }`}>
+                <h3 className={`text-lg font-medium mb-4 ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+                  공통 설정
+                </h3>
+                
+                {/* 제목 */}
+                <div className="mb-4">
+                  <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                    제목
+                  </label>
+                  <Input
+                    value={publish_form.title}
+                    onChange={(e) => on_update_form('title', e.target.value)}
+                    className={`${
+                      dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                    } backdrop-blur-sm rounded-xl`}
+                    placeholder="모든 플랫폼에 사용할 제목을 입력하세요"
+                  />
+                </div>
+
+                {/* 설명 */}
+                <div className="mb-4">
+                  <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                    설명
+                  </label>
+                  <Textarea
+                    value={publish_form.description}
+                    onChange={(e) => on_update_form('description', e.target.value)}
+                    className={`${
+                      dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                    } backdrop-blur-sm rounded-xl min-h-[100px] resize-none`}
+                    placeholder="모든 플랫폼에 사용할 설명을 입력하세요"
+                  />
+                </div>
+
+                {/* 태그 */}
+                <div>
+                  <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                    태그
+                  </label>
+                  <Input
+                    value={publish_form.tags}
+                    onChange={(e) => on_update_form('tags', e.target.value)}
+                    className={`${
+                      dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                    } backdrop-blur-sm rounded-xl`}
+                    placeholder="태그1, 태그2, 태그3 (쉼표로 구분)"
+                  />
+                </div>
+              </div>
+
+              {/* YouTube 섹션 */}
+              {hasYoutube && (
+                <div className={`p-4 rounded-xl border ${
+                  dark_mode ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50/60 border-red-200/60'
+                }`}>
+                  <h3 className={`text-lg font-medium mb-4 ${dark_mode ? 'text-red-300' : 'text-red-700'} flex items-center gap-2`}>
+                    <Play className="h-5 w-5" />
+                    YouTube 설정
+                  </h3>
+                  
+                  {/* 공개 상태 */}
+                  <div className="mb-4">
+                    <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
+                      공개 상태
+                    </label>
+                    <div className="space-y-2">
+                      {PRIVACY_OPTIONS.map((option) => (
+                        <label
+                          key={option.value}
+                          className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                            publish_form.privacyStatus === option.value
+                              ? dark_mode
+                                ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
+                                : 'bg-blue-50 border-blue-200 text-blue-700'
+                              : dark_mode
+                                ? 'bg-gray-800/30 border-gray-600/60 hover:bg-gray-700/60'
+                                : 'bg-white/30 border-gray-300/60 hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="privacyStatus"
+                            value={option.value}
+                            checked={publish_form.privacyStatus === option.value}
+                            onChange={(e) => on_update_form('privacyStatus', e.target.value)}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          <div>
+                            <div className="font-medium">{option.label}</div>
+                            <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {option.description}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 카테고리 */}
+                  <div className="mb-4">
+                    <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                      카테고리
+                    </label>
+                    <select
+                      value={publish_form.categoryId}
+                      onChange={(e) => on_update_form('categoryId', e.target.value)}
+                      className={`w-full p-3 rounded-xl border ${
+                        dark_mode 
+                          ? 'bg-gray-800/60 border-gray-600/60 text-white' 
+                          : 'bg-white/60 border-gray-300/60 text-gray-900'
+                      } backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    >
+                      {Object.entries(YOUTUBE_CATEGORIES).map(([id, name]) => (
+                        <option key={id} value={id}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 아동용 여부 */}
+                  <div>
+                    <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
+                      아동용 콘텐츠
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <label className={`flex items-center gap-2 cursor-pointer p-2 rounded-lg transition-colors ${
+                        !publish_form.madeForKids ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      }`}>
+                        <input
+                          type="radio"
+                          name="madeForKids"
+                          checked={!publish_form.madeForKids}
+                          onChange={() => on_update_form('madeForKids', false)}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span className={dark_mode ? 'text-gray-300' : 'text-gray-700'}>
+                          아니오
+                        </span>
+                      </label>
+                      <label className={`flex items-center gap-2 cursor-pointer p-2 rounded-lg transition-colors ${
+                        publish_form.madeForKids ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      }`}>
+                        <input
+                          type="radio"
+                          name="madeForKids"
+                          checked={publish_form.madeForKids}
+                          onChange={() => on_update_form('madeForKids', true)}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span className={dark_mode ? 'text-gray-300' : 'text-gray-700'}>
+                          예
+                        </span>
+                      </label>
+                    </div>
+                    <p className={`text-xs mt-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      13세 이하를 대상으로 제작된 콘텐츠인지 선택해주세요.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Reddit 섹션 */}
+              {hasReddit && (
+                <div className={`p-4 rounded-xl border ${
+                  dark_mode ? 'bg-orange-500/10 border-orange-500/30' : 'bg-orange-50/60 border-orange-200/60'
+                }`}>
+                  <h3 className={`text-lg font-medium mb-4 ${dark_mode ? 'text-orange-300' : 'text-orange-700'} flex items-center gap-2`}>
+                    <MessageSquare className="h-5 w-5" />
+                    Reddit 설정
+                  </h3>
+                  
+                  {/* Subreddit */}
+                  <div>
+                    <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                      서브레딧 (Subreddit)
+                    </label>
+                    <Input
+                      value={publish_form.subreddit}
+                      onChange={(e) => on_update_form('subreddit', e.target.value)}
+                      className={`${
+                        dark_mode ? 'bg-gray-800/60 border-gray-600/60' : 'bg-white/60 border-gray-300/60'
+                      } backdrop-blur-sm rounded-xl`}
+                      placeholder="예: videos, funny, gaming (r/ 없이 입력)"
+                    />
+                    <p className={`text-xs mt-1 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      게시할 서브레딧의 이름을 입력하세요.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
           {/* 액션 버튼 */}
           <div className="flex items-center gap-3 pt-4 sticky bottom-0 bg-inherit">
             <Button
@@ -311,7 +574,7 @@ const ContentPublishModal = ({
             
             <Button
               onClick={on_publish}
-              disabled={publish_form.platforms.length === 0 || !publish_form.title.trim()}
+              disabled={!getFormValidation()}
               className="flex-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl disabled:opacity-50"
             >
               <Upload className="h-4 w-4 mr-2" />

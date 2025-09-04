@@ -14,9 +14,10 @@ import { useNotificationStore } from '@/features/real-time-notifications/logic/n
  * @param {boolean} isPriority - 우선순위 재생성 모드 여부
  * @param {Object|null} selectedVideoData - 선택된 영상 데이터 (자동 import용)
  * @param {Function|null} on_request_success - 요청 성공 콜백 함수
+ * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
  * @returns {Object} 폼 상태와 핸들러들
  */
-export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null) => {
+export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube') => {
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -98,7 +99,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     }
   }, [selectedVideoData, reset_form]);
 
-  // 폼 제출 핸들러 (낙관적 UI 패턴 적용)
+  // 폼 제출 핸들러 (다중 플랫폼 병렬 처리)
   const handle_submit = useCallback(async () => {
     // 필수 항목 검증
     if (!selected_location) {
@@ -108,6 +109,11 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
 
     if (!uploaded_file) {
       alert('참고 이미지를 업로드해주세요.');
+      return;
+    }
+
+    if (!selectedPlatform) {
+      alert('플랫폼을 선택해주세요.');
       return;
     }
 
@@ -129,27 +135,29 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creation_date = new Date().toISOString().split('T')[0];
       
-      // 영상 데이터 구성 (temp_id 명시적 생성)
-      const video_temp_id = `temp-${Date.now()}`;
-      const video_data = {
-        temp_id: video_temp_id,
-        title: `${selected_location.name} AI 영상`,
-        location_id: selected_location.poi_id,
-        location_name: selected_location.name,
-        image_url: image_url,
-        user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null
-      };
-      
       // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
       const last_request_info = {
         location: selected_location,
         image_url: image_url,
         prompt: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
+        platform: selectedPlatform,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
-      // 🚀 낙관적 UI: on_request_success 콜백을 즉시 실행하여 UI가 먼저 반응
+      // 🚀 영상 데이터 생성 및 낙관적 UI 적용
+      const video_temp_id = `temp-${Date.now()}`;
+      const video_data = {
+        temp_id: video_temp_id,
+        title: `${selected_location.name} AI ${selectedPlatform === 'youtube' ? '영상' : '이미지'}`,
+        location_id: selected_location.poi_id,
+        location_name: selected_location.name,
+        image_url: image_url,
+        user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
+        platform: selectedPlatform
+      };
+
+      // 낙관적 UI: 즉시 UI에 반영
       if (on_request_success) {
         on_request_success({
           video_data,
@@ -157,36 +165,37 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
           isPriority
         });
       } else {
-        // 기존 방식: 직접 Zustand 스토어 호출
         if (isPriority) {
           use_content_launch.getState().replace_processing_video(video_data, creation_date);
         } else {
           use_content_launch.getState().add_pending_video(video_data, creation_date);
         }
-        
-        // 기존 방식에서도 성공 모달 즉시 표시
-        set_is_success_modal_open(true);
       }
-      
+
       // 폼 초기화
       reset_form();
+      
+      // 기존 방식에서 성공 모달 표시
+      if (!on_request_success) {
+        set_is_success_modal_open(true);
+      }
       
       // 🔄 백그라운드 처리: S3 업로드를 비동기로 실행
       (async () => {
         try {
-          // S3 통합 업로드 함수 사용 - PostgreSQL NOT NULL 제약조건 해결을 위한 platform 전달
+          // S3 통합 업로드 함수 사용 - selectedPlatform 전달
           const uploadResult = await uploadImageToS3Complete(
             uploaded_file,
             selected_location.poi_id,
             prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-            "youtube" // 대문자로 고정하여 전달
+            selectedPlatform
           );
           
           // ✅ jobId를 영상 데이터에 추가 (백엔드에서 받은 jobId 사용)
           if (uploadResult.jobId) {
             use_content_launch.getState().update_video_job_info(video_temp_id, {
               jobId: uploadResult.jobId,
-              job_id: uploadResult.jobId, // YouTube 업로드에서 사용하는 필드명
+              job_id: uploadResult.jobId, // YouTube/Reddit 업로드에서 사용하는 필드명
               s3Key: uploadResult.s3Key
             });
           }
@@ -198,8 +207,9 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
           // 사용자에게 실패 알림
           useNotificationStore.getState().add_notification({
             type: 'error',
-            message: `영상 업로드에 실패했습니다: ${background_error.message}`,
+            message: `${selectedPlatform.toUpperCase()} 업로드에 실패했습니다: ${background_error.message}`,
             data: { 
+              platform: selectedPlatform,
               error: background_error.message,
               temp_id: video_temp_id,
               failed_at: new Date().toISOString()
@@ -213,10 +223,10 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     } finally {
       set_is_submitting(false);
     }
-  }, [selected_location, uploaded_file, prompt_text, reset_form, on_request_success, isPriority]);
+  }, [selected_location, uploaded_file, prompt_text, selectedPlatform, reset_form, on_request_success, isPriority]);
 
-  // 폼 검증 상태
-  const is_form_valid = selected_location && uploaded_file && !is_submitting;
+  // 폼 검증 상태 (플랫폼 선택 포함)
+  const is_form_valid = selected_location && uploaded_file && selectedPlatform && !is_submitting;
 
   return {
     // 상태
