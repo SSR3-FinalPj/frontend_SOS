@@ -20,7 +20,7 @@ import { usePlatformStore } from '@/domain/platform/logic/store';
 import { get_kpi_data_from_api } from '@/domain/dashboard/logic/dashboard-utils';
 import AnalyticsFilterSidebar from '@/containers/AnalyticsFilterSidebar/index';
 import Notification from '@/common/ui/notification';
-import AudienceDemographicsChart from '@/common/ui/AudienceDemographicsChart';
+import AudienceDemoContainer from '@/containers/AudienceDemoContainer/index'; // ✅ 수정
 import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import UploadedContentList from '@/features/content-management/ui/UploadedContentList';
 import IntegratedAnalyticsView from '@/containers/IntegratedAnalyticsView';
@@ -54,11 +54,20 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
     if ((selected_platform === 'youtube' && isYoutubeConnected) || (selected_platform === 'reddit' && isRedditConnected)) {
       fetchSummaryData();
     }
-  }, [platforms.google.connected, platforms.reddit.connected, platforms.google.loading, platforms.reddit.loading, selected_platform, fetchSummaryData]);
+  }, [
+    platforms.google.connected, 
+    platforms.reddit.connected, 
+    platforms.google.loading, 
+    platforms.reddit.loading, 
+    selected_platform, 
+    fetchSummaryData
+  ]);
 
   const kpiData = get_kpi_data_from_api(selected_platform, summaryData);
 
-  const isSelectedPlatformConnected = selected_platform === 'youtube' ? platforms.google.connected : platforms.reddit.connected;
+  const isSelectedPlatformConnected = selected_platform === 'youtube' 
+    ? platforms.google.connected 
+    : platforms.reddit.connected;
 
   return (
     <div className="h-screen bg-white dark:bg-gray-900 transition-colors duration-300 flex overflow-hidden">
@@ -166,12 +175,19 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
                 })}
               </div>
 
-              <UploadedContentList startDate={date_range?.from} endDate={date_range?.to} onVideoCardClick={onVideoCardClick} selectedPlatform={selected_platform} />
-              
+              <UploadedContentList 
+                startDate={date_range?.from} 
+                endDate={date_range?.to} 
+                onVideoCardClick={onVideoCardClick} 
+                selectedPlatform={selected_platform} 
+              />
 
               <div className="grid grid-cols-2 gap-8">
-                <AudienceDemographicsChart />
-                
+                {/* ✅ AudienceDemoContainer로 교체 */}
+                <AudienceDemoContainer 
+                  startDate={date_range?.from} 
+                  endDate={date_range?.to} 
+                />
 
                 <TrafficSourceChart />
               </div>
