@@ -65,9 +65,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-indigo-950/20" />
       
       <AnalyticsFilterSidebar 
-        current_view={current_view} 
-        set_current_view={set_current_view}
-        platforms={platforms} // Pass platforms down
+        platforms={platforms}
       />
 
       <div className="flex-1 flex flex-col relative z-10">
@@ -76,7 +74,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
             <div>
               <h1 className="text-3xl font-light text-gray-800 dark:text-white mb-2">
                 {view_type === 'integrated' 
-                  ? '통합 분석' 
+                  ? '비교 분석' 
                   : (selected_platform === 'youtube' ? '유튜브 상세 분석' : '레딧 상세 분석')
                 }
               </h1>

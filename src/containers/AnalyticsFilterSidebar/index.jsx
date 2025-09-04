@@ -20,18 +20,15 @@ import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { MeaireLogo } from '@/common/ui/meaire-logo';
 import { usePageStore } from '@/common/stores/page-store';
 import { period_options } from '@/domain/dashboard/logic/dashboard-constants';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip'; // Import Tooltip
 
 /**
  * Analytics Filter Sidebar 컴포넌트
  * @param {Object} props - 컴포넌트 props
- * @param {string} props.current_view - 현재 뷰
  * @param {object} props.platforms - Platform connection status
  * @returns {JSX.Element} Analytics Filter Sidebar 컴포넌트
  */
 const AnalyticsFilterSidebar = ({ 
-  current_view,
-  platforms // Receive platforms prop
+  platforms
 }) => {
   const navigate = useNavigate();
   const { isDarkMode } = usePageStore();
@@ -74,8 +71,8 @@ const AnalyticsFilterSidebar = ({
           </h3>
           <div className="space-y-2">
             {[
-              { id: 'detailed', label: '개별 분석', icon: PieChart, description: '플랫폼별 상세 분석' },
-              { id: 'integrated', label: '통합 분석', icon: BarChart3, description: '플랫폼 간 비교 분석' }
+              { id: 'integrated', label: '비교 분석', icon: BarChart3, description: '플랫폼 간 비교 분석' },
+              { id: 'detailed', label: '개별 분석', icon: PieChart, description: '플랫폼별 상세 분석' }
             ].map((viewOption) => {
               const Icon = viewOption.icon;
               const isSelected = view_type === viewOption.id;
@@ -221,7 +218,7 @@ const AnalyticsFilterSidebar = ({
         )}
 
         {/* 뒤로가기 버튼 - 최하단에 위치 */}
-        <div className="pt-6 border-t border-gray-200/40 dark:border-white/10">
+        <div className="pt-6 border-t border-gray-200/40 dark:border-white/10 mt-auto">
           <motion.button
             onClick={() => navigate('/dashboard')}
             whileHover={{ scale: 1.02 }}

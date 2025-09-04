@@ -7,135 +7,413 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Search,
-  Play, 
-  MessageSquare,
-  Calendar,
-  Eye,
-  Heart,
-  TrendingUp,
-  Clock
+  Play,
+  MessageSquare
 } from 'lucide-react';
 import GlassCard from '@/common/ui/glass-card';
-import PlatformSearchCard from '@/features/platform-search/ui/PlatformSearchCard';
-import PlatformSearchModal from '@/features/platform-search/ui/PlatformSearchModal';
+import YouTubeIcon from '@/assets/images/button/Youtube_Icon.svg';
+import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 
 const IntegratedAnalyticsView = () => {
-  const [selectedYouTube, setSelectedYouTube] = useState(null);
-  const [selectedReddit, setSelectedReddit] = useState(null);
-  const [isYouTubeSearchOpen, setYouTubeSearchOpen] = useState(false);
-  const [isRedditSearchOpen, setRedditSearchOpen] = useState(false);
+  const [selectedCrossPlatformContent, setSelectedCrossPlatformContent] = useState(null);
 
-  // Mock 데이터: 개별 플랫폼 콘텐츠 목록
-  const mockYouTubeContent = [
+  // Mock 데이터: 동일 콘텐츠 크로스 플랫폼 비교 (YouTube-Reddit 동일 제목)
+  const mockCrossPlatformContent = [
     {
-      id: 'yt1',
+      id: 'cross_1',
       title: 'AI 기술의 미래와 현실',
-      videoId: 'abc123',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-      views: 24500,
-      likes: 1200,
-      comments: 234,
-      engagement: 5.2,
-      publishedAt: '2024-01-15',
-      duration: '12:34'
+      description: '동일한 AI 콘텐츠를 YouTube와 Reddit에 업로드하여 플랫폼별 성과 비교',
+      youtube: {
+        id: 'yt1',
+        title: 'AI 기술의 미래와 현실',
+        videoId: 'abc123',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        views: 24500,
+        likes: 1200,
+        comments: 234,
+        engagement: 5.2,
+        publishedAt: '2024-01-15',
+        duration: '12:34',
+        platform: 'youtube'
+      },
+      reddit: {
+        id: 'rd1',
+        title: 'AI 기술의 미래와 현실',
+        postId: 'r/technology_post1',
+        subreddit: 'r/technology',
+        upvotes: 3100,
+        comments: 156,
+        score: 258,
+        engagement: 8.3,
+        publishedAt: '2024-01-15',
+        author: 'tech_creator',
+        platform: 'reddit'
+      }
     },
     {
-      id: 'yt2',
-      title: '최신 프로그래밍 트렌드 2024',
-      videoId: 'def456',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-      views: 18200,
-      likes: 892,
-      comments: 145,
-      engagement: 6.1,
-      publishedAt: '2024-02-01',
-      duration: '8:45'
+      id: 'cross_2',
+      title: '2024 최신 프로그래밍 트렌드',
+      description: '프로그래밍 트렌드 동영상을 두 플랫폼에 동시 업로드한 성과 분석',
+      youtube: {
+        id: 'yt2',
+        title: '2024 최신 프로그래밍 트렌드',
+        videoId: 'def456',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        views: 18200,
+        likes: 892,
+        comments: 145,
+        engagement: 6.1,
+        publishedAt: '2024-02-01',
+        duration: '8:45',
+        platform: 'youtube'
+      },
+      reddit: {
+        id: 'rd2',
+        title: '2024 최신 프로그래밍 트렌드',
+        postId: 'r/programming_post2',
+        subreddit: 'r/programming',
+        upvotes: 2400,
+        comments: 89,
+        score: 195,
+        engagement: 7.8,
+        publishedAt: '2024-02-01',
+        author: 'dev_creator',
+        platform: 'reddit'
+      }
     },
     {
-      id: 'yt3',
-      title: '개발자를 위한 효율적인 워크플로우',
-      videoId: 'ghi789',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-      views: 31000,
-      likes: 1850,
-      comments: 267,
-      engagement: 7.3,
-      publishedAt: '2024-01-28',
-      duration: '15:22'
+      id: 'cross_3',
+      title: '개발자 워크플로우 최적화 가이드',
+      description: '워크플로우 최적화 콘텐츠의 플랫폼별 반응 차이 분석',
+      youtube: {
+        id: 'yt3',
+        title: '개발자 워크플로우 최적화 가이드',
+        videoId: 'ghi789',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        views: 31000,
+        likes: 1850,
+        comments: 267,
+        engagement: 7.3,
+        publishedAt: '2024-01-28',
+        duration: '15:22',
+        platform: 'youtube'
+      },
+      reddit: {
+        id: 'rd3',
+        title: '개발자 워크플로우 최적화 가이드',
+        postId: 'r/webdev_post3',
+        subreddit: 'r/webdev',
+        upvotes: 4200,
+        comments: 198,
+        score: 342,
+        engagement: 9.1,
+        publishedAt: '2024-01-28',
+        author: 'workflow_expert',
+        platform: 'reddit'
+      }
     },
     {
-      id: 'yt4',
-      title: '리액트 훅 완벽 가이드',
-      videoId: 'jkl012',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-      views: 42300,
-      likes: 2100,
-      comments: 189,
-      engagement: 8.1,
-      publishedAt: '2024-02-15',
-      duration: '20:10'
+      id: 'cross_4',
+      title: 'React 훅 완벽 마스터하기',
+      description: 'React 훅 튜토리얼의 YouTube vs Reddit 성과 비교',
+      youtube: {
+        id: 'yt4',
+        title: 'React 훅 완벽 마스터하기',
+        videoId: 'jkl012',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        views: 42300,
+        likes: 2100,
+        comments: 189,
+        engagement: 8.1,
+        publishedAt: '2024-02-15',
+        duration: '20:10',
+        platform: 'youtube'
+      },
+      reddit: {
+        id: 'rd4',
+        title: 'React 훅 완벽 마스터하기',
+        postId: 'r/javascript_post4',
+        subreddit: 'r/javascript',
+        upvotes: 1850,
+        comments: 245,
+        score: 178,
+        engagement: 6.4,
+        publishedAt: '2024-02-15',
+        author: 'react_master',
+        platform: 'reddit'
+      }
+    },
+    {
+      id: 'cross_5',
+      title: '웹 성능 최적화 실전 가이드',
+      description: '성능 최적화 콘텐츠의 플랫폼별 도달률과 참여도 분석',
+      youtube: {
+        id: 'yt5',
+        title: '웹 성능 최적화 실전 가이드',
+        videoId: 'xyz789',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        views: 15600,
+        likes: 720,
+        comments: 98,
+        engagement: 5.8,
+        publishedAt: '2024-03-01',
+        duration: '18:45',
+        platform: 'youtube'
+      },
+      reddit: {
+        id: 'rd5',
+        title: '웹 성능 최적화 실전 가이드',
+        postId: 'r/webdev_performance',
+        subreddit: 'r/webdev',
+        upvotes: 2800,
+        comments: 134,
+        score: 224,
+        engagement: 9.5,
+        publishedAt: '2024-03-01',
+        author: 'perf_optimizer',
+        platform: 'reddit'
+      }
     }
   ];
 
-  const mockRedditContent = [
-    {
-      id: 'rd1',
-      title: 'AI 기술에 대한 사회적 논의',
-      postId: 'r/technology_post1',
-      subreddit: 'r/technology',
-      upvotes: 3100,
-      comments: 156,
-      score: 258,
-      engagement: 8.3,
-      publishedAt: '2024-01-16',
-      author: 'tech_enthusiast_42'
-    },
-    {
-      id: 'rd2',
-      title: '프로그래밍 커리어 전환 후기',
-      postId: 'r/programming_post2',
-      subreddit: 'r/programming',
-      upvotes: 2400,
-      comments: 89,
-      score: 195,
-      engagement: 7.8,
-      publishedAt: '2024-02-02',
-      author: 'code_switcher'
-    },
-    {
-      id: 'rd3',
-      title: '웹개발 워크플로우 추천',
-      postId: 'r/webdev_post3',
-      subreddit: 'r/webdev',
-      upvotes: 4200,
-      comments: 198,
-      score: 342,
-      engagement: 9.1,
-      publishedAt: '2024-01-29',
-      author: 'frontend_guru'
-    },
-    {
-      id: 'rd4',
-      title: '리액트 vs Vue 비교 분석',
-      postId: 'r/javascript_debate',
-      subreddit: 'r/javascript',
-      upvotes: 1850,
-      comments: 245,
-      score: 178,
-      engagement: 6.4,
-      publishedAt: '2024-02-12',
-      author: 'js_debater'
-    }
-  ];
-
-  // 개별 플랫폼 콘텐츠 선택 처리
-  const handleSelectYouTube = React.useCallback((content) => {
-    setSelectedYouTube(content);
+  // 크로스 플랫폼 콘텐츠 선택 처리
+  const handleSelectCrossPlatformContent = React.useCallback((content) => {
+    setSelectedCrossPlatformContent(content);
   }, []);
 
-  const handleSelectReddit = React.useCallback((content) => {
-    setSelectedReddit(content);
-  }, []);
+  // 크로스 플랫폼 검색 카드 컴포넌트
+  const CrossPlatformSearchCard = ({ selectedContent, onSelectContent, allContent }) => {
+    const [query, setQuery] = React.useState('');
+    const [filteredResults, setFilteredResults] = React.useState([]);
+
+    // 실시간 검색 필터링
+    React.useEffect(() => {
+      if (query.length < 1) {
+        setFilteredResults([]);
+        return;
+      }
+
+      const results = allContent.filter(content => 
+        content.title.toLowerCase().includes(query.toLowerCase()) ||
+        content.description.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 5); // 최대 5개까지만 표시
+
+      setFilteredResults(results);
+    }, [query, allContent]);
+
+    // 콘텐츠 선택 처리
+    const handleSelectContent = (content) => {
+      onSelectContent(content);
+      setQuery('');
+      setFilteredResults([]);
+    };
+
+    // 검색 초기화
+    const handleClearSearch = () => {
+      setQuery('');
+      setFilteredResults([]);
+    };
+
+    const formatNumber = (num) => {
+      if (num >= 1000) {
+        return `${(num / 1000).toFixed(1)}K`;
+      }
+      return num?.toLocaleString();
+    };
+
+
+    return (
+      <GlassCard className="h-full">
+        <div className="flex flex-col h-full">
+          {/* 헤더 */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800/30 rounded-full flex items-center justify-center">
+              <Search className="w-4 h-4 text-blue-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+              콘텐츠 성과 비교하기
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <img src={YouTubeIcon} alt="YouTube" className="w-4 h-4" />
+              <span>vs</span>
+              <img src={RedditIcon} alt="Reddit" className="w-4 h-4" />
+            </div>
+          </div>
+
+          {/* 지속적 검색 영역 */}
+          <div className="flex-1">
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="동일한 제목으로 업로드된 콘텐츠를 검색해보세요..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-full pl-10 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
+                {query && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* 검색 결과 드롭다운 - 항상 표시 */}
+              {query.length >= 1 && (
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                  {filteredResults.length > 0 ? (
+                    filteredResults.map((content) => (
+                      <button
+                        key={content.id}
+                        onClick={() => handleSelectContent(content)}
+                        className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                      >
+                        <div className="space-y-3">
+                          <div>
+                            <h5 className="font-medium text-lg text-gray-900 dark:text-white">
+                              {content.title}
+                            </h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {content.description}
+                            </p>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+                            {/* YouTube 성과 */}
+                            <div className="flex items-start gap-2">
+                              <img 
+                                src={YouTubeIcon}
+                                alt="YouTube"
+                                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">YouTube 성과</p>
+                                <div className="space-y-0.5">
+                                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                                    {formatNumber(content.youtube.views)} 조회 • {content.youtube.engagement}% 참여율
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                                    {formatNumber(content.youtube.likes)} 좋아요
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Reddit 성과 */}
+                            <div className="flex items-start gap-2">
+                              <img 
+                                src={RedditIcon}
+                                alt="Reddit"
+                                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Reddit 성과</p>
+                                <div className="space-y-0.5">
+                                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                                    {formatNumber(content.reddit.upvotes)} 업보트 • {content.reddit.engagement}% 참여율
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                                    {content.reddit.subreddit}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                      <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">검색 결과가 없습니다</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 검색 가이드 (검색어가 없을 때) */}
+              {!query && (
+                <div className="p-6 text-center rounded-xl">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/40 dark:to-purple-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="flex items-center justify-center gap-1">
+                      <img src={YouTubeIcon} alt="YouTube" className="w-6 h-6" />
+                      <span className="text-gray-500 dark:text-gray-400 text-lg">vs</span>
+                      <img src={RedditIcon} alt="Reddit" className="w-6 h-6" />
+                    </div>
+                  </div>
+                  <h4 className="font-medium text-gray-800 dark:text-white mb-2">
+                    동일 콘텐츠 성과 비교
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    같은 제목으로 YouTube와 Reddit에 업로드된 콘텐츠의 성과를 비교해보세요
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 선택된 콘텐츠 요약 */}
+          {selectedContent && (
+            // 선택된 콘텐츠 미리보기
+            <div className="flex-1">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-4 mb-4">
+                <h4 className="font-medium text-gray-800 dark:text-white mb-3">
+                  {selectedContent.title}
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {selectedContent.description}
+                </p>
+                
+                {/* 플랫폼별 미리보기 */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* YouTube */}
+                  <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <img 
+                        src={YouTubeIcon}
+                        alt="YouTube"
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">YouTube</span>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                      {selectedContent.youtube.title}
+                    </p>
+                    <div className="text-xs text-gray-500 dark:text-gray-500">
+                      {formatNumber(selectedContent.youtube.views)} 조회 • {selectedContent.youtube.engagement}% 참여율
+                    </div>
+                  </div>
+                  
+                  {/* Reddit */}
+                  <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <img 
+                        src={RedditIcon}
+                        alt="Reddit"
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Reddit</span>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                      {selectedContent.reddit.title}
+                    </p>
+                    <div className="text-xs text-gray-500 dark:text-gray-500">
+                      {formatNumber(selectedContent.reddit.upvotes)} 업보트 • {selectedContent.reddit.engagement}% 참여율
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
+      </GlassCard>
+    );
+  };
 
   // ComparisonRow 컴포넌트
   const ComparisonRow = ({ youtubeValue, redditValue, metricName, unit = '', isPercentage = false }) => {
@@ -214,31 +492,16 @@ const IntegratedAnalyticsView = () => {
     );
   };
 
-  // 듀얼 플랫폼 검색 섹션
-  const DualSearchSection = () => (
+  // 크로스 플랫폼 검색 섹션
+  const CrossPlatformSearchSection = () => (
     <div className="mb-8">
-      <div className="flex items-center gap-3 mb-6">
-        <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-          콘텐츠 선택
-        </h3>
-        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-      </div>
+      <CrossPlatformSearchCard
+        selectedContent={selectedCrossPlatformContent}
+        onSelectContent={handleSelectCrossPlatformContent}
+        allContent={mockCrossPlatformContent}
+      />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PlatformSearchCard
-          platform="youtube"
-          selectedContent={selectedYouTube}
-          onOpenSearch={() => setYouTubeSearchOpen(true)}
-        />
-        <PlatformSearchCard
-          platform="reddit"
-          selectedContent={selectedReddit}
-          onOpenSearch={() => setRedditSearchOpen(true)}
-        />
-      </div>
-      
-      {(selectedYouTube || selectedReddit) && (
+      {selectedCrossPlatformContent && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -249,13 +512,11 @@ const IntegratedAnalyticsView = () => {
               <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 선택된 콘텐츠: 
-                {selectedYouTube && <span className="text-red-600 dark:text-red-400 ml-1">YouTube</span>}
-                {selectedYouTube && selectedReddit && <span className="text-gray-500 mx-1">+</span>}
-                {selectedReddit && <span className="text-orange-600 dark:text-orange-400 ml-1">Reddit</span>}
+                <span className="text-blue-600 dark:text-blue-400 ml-1 font-semibold">{selectedCrossPlatformContent.title}</span>
               </span>
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {(selectedYouTube ? 1 : 0) + (selectedReddit ? 1 : 0)}/2 플랫폼 선택됨
+              업로드: {new Date(selectedCrossPlatformContent.youtube.publishedAt).toLocaleDateString('ko-KR')}
             </div>
           </div>
         </motion.div>
@@ -263,40 +524,9 @@ const IntegratedAnalyticsView = () => {
     </div>
   );
 
-  // EmptyState 컴포넌트
-  const EmptyState = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col items-center justify-center py-16"
-    >
-      <GlassCard className="text-center max-w-lg mx-auto">
-        <div className="mb-6">
-          <Search className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
-            콘텐츠 성과 비교 시작하기
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            상단의 검색창을 이용해 비교하고 싶은 콘텐츠를 찾아보세요
-          </p>
-        </div>
-        <div className="space-y-3 text-sm text-gray-500 dark:text-gray-400">
-          <div className="flex items-center justify-center gap-2">
-            <Play className="w-4 h-4 text-red-500" />
-            <span>YouTube 영상</span>
-            <span>vs</span>
-            <MessageSquare className="w-4 h-4 text-orange-500" />
-            <span>Reddit 포스트</span>
-          </div>
-          <p>두 플랫폼의 성과를 한눈에 비교할 수 있습니다</p>
-        </div>
-      </GlassCard>
-    </motion.div>
-  );
 
-  // 성과 요약 UI 컴포넌트 - 개별 플랫폼 지원
-  const PerformanceSummary = ({ youtubeContent, redditContent }) => {
+  // 성과 요약 UI 컴포넌트 - 크로스 플랫폼 콘텐츠 지원
+  const PerformanceSummary = ({ youtubeContent, redditContent, title }) => {
     const formatNumber = (num) => {
       if (!num) return '-';
       if (num >= 1000) {
@@ -309,13 +539,10 @@ const IntegratedAnalyticsView = () => {
       <GlassCard>
         <div className="mb-6">
           <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-            선택된 콘텐츠 비교
+            {title} - 플랫폼별 성과 비교
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {youtubeContent && redditContent 
-              ? '두 플랫폼 간 성과 비교'
-              : '개별 플랫폼 성과 분석'
-            }
+            동일 콘텐츠를 YouTube와 Reddit에 업로드하여 어느 플랫폼에서 더 좋은 성과를 거두었는지 비교합니다
           </p>
         </div>
 
@@ -517,13 +744,6 @@ const IntegratedAnalyticsView = () => {
             redditValue={redditContent?.score} 
             metricName="좋아요 / 점수" 
           />
-          {youtubeContent && redditContent && (
-            <ComparisonRow 
-              youtubeValue={new Date(youtubeContent.publishedAt).getTime()} 
-              redditValue={new Date(redditContent.publishedAt).getTime()} 
-              metricName="게시일"
-            />
-          )}
         </div>
         
         {(!youtubeContent || !redditContent) && (
@@ -539,41 +759,23 @@ const IntegratedAnalyticsView = () => {
 
   return (
     <div className="space-y-8">
-      {/* 듀얼 검색 섹션 */}
-      <DualSearchSection />
+      {/* 크로스 플랫폼 검색 섹션 */}
+      <CrossPlatformSearchSection />
       
-      {/* YouTube 검색 모달 */}
-      <PlatformSearchModal
-        isOpen={isYouTubeSearchOpen}
-        onClose={() => setYouTubeSearchOpen(false)}
-        onSelectContent={handleSelectYouTube}
-        contentList={mockYouTubeContent}
-        platform="youtube"
-      />
-      
-      {/* Reddit 검색 모달 */}
-      <PlatformSearchModal
-        isOpen={isRedditSearchOpen}
-        onClose={() => setRedditSearchOpen(false)}
-        onSelectContent={handleSelectReddit}
-        contentList={mockRedditContent}
-        platform="reddit"
-      />
-      
-      {!selectedYouTube && !selectedReddit ? (
-        <EmptyState />
-      ) : (
+      {/* 비교 결과 섹션 - 콘텐츠 선택 시에만 표시 */}
+      {selectedCrossPlatformContent && (
         <div className="space-y-8">
           {/* 성과 요약 */}
           <PerformanceSummary 
-            youtubeContent={selectedYouTube} 
-            redditContent={selectedReddit} 
+            youtubeContent={selectedCrossPlatformContent.youtube} 
+            redditContent={selectedCrossPlatformContent.reddit}
+            title={selectedCrossPlatformContent.title}
           />
           
           {/* 세부 비교 테이블 */}
           <DetailedComparison 
-            youtubeContent={selectedYouTube}
-            redditContent={selectedReddit}
+            youtubeContent={selectedCrossPlatformContent.youtube}
+            redditContent={selectedCrossPlatformContent.reddit}
           />
         </div>
       )}
