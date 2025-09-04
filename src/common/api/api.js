@@ -268,31 +268,39 @@ export async function getYouTubeUploadsByRange(startDate, endDate, channelId) {
   return await res.json();
 }
 
+
+/* ------------------ traffic-source-summary 조회 ------------------ */
+
 /**
- * 특정 영상의 트래픽 소스 요약 조회
- * @param {string} videoId - 유튜브 영상 ID
- * @returns {Promise} 트래픽 소스 데이터
+ * 특정 기간의 트래픽 소스 요약 조회
+ * @param {string} startDate - 시작일 (YYYY-MM-DD)
+ * @param {string} endDate - 종료일 (YYYY-MM-DD)
+ * @returns {Promise<{data: Array, message: string, status: number}>}
  */
-export async function get_traffic_source_summary(videoId) {
-  if (!videoId) {
-    throw new Error('Video ID가 필요합니다.');
+export async function getTrafficSourceSummary(startDate, endDate) {
+  if (!startDate || !endDate) {
+    throw new Error("startDate, endDate are required.");
   }
 
-  const url = `/api/youtube/traffic-source-summary/${videoId}`;
-
-  const res = await apiFetch(url, {
-    method: 'POST'
+  const res = await apiFetch("/api/youtube/traffic-source-summary", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ startDate, endDate }),
   });
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
-    throw new Error(`트래픽 소스 조회 실패: ${res.status} - ${errorData.message}`);
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(
+      `트래픽 소스 요약 조회 실패: ${res.status} - ${
+        errorData.message || "알 수 없는 오류"
+      }`
+    );
   }
-  
-  const responseData = await res.json();
-  
-  return responseData;
+
+  return await res.json(); // { data: [...], message, status }
 }
+
+
 /* ------------------ Reddit 대시보드 데이터 조회 ------------------ */
 /**
  * @param {string} startDate - 시작일 (YYYY-MM-DD)
