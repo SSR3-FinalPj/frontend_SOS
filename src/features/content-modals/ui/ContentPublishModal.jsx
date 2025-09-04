@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 import { Button } from '@/common/ui/button';
 import { Input } from '@/common/ui/input';
 import { Textarea } from '@/common/ui/textarea';
-import { Upload, X as XIcon } from 'lucide-react';
+import { Upload, X as XIcon, Play, MessageSquare } from 'lucide-react';
 import { 
   get_type_icon, 
   get_platform_icon, 
