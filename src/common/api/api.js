@@ -377,6 +377,59 @@ export async function getRedditUploadsByRange(startDate, endDate, channelId) {
 }
 
 
+/* ------------------ Reddit 댓글 분석 API ------------------ */
+/**
+ * 특정 Reddit 게시글의 댓글 분석 결과 조회
+ * @param {string} postId - Reddit 게시글 ID
+ * @returns {Promise<{topComments: Array, atmosphere: string}>}
+ */
+export async function getRedditCommentAnalysis(postId) {
+  if (!postId) {
+    throw new Error("postId is required");
+  }
+
+  // ⚠️ 현재는 videoId로 보내야 함
+  // TODO: 백엔드가 수정되면 { postId } 로 변경 필요
+  const res = await apiFetch("/api/reddit/commentAnalystic", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ videoId: postId }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: "알 수 없는 오류가 발생했습니다." }));
+    throw new Error(`Reddit 댓글 분석 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}
+
+
+/* ------------------ Reddit 특정 게시글 상세 조회 ------------------ */
+/**
+ * 특정 Reddit 게시글 상세 정보를 가져오는 함수
+ * @param {string} postId - Reddit 게시글 ID
+ * @returns {Promise<Object>} 게시글 상세 데이터
+ */
+export async function getRedditContentById(postId) {
+  if (!postId) {
+    throw new Error("postId is required.");
+  }
+
+  const res = await apiFetch(`/api/reddit/contents/${postId}`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: "알 수 없는 오류가 발생했습니다." }));
+    throw new Error(`Reddit 게시글 상세 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}
+
+
+
 
 /* ------------------ 영상 데이터 조회 (SSE 사전 로딩용) ------------------ */
 /**

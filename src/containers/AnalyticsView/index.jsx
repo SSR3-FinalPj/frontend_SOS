@@ -23,6 +23,7 @@ import Notification from '@/common/ui/notification';
 import AudienceDemographicsChart from '@/common/ui/AudienceDemographicsChart';
 import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import UploadedContentList from '@/features/content-management/ui/UploadedContentList';
+import IntegratedAnalyticsView from '@/containers/IntegratedAnalyticsView';
 
 const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClick }) => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
 
   const {
     selected_platform,
+    view_type,
     is_calendar_visible,
     date_range,
     summaryData,
@@ -63,9 +65,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30 dark:from-blue-950/20 dark:via-purple-950/10 dark:to-indigo-950/20" />
       
       <AnalyticsFilterSidebar 
-        current_view={current_view} 
-        set_current_view={set_current_view}
-        platforms={platforms} // Pass platforms down
+        platforms={platforms}
       />
 
       <div className="flex-1 flex flex-col relative z-10">
@@ -73,10 +73,16 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-light text-gray-800 dark:text-white mb-2">
-                {selected_platform === 'youtube' ? '유튜브 상세 분석' : '레딧 상세 분석'}
+                {view_type === 'integrated' 
+                  ? '비교 분석' 
+                  : (selected_platform === 'youtube' ? '유튜브 상세 분석' : '레딧 상세 분석')
+                }
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
-                {get_selected_period_label()}
+                {view_type === 'integrated' 
+                  ? '플랫폼 간 성과를 한눈에 비교 분석하세요'
+                  : get_selected_period_label()
+                }
               </p>
             </div>
 
@@ -100,7 +106,9 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
-          {platforms.google.loading || platforms.reddit.loading ? (
+          {view_type === 'integrated' ? (
+            <IntegratedAnalyticsView />
+          ) : platforms.google.loading || platforms.reddit.loading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
             </div>
