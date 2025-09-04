@@ -30,6 +30,7 @@ export const useAnalyticsStore = create(
 
       return {
         selected_platform: 'youtube',
+        view_type: 'detailed', // 'detailed' or 'integrated'
         selected_period: 'last7Days',
         is_calendar_visible: false,
         date_range: {
@@ -49,6 +50,7 @@ export const useAnalyticsStore = create(
         trafficError: null,
 
         set_selected_platform: (platform) => set({ selected_platform: platform }),
+        set_view_type: (type) => set({ view_type: type }),
         set_selected_period: (period) => set({ selected_period: period }),
         set_is_calendar_visible: (visible) => set({ is_calendar_visible: visible }),
         set_date_range: (range) => set({ date_range: range }),
