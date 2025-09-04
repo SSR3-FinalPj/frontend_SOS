@@ -262,7 +262,7 @@ function getCategoryName(categoryCode) {
     'NOTIFICATION': '알림',
     'PLAYLIST': '재생목록',
     'YT_OTHER_PAGE': '기타 유튜브 페이지',
-    'NO_LINK_OTHER': '알 수 없는 직접 액세스',
+    'NO_LINK_OTHER': '기타',
     'SUBSCRIBER': '구독자',
     'RELATED_VIDEO': '관련 영상'
   };

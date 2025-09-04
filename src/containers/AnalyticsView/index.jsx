@@ -182,15 +182,17 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
                 selectedPlatform={selected_platform} 
               />
 
-              <div className="grid grid-cols-2 gap-8">
-                {/* ✅ AudienceDemoContainer로 교체 */}
-                <AudienceDemoContainer 
-                  startDate={date_range?.from} 
-                  endDate={date_range?.to} 
-                />
+              {selected_platform === 'youtube' && (
+                <div className="grid grid-cols-2 gap-8">
+                  {/* AudienceDemoContainer로 교체 */}
+                  <AudienceDemoContainer 
+                    startDate={date_range?.from} 
+                    endDate={date_range?.to} 
+                  />
 
-                <TrafficSourceChart />
-              </div>
+                  <TrafficSourceChart />
+                </div>
+              )}
             </div>
           )}
         </main>
