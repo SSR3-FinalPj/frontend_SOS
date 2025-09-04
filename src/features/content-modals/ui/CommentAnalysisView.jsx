@@ -6,7 +6,9 @@ const CommentAnalysisView = ({ data }) => {
     return <div className="text-center text-gray-500">데이터가 없습니다.</div>;
   }
 
-  const { top3, atmosphere } = data;
+  console.log("CommentAnalysisView data:", data);
+  const { topComments, atmosphere } = data;
+  console.log("CommentAnalysisView topComments:", topComments);
 
   return (
     <div className="space-y-4">
@@ -15,25 +17,27 @@ const CommentAnalysisView = ({ data }) => {
         <p className="text-sm text-gray-600 dark:text-gray-400">{atmosphere}</p>
       </div>
       <div>
-        <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200">주요 댓글 (Top 3)</h4>
-        <ul className="space-y-3">
-          {top3 && top3.map((comment, index) => (
-            <li key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">{comment.author}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{comment.text}</p>
-              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">
-                <div className="flex items-center gap-1">
-                    <ThumbsUp className="w-3 h-3" />
-                    <span>{comment.likes_or_score}</span>
+        <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200">인기 댓글</h4>
+        <div className="max-h-60 overflow-y-auto pr-2">
+          <ul className="space-y-3">
+            {topComments && topComments.map((comment, index) => (
+              <li key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">{comment.author}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{comment.text}</p>
+                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">
+                  <div className="flex items-center gap-1">
+                      <ThumbsUp className="w-3 h-3" />
+                      <span>{comment.likes_or_score}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                      <MessageCircle className="w-3 h-3" />
+                      <span>{comment.replies}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                    <MessageCircle className="w-3 h-3" />
-                    <span>{comment.replies}</span>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
