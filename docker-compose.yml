@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        VITE_API_URL: "${VITE_API_URL}"   # React 빌드용 ARG
+    environment:
+      - BACKEND_URL=${BACKEND_URL}       # nginx 프록시용 ENV
+    ports:
+      - "3000:80"
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

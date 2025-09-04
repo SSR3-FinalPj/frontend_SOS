@@ -1,1 +1,7 @@
 node_modules
+CLAUDE.md
+/dist
+.DS_store
+.env
+.claude
+.dockerignore

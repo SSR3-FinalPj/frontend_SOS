@@ -1,27 +1,54 @@
-import { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePageStore } from './src/stores/page_store.js';
-import LandingInteractive from './src/components/LandingInteractive.jsx';
-import LoginPage from './src/pages/LoginPage.jsx';
-import Dashboard from './src/pages/Dashboard.jsx';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+
+import { tryRefreshOnBoot } from '@/common/lib/auth-bootstrap';
+import { usePageStore } from '@/common/stores/page-store';
+import { usePlatformStore } from '@/domain/platform/logic/store';
+import { usePlatformInitializer } from '@/domain/platform/logic/use-platform-initializer';
+import Router from '@/Router'; 
+import CookieConsentBanner from '@/common/ui/CookieConsentBanner';
+import SSEProvider from '@/common/ui/SSEProvider';
 
 export default function App() {
-  const { currentPage, isDarkMode, setIsDarkMode, language, setLanguage } = usePageStore();
+  const { isDarkMode, setIsDarkMode } = usePageStore();
+  const { platforms } = usePlatformStore();
+  usePlatformInitializer();
 
-  // Initialize dark mode and language from localStorage
+  const [bootDone, setBootDone] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 부트스트랩: 세션 복원
+  useEffect(() => {
+    (async () => {
+      const ok = await tryRefreshOnBoot();
+
+      if (ok) { // User is authenticated
+        if (location.pathname === '/login') {
+          navigate('/dashboard'); // If they try to go to login page, redirect to dashboard
+        }
+      } else { // User is not authenticated
+        // If trying to access a protected page, redirect to landing page
+        const protectedPaths = ['/dashboard', '/contents', '/contentlaunch', '/analytics', '/settings'];
+        if (protectedPaths.some(path => location.pathname.startsWith(path))) {
+          navigate('/');
+        }
+      }
+      setBootDone(true);
+    })();
+  }, [navigate, location.pathname]);
+
+  // 다크 모드/언어 초기화
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
-    const savedLanguage = localStorage.getItem('contentboost-language');
-    
+
     if (savedDarkMode !== null) {
       setIsDarkMode(JSON.parse(savedDarkMode));
     }
-    if (savedLanguage) {
-      setLanguage(savedLanguage);
-    }
-  }, [setIsDarkMode, setLanguage]);
+  }, [setIsDarkMode]);
 
-  // Apply dark mode
+  // 다크 모드 적용
   useEffect(() => {
     const root = document.documentElement;
     if (isDarkMode) {
@@ -32,69 +59,16 @@ export default function App() {
     localStorage.setItem('contentboost-dark-mode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
-  // Save language preference
-  useEffect(() => {
-    localStorage.setItem('contentboost-language', language);
-  }, [language]);
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'landing':
-        return (
-          <motion.div
-            key="landing"
-            initial={{ opacity: 0, scale: 1.01, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.99, y: -20 }}
-            transition={{ 
-              duration: 0.6, 
-              ease: [0.16, 1, 0.3, 1],
-              layout: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-            }}
-          >
-            <LandingInteractive />
-          </motion.div>
-        );
-      case 'login':
-        return (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0, scale: 1.01, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.99, y: -20 }}
-            transition={{ 
-              duration: 0.6, 
-              ease: [0.16, 1, 0.3, 1],
-              layout: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-            }}
-          >
-            <LoginPage />
-          </motion.div>
-        );
-      case 'dashboard':
-        return (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, scale: 1.01, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.99, y: -20 }}
-            transition={{ 
-              duration: 0.5, 
-              ease: [0.16, 1, 0.3, 1],
-              layout: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-            }}
-          >
-            <Dashboard />
-          </motion.div>
-        );
-      default:
-        return null;
-    }
-  };
+
+  if (!bootDone || platforms.google.loading || platforms.reddit.loading) {
+    return <div />; // 로딩 화면
+  }
 
   return (
-    <AnimatePresence mode="wait">
-      {renderCurrentPage()}
-    </AnimatePresence>
+    <SSEProvider>
+      <Router />
+      <CookieConsentBanner />
+    </SSEProvider>
   );
 }
