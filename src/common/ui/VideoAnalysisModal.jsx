@@ -28,7 +28,7 @@ const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
           commentData = await getRedditCommentAnalysis(contentId);
         }
         setCommentAnalysisData(commentData);
-        console.log("Reddit Comment Analysis Data:", commentData);
+
       } catch (err) {
         setError(String(err));
       } finally {
@@ -62,21 +62,6 @@ const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
                 <div className="text-white">미리보기를 제공하지 않는 플랫폼입니다.</div>
               )}
             </div>
-            {/* <GlassCard>
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <BarChart2 className="w-6 h-6 text-blue-500" />
-                  <h3 className="text-lg font-semibold">트래픽 소스</h3>
-                </div>
-                {loading ? (
-                  <div className="flex justify-center items-center h-48">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                  </div>
-                ) : (
-                  <TrafficSourceChart data={trafficSourceData} />
-                )}
-              </div>
-            </GlassCard> */}
           </div>
           <div className="col-span-1">
             <DialogClose asChild>
@@ -89,29 +74,29 @@ const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
               </button>
             </DialogClose>
             <div className="space-y-4">
-                <DialogTitle asChild>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title || '영상 분석'}</h2>
-                </DialogTitle>
-                <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
-                  이 영상에 대한 상세 분석 결과입니다.
-                </DialogDescription>
+              <DialogTitle asChild>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title || '영상 분석'}</h2>
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+                이 영상에 대한 상세 분석 결과입니다.
+              </DialogDescription>
             </div>
             <div className="mt-6">
               <GlassCard>
                 <div className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <MessageSquare className="w-6 h-6 text-green-500" />
-                        <h3 className="text-lg font-semibold">댓글 반응 분석</h3>
+                  <div className="flex items-center gap-3 mb-4">
+                    <MessageSquare className="w-6 h-6 text-green-500" />
+                    <h3 className="text-lg font-semibold">댓글 반응 분석</h3>
+                  </div>
+                  {loading ? (
+                    <div className="flex justify-center items-center h-48">
+                      <Loader2 className="w-8 h-8 animate-spin text-green-500" />
                     </div>
-                    {loading ? (
-                        <div className="flex justify-center items-center h-48">
-                            <Loader2 className="w-8 h-8 animate-spin text-green-500" />
-                        </div>
-                    ) : error ? (
-                        <div className="text-center text-red-500">오류: {error}</div>
-                    ) : (
-                        <CommentAnalysisView data={commentAnalysisData} />
-                    )}
+                  ) : error ? (
+                    <div className="text-center text-red-500">오류: {error}</div>
+                  ) : (
+                    <CommentAnalysisView data={commentAnalysisData} />
+                  )}
                 </div>
               </GlassCard>
             </div>
