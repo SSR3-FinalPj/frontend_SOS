@@ -429,7 +429,30 @@ export async function getRedditContentById(postId) {
 }
 
 
+/* ------------------Demographics 차트 조회 ------------------ */
 
+
+export async function getYouTubeDailyDemographics(startDate, endDate) {
+  try {
+    const res = await apiFetch(`/api/youtube/daily-demographics`, {
+      method: "POST",
+      body: JSON.stringify({ startDate, endDate }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        `유튜브 데모그래픽 조회 실패: ${res.status} - ${errorData.message || "알 수 없는 오류"}`
+      );
+    }
+
+    const data = await res.json();
+    return data; // { data: [...], message, status }
+  } catch (error) {
+    console.error("❌ getYouTubeDailyDemographics error:", error);
+    throw error;
+  }
+}
 
 /* ------------------ 영상 데이터 조회 (SSE 사전 로딩용) ------------------ */
 /**
