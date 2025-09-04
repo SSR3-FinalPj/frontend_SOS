@@ -12,7 +12,6 @@ import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestMo
 import { Button } from '@/common/ui/button';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
-import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 import ConfirmationModal from '@/common/ui/confirmation-modal';
 import SuccessModal from '@/common/ui/success-modal';
 
@@ -122,57 +121,19 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   };
 
   /**
-   * 게시 완료 핸들러 - 멀티 플랫폼 지원 (리팩토링됨)
+   * 게시 완료 핸들러 (FSD 아키텍처 준수)
    */
   const handle_final_publish = async () => {
     if (!publish_modal.item || !publish_form) return;
-    
+
     try {
-      // Logic 레이어의 멀티 플랫폼 게시 액션 호출
-      const result = await handle_multi_platform_publish(publish_modal.item, publish_form);
-      
-      // 성공 알림 생성
-      const successfulPlatforms = result.results
-        .filter(r => r.success)
-        .map(r => r.platform);
-      
-      const failedPlatforms = result.results
-        .filter(r => !r.success)
-        .map(r => `${r.platform}: ${r.error}`);
-      
-      if (successfulPlatforms.length > 0) {
-        useNotificationStore.getState().add_notification({
-          type: 'success',
-          message: `"${publish_form.title}" 영상이 ${successfulPlatforms.join(', ')}에 성공적으로 업로드되었습니다!`,
-          data: {
-            ...result,
-            successful_platforms: successfulPlatforms
-          }
-        });
-      }
-      
-      if (failedPlatforms.length > 0) {
-        useNotificationStore.getState().add_notification({
-          type: 'warning',
-          message: `일부 플랫폼 업로드에 실패했습니다: ${failedPlatforms.join(', ')}`,
-          data: {
-            failed_platforms: failedPlatforms
-          }
-        });
-      }
-      
+      // Logic 레이어의 멀티 플랫폼 게시 액션 호출 (모든 비즈니스 로직은 스토어에서 처리)
+      await handle_multi_platform_publish(publish_form, publish_modal.item);
     } catch (error) {
-      console.error('멀티 플랫폼 게시 실패:', error);
-      
-      // 에러 알림
-      useNotificationStore.getState().add_notification({
-        type: 'error',
-        message: `게시에 실패했습니다: ${error.message}`,
-        data: { 
-          error: error.message
-        }
-      });
+      // 에러는 이미 스토어에서 알림으로 처리됨
+      console.error('게시 실패:', error);
     } finally {
+      // UI는 오직 모달 닫기만 담당
       close_publish_modal();
     }
   };
