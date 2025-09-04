@@ -26,8 +26,8 @@ import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
 const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null }) => {
-  // 플랫폼 선택 상태
-  const [selectedPlatform, setSelectedPlatform] = useState('youtube');
+  // 플랫폼 선택 상태 (다중 선택 지원)
+  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
 
   // YouTube 폼 상태 관리 커스텀 훅 사용
   const {
@@ -42,21 +42,25 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     handle_prompt_change,
     handle_submit,
     handle_success_modal_close
-  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success);
+  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success, selectedPlatforms);
 
-  // 플랫폼 변경 핸들러
+  // 플랫폼 변경 핸들러 (다중 선택 토글)
   const handlePlatformChange = useCallback((platform) => {
-    // Reddit 플랫폼 선택 방지
-    if (platform === 'reddit') {
-      return;
-    }
-    setSelectedPlatform(platform);
+    setSelectedPlatforms(prev => {
+      if (prev.includes(platform)) {
+        // 이미 선택된 플랫폼이면 제거
+        return prev.filter(p => p !== platform);
+      } else {
+        // 선택되지 않은 플랫폼이면 추가
+        return [...prev, platform];
+      }
+    });
   }, []);
 
   // 모달 닫기 핸들러
   const handle_close = useCallback(() => {
     if (is_submitting) return;
-    setSelectedPlatform('youtube'); // 플랫폼 초기화
+    setSelectedPlatforms([]); // 플랫폼 선택 초기화
     on_close();
   }, [is_submitting, on_close]);
 
@@ -117,14 +121,14 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
           <div className="p-6 space-y-5 max-h-[calc(95vh-140px)] overflow-y-auto">
             {/* 플랫폼 선택 컴포넌트 */}
             <PlatformSelector
-              selectedPlatform={selectedPlatform}
+              selectedPlatforms={selectedPlatforms}
               onPlatformChange={handlePlatformChange}
             />
 
-            {/* 플랫폼별 조건부 폼 렌더링 */}
-            {selectedPlatform === 'youtube' && (
+            {/* 플랫폼 선택 시 공통 폼 렌더링 */}
+            {selectedPlatforms.length > 0 && (
               <>
-                {/* YouTube 폼 - 기존 컴포넌트들 */}
+                {/* 공통 폼 - 모든 플랫폼에서 사용 */}
                 <LocationSelector
                   selected_location={selected_location}
                   on_location_select={handle_location_select}

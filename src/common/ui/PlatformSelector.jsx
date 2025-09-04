@@ -8,13 +8,13 @@ import { motion } from 'framer-motion';
 import { Play, Image } from 'lucide-react';
 
 /**
- * 플랫폼 선택 컴포넌트
+ * 플랫폼 선택 컴포넌트 (다중 선택 지원)
  * @param {Object} props - 컴포넌트 props
- * @param {string} props.selectedPlatform - 현재 선택된 플랫폼 ('youtube' | 'reddit')
- * @param {Function} props.onPlatformChange - 플랫폼 변경 시 호출되는 콜백 함수
+ * @param {Array} props.selectedPlatforms - 현재 선택된 플랫폼 배열 ['youtube', 'reddit']
+ * @param {Function} props.onPlatformChange - 플랫폼 토글 시 호출되는 콜백 함수
  * @returns {JSX.Element} 플랫폼 선택 컴포넌트
  */
-const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
+const PlatformSelector = ({ selectedPlatforms, onPlatformChange }) => {
   const platforms = [
     {
       id: 'youtube',
@@ -34,8 +34,7 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
       borderColor: 'border-orange-500/30',
       hoverColor: 'hover:from-orange-500/30 hover:to-red-500/30',
       textColor: 'text-orange-600',
-      description: '이미지 생성',
-      disabled: true
+      description: '이미지 생성'
     }
   ];
 
@@ -51,24 +50,21 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
       <div className="grid grid-cols-2 gap-4">
         {platforms.map((platform) => {
           const Icon = platform.icon;
-          const isSelected = selectedPlatform === platform.id;
+          const isSelected = selectedPlatforms.includes(platform.id);
           
           return (
             <motion.button
               key={platform.id}
-              onClick={() => !platform.disabled && onPlatformChange(platform.id)}
-              whileHover={platform.disabled ? {} : { scale: 1.02 }}
-              whileTap={platform.disabled ? {} : { scale: 0.98 }}
-              disabled={platform.disabled}
+              onClick={() => onPlatformChange(platform.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className={`
                 relative p-4 rounded-2xl border-2 transition-all duration-200
-                ${platform.disabled 
-                  ? 'bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 cursor-not-allowed opacity-60'
-                  : isSelected 
-                    ? `bg-gradient-to-br ${platform.color} ${platform.borderColor} shadow-lg` 
-                    : 'bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                ${isSelected 
+                  ? `bg-gradient-to-br ${platform.color} ${platform.borderColor} shadow-lg` 
+                  : 'bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }
-                ${!isSelected && !platform.disabled && `${platform.hoverColor}`}
+                ${!isSelected && `${platform.hoverColor}`}
               `}
             >
               {/* 선택된 상태 표시 */}
@@ -122,22 +118,13 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
                   </p>
                 </div>
               </div>
-              
-              {/* Reddit 준비 중 배지 */}
-              {platform.id === 'reddit' && (
-                <div className="absolute top-2 left-2">
-                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full">
-                    준비중
-                  </span>
-                </div>
-              )}
             </motion.button>
           );
         })}
       </div>
       
       {/* 선택된 플랫폼 안내 */}
-      {selectedPlatform && (
+      {selectedPlatforms.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -145,12 +132,14 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
         >
           <p className="text-sm text-blue-700 dark:text-blue-300">
             <span className="font-semibold">
-              {platforms.find(p => p.id === selectedPlatform)?.name}
+              {selectedPlatforms.map(platformId => 
+                platforms.find(p => p.id === platformId)?.name
+              ).join(', ')}
             </span>
-            {selectedPlatform === 'youtube' 
-              ? ' 플랫폼이 선택되었습니다. 아래 정보를 입력해주세요.'
-              : ' 플랫폼이 선택되었습니다. (현재 준비 중인 기능입니다)'
-            }
+            {selectedPlatforms.length === 1 
+              ? ' 플랫폼이 선택되었습니다.' 
+              : ' 플랫폼들이 선택되었습니다.'
+            } 아래 정보를 입력해주세요.
           </p>
         </motion.div>
       )}
