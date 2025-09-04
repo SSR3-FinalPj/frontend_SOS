@@ -78,7 +78,7 @@ function ContentListView({
               sortBy: sortOrder,
               // No pagination here, fetch all and paginate after merge
             });
-            const formattedYtData = ytData.videos.map(v => ({...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount}));
+            const formattedYtData = ytData.videos.map(v => ({...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, title: v.title, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount}));
             allData.push(...formattedYtData);
           } else if (selectedPlatform === 'youtube') {
              setError('YouTube 채널이 연결되지 않았습니다.');
@@ -331,7 +331,7 @@ function ContentListView({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                onClick={() => open_preview_modal(content)}
+                onClick={() => open_preview_modal({...content, title: content.title,})}
               >
                 <motion.div
                   whileHover={{ y: -8, scale: 1.02 }}

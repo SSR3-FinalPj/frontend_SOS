@@ -104,9 +104,15 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
             className="flex items-center gap-4 p-3 bg-white/20 dark:bg-white/5 rounded-xl cursor-pointer hover:bg-white/30 dark:hover:bg-white/10 transition-colors duration-200"
             onClick={() => {
               if (selectedPlatform === 'youtube') {
-                onVideoCardClick(content.videoId, content.title, 'youtube');
+                onVideoCardClick({
+                  contentId: content.videoId,
+                  title: content.title,
+                  platform: 'youtube'});
               } else if (selectedPlatform === 'reddit') {
-                onVideoCardClick(content.post_id, content.title, 'reddit');
+                onVideoCardClick({
+                  contentId: content.post_id, 
+                  title: content.title, 
+                  platform: 'reddit'});
               }
             }}
           >
