@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/common/ui/dialog';
-import { X as XIcon, Loader2, BarChart2, MessageSquare } from 'lucide-react';
-import { getCommentAnalysis, get_traffic_source_summary } from '@/common/api/api';
-import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
+import { X as XIcon, Loader2, MessageSquare } from 'lucide-react';
+import { getCommentAnalysis, getRedditCommentAnalysis } from '@/common/api/api';
 import CommentAnalysisView from '@/features/content-modals/ui/CommentAnalysisView';
 import GlassCard from '@/common/ui/glass-card';
 
-const VideoAnalysisModal = ({ videoId, title, onClose }) => {
+const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
   const [commentAnalysisData, setCommentAnalysisData] = useState(null);
   const [trafficSourceData, setTrafficSourceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!videoId) {
+    if (!contentId || !platform) {
       setLoading(false);
       return;
     }
@@ -22,12 +21,13 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
       setLoading(true);
       setError(null);
       try {
-        const [commentData] = await Promise.all([
-          getCommentAnalysis(videoId),
-          //get_traffic_source_summary(videoId)
-        ]);
+        let commentData;
+        if (platform === 'youtube') {
+          commentData = await getCommentAnalysis(contentId);
+        } else if (platform === 'reddit') {
+          commentData = await getRedditCommentAnalysis(contentId);
+        }
         setCommentAnalysisData(commentData);
-        //setTrafficSourceData(trafficData);
       } catch (err) {
         setError(String(err));
       } finally {
@@ -36,17 +36,17 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
     };
 
     fetchAnalysisData();
-  }, [videoId]);
+  }, [contentId, platform]);
 
-  const youtubeEmbedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+  const youtubeEmbedUrl = contentId && platform === 'youtube' ? `https://www.youtube.com/embed/${contentId}` : '';
 
   return (
-    <Dialog open={!!videoId} onOpenChange={(open) => !open && onClose?.()}>
+    <Dialog open={!!contentId} onOpenChange={(open) => !open && onClose?.()}>
       <DialogContent className="max-w-6xl w-[90vw] bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl rounded-3xl shadow-xl border p-8 overflow-y-auto max-h-[90vh]">
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-2 space-y-6">
             <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
-              {youtubeEmbedUrl ? (
+              {platform === 'youtube' && youtubeEmbedUrl ? (
                 <iframe
                   src={youtubeEmbedUrl}
                   title={title || 'YouTube video player'}
@@ -55,8 +55,10 @@ const VideoAnalysisModal = ({ videoId, title, onClose }) => {
                   allowFullScreen
                   className="w-full h-full"
                 ></iframe>
-              ) : (
+              ) : platform === 'youtube' ? (
                 <div className="text-white">비디오 ID가 없습니다.</div>
+              ) : (
+                <div className="text-white">미리보기를 제공하지 않는 플랫폼입니다.</div>
               )}
             </div>
             {/* <GlassCard>
