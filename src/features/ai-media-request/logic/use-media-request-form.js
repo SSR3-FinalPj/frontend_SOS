@@ -14,10 +14,10 @@ import { useNotificationStore } from '@/features/real-time-notifications/logic/n
  * @param {boolean} isPriority - 우선순위 재생성 모드 여부
  * @param {Object|null} selectedVideoData - 선택된 영상 데이터 (자동 import용)
  * @param {Function|null} on_request_success - 요청 성공 콜백 함수
- * @param {Array} selectedPlatforms - 선택된 플랫폼 배열
+ * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
  * @returns {Object} 폼 상태와 핸들러들
  */
-export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatforms = []) => {
+export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube') => {
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -112,8 +112,8 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       return;
     }
 
-    if (selectedPlatforms.length === 0) {
-      alert('하나 이상의 플랫폼을 선택해주세요.');
+    if (!selectedPlatform) {
+      alert('플랫폼을 선택해주세요.');
       return;
     }
 
@@ -140,41 +140,37 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         location: selected_location,
         image_url: image_url,
         prompt: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
-        platforms: selectedPlatforms,
+        platform: selectedPlatform,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
-      // 🚀 각 플랫폼별로 영상 데이터 생성 및 낙관적 UI 적용
-      const platform_videos = selectedPlatforms.map((platform, index) => {
-        const video_temp_id = `temp-${Date.now()}-${platform}-${index}`;
-        const video_data = {
-          temp_id: video_temp_id,
-          title: `${selected_location.name} AI ${platform === 'youtube' ? '영상' : '이미지'}`,
-          location_id: selected_location.poi_id,
-          location_name: selected_location.name,
-          image_url: image_url,
-          user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
-          platform: platform
-        };
+      // 🚀 영상 데이터 생성 및 낙관적 UI 적용
+      const video_temp_id = `temp-${Date.now()}`;
+      const video_data = {
+        temp_id: video_temp_id,
+        title: `${selected_location.name} AI ${selectedPlatform === 'youtube' ? '영상' : '이미지'}`,
+        location_id: selected_location.poi_id,
+        location_name: selected_location.name,
+        image_url: image_url,
+        user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
+        platform: selectedPlatform
+      };
 
-        // 낙관적 UI: 즉시 UI에 반영
-        if (on_request_success) {
-          on_request_success({
-            video_data,
-            creation_date,
-            isPriority
-          });
+      // 낙관적 UI: 즉시 UI에 반영
+      if (on_request_success) {
+        on_request_success({
+          video_data,
+          creation_date,
+          isPriority
+        });
+      } else {
+        if (isPriority) {
+          use_content_launch.getState().replace_processing_video(video_data, creation_date);
         } else {
-          if (isPriority) {
-            use_content_launch.getState().replace_processing_video(video_data, creation_date);
-          } else {
-            use_content_launch.getState().add_pending_video(video_data, creation_date);
-          }
+          use_content_launch.getState().add_pending_video(video_data, creation_date);
         }
-
-        return { platform, video_temp_id, video_data };
-      });
+      }
 
       // 폼 초기화
       reset_form();
@@ -184,88 +180,38 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         set_is_success_modal_open(true);
       }
       
-      // 🔄 백그라운드 처리: 모든 플랫폼에 병렬 업로드
+      // 🔄 백그라운드 처리: S3 업로드를 비동기로 실행
       (async () => {
         try {
-          // 모든 플랫폼에 대한 업로드 프로미스 생성
-          const uploadPromises = platform_videos.map(({ platform, video_temp_id }) => ({
-            platform,
-            video_temp_id,
-            promise: uploadImageToS3Complete(
-              uploaded_file,
-              selected_location.poi_id,
-              prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-              platform
-            )
-          }));
-
-          // 모든 업로드를 병렬로 실행
-          const settledResults = await Promise.allSettled(
-            uploadPromises.map(({ promise }) => promise)
+          // S3 통합 업로드 함수 사용 - selectedPlatform 전달
+          const uploadResult = await uploadImageToS3Complete(
+            uploaded_file,
+            selected_location.poi_id,
+            prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
+            selectedPlatform
           );
-
-          // 각 플랫폼별 결과 처리
-          settledResults.forEach((result, index) => {
-            const { platform, video_temp_id } = uploadPromises[index];
-            
-            if (result.status === 'fulfilled') {
-              // 성공한 경우
-              const uploadResult = result.value;
-              
-              if (uploadResult.jobId) {
-                use_content_launch.getState().update_video_job_info(video_temp_id, {
-                  jobId: uploadResult.jobId,
-                  job_id: uploadResult.jobId,
-                  s3Key: uploadResult.s3Key
-                });
-              }
-              
-              // 개별 성공 알림
-              useNotificationStore.getState().add_notification({
-                type: 'success',
-                message: `${platform.toUpperCase()} 업로드가 성공했습니다.`,
-                data: {
-                  platform,
-                  temp_id: video_temp_id,
-                  jobId: uploadResult.jobId
-                }
-              });
-              
-            } else {
-              // 실패한 경우
-              const error = result.reason;
-              
-              use_content_launch.getState().transition_to_failed(video_temp_id);
-              
-              // 개별 실패 알림
-              useNotificationStore.getState().add_notification({
-                type: 'error',
-                message: `${platform.toUpperCase()} 업로드에 실패했습니다: ${error.message}`,
-                data: { 
-                  platform,
-                  error: error.message,
-                  temp_id: video_temp_id,
-                  failed_at: new Date().toISOString()
-                }
-              });
-            }
-          });
+          
+          // ✅ jobId를 영상 데이터에 추가 (백엔드에서 받은 jobId 사용)
+          if (uploadResult.jobId) {
+            use_content_launch.getState().update_video_job_info(video_temp_id, {
+              jobId: uploadResult.jobId,
+              job_id: uploadResult.jobId, // YouTube/Reddit 업로드에서 사용하는 필드명
+              s3Key: uploadResult.s3Key
+            });
+          }
           
         } catch (background_error) {
-          // 전체적인 백그라운드 처리 실패
-          console.error('Background upload processing failed:', background_error);
+          // 백그라운드 작업 실패 시 영상을 실패 상태로 전환
+          use_content_launch.getState().transition_to_failed(video_temp_id);
           
-          // 모든 영상을 실패 상태로 전환
-          platform_videos.forEach(({ video_temp_id }) => {
-            use_content_launch.getState().transition_to_failed(video_temp_id);
-          });
-          
+          // 사용자에게 실패 알림
           useNotificationStore.getState().add_notification({
             type: 'error',
-            message: `업로드 처리 중 오류가 발생했습니다: ${background_error.message}`,
+            message: `${selectedPlatform.toUpperCase()} 업로드에 실패했습니다: ${background_error.message}`,
             data: { 
+              platform: selectedPlatform,
               error: background_error.message,
-              platforms: selectedPlatforms,
+              temp_id: video_temp_id,
               failed_at: new Date().toISOString()
             }
           });
@@ -277,10 +223,10 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     } finally {
       set_is_submitting(false);
     }
-  }, [selected_location, uploaded_file, prompt_text, selectedPlatforms, reset_form, on_request_success, isPriority]);
+  }, [selected_location, uploaded_file, prompt_text, selectedPlatform, reset_form, on_request_success, isPriority]);
 
   // 폼 검증 상태 (플랫폼 선택 포함)
-  const is_form_valid = selected_location && uploaded_file && selectedPlatforms.length > 0 && !is_submitting;
+  const is_form_valid = selected_location && uploaded_file && selectedPlatform && !is_submitting;
 
   return {
     // 상태

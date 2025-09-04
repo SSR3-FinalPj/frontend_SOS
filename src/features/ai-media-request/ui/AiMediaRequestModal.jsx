@@ -13,7 +13,6 @@ import PlatformSelector from '@/common/ui/PlatformSelector';
 import LocationSelector from '@/common/ui/location-selector';
 import ImageUploader from '@/common/ui/image-uploader';
 import NaturalPromptInput from '@/common/ui/natural-prompt-input';
-import RedditRequestForm from '@/features/reddit-media-request/ui/RedditRequestForm';
 import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media-request-form';
 
 /**
@@ -26,8 +25,8 @@ import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
 const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null }) => {
-  // 플랫폼 선택 상태 (다중 선택 지원)
-  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+  // 플랫폼 선택 상태
+  const [selectedPlatform, setSelectedPlatform] = useState('youtube');
 
   // YouTube 폼 상태 관리 커스텀 훅 사용
   const {
@@ -42,25 +41,17 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     handle_prompt_change,
     handle_submit,
     handle_success_modal_close
-  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success, selectedPlatforms);
+  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success, selectedPlatform);
 
-  // 플랫폼 변경 핸들러 (다중 선택 토글)
+  // 플랫폼 변경 핸들러
   const handlePlatformChange = useCallback((platform) => {
-    setSelectedPlatforms(prev => {
-      if (prev.includes(platform)) {
-        // 이미 선택된 플랫폼이면 제거
-        return prev.filter(p => p !== platform);
-      } else {
-        // 선택되지 않은 플랫폼이면 추가
-        return [...prev, platform];
-      }
-    });
+    setSelectedPlatform(platform);
   }, []);
 
   // 모달 닫기 핸들러
   const handle_close = useCallback(() => {
     if (is_submitting) return;
-    setSelectedPlatforms([]); // 플랫폼 선택 초기화
+    setSelectedPlatform('youtube'); // 플랫폼 초기화
     on_close();
   }, [is_submitting, on_close]);
 
@@ -121,12 +112,12 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
           <div className="p-6 space-y-5 max-h-[calc(95vh-140px)] overflow-y-auto">
             {/* 플랫폼 선택 컴포넌트 */}
             <PlatformSelector
-              selectedPlatforms={selectedPlatforms}
+              selectedPlatform={selectedPlatform}
               onPlatformChange={handlePlatformChange}
             />
 
             {/* 플랫폼 선택 시 공통 폼 렌더링 */}
-            {selectedPlatforms.length > 0 && (
+            {selectedPlatform && (
               <>
                 {/* 공통 폼 - 모든 플랫폼에서 사용 */}
                 <LocationSelector
@@ -143,17 +134,32 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
                   prompt_text={prompt_text}
                   on_prompt_change={handle_prompt_change}
                 />
-              </>
-            )}
 
-            {selectedPlatform === 'reddit' && (
-              <>
-                {/* Reddit 폼 - 새로운 컴포넌트 */}
-                <RedditRequestForm
-                  onRequestSuccess={on_request_success}
-                  selectedVideoData={selectedVideoData}
-                  isPriority={isPriority}
-                />
+                {/* Reddit 전용 필드 */}
+                {selectedPlatform === 'reddit' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"></div>
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                        Subreddit 설정
+                      </h3>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        게시할 Subreddit
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="예: funny, pics, videos (r/ 없이 입력)"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        게시할 서브레딧의 이름을 입력하세요.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -168,29 +174,23 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
               취소
             </Button>
             
-            {/* YouTube 제출 버튼 */}
-            {selectedPlatform === 'youtube' && (
-              <Button
-                onClick={handle_submit}
-                disabled={!is_form_valid}
-                className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
-              >
-                {is_submitting ? '요청 중...' : '동영상 생성 요청'}
-              </Button>
-            )}
-
-            {/* Reddit 제출 버튼 */}
-            {selectedPlatform === 'reddit' && (
-              <Button
-                onClick={() => {
-                  // Reddit 기능 비활성화로 인해 아무 동작 안함
-                }}
-                disabled={true} // 항상 비활성화
-                className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
-              >
-                이미지 생성 (준비 중)
-              </Button>
-            )}
+            {/* 통합 제출 버튼 */}
+            <Button
+              onClick={handle_submit}
+              disabled={!is_form_valid}
+              className={`font-semibold disabled:opacity-50 ${
+                selectedPlatform === 'youtube'
+                  ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30'
+                  : 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30'
+              } text-gray-800 dark:text-white`}
+            >
+              {is_submitting 
+                ? '요청 중...' 
+                : selectedPlatform === 'youtube' 
+                  ? '동영상 생성 요청' 
+                  : '이미지 생성 요청'
+              }
+            </Button>
           </div>
         </motion.div>
       </motion.div>

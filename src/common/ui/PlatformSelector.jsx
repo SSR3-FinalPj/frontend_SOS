@@ -8,13 +8,13 @@ import { motion } from 'framer-motion';
 import { Play, Image } from 'lucide-react';
 
 /**
- * 플랫폼 선택 컴포넌트 (다중 선택 지원)
+ * 플랫폼 선택 컴포넌트
  * @param {Object} props - 컴포넌트 props
- * @param {Array} props.selectedPlatforms - 현재 선택된 플랫폼 배열 ['youtube', 'reddit']
- * @param {Function} props.onPlatformChange - 플랫폼 토글 시 호출되는 콜백 함수
+ * @param {string} props.selectedPlatform - 현재 선택된 플랫폼 ('youtube' | 'reddit')
+ * @param {Function} props.onPlatformChange - 플랫폼 변경 시 호출되는 콜백 함수
  * @returns {JSX.Element} 플랫폼 선택 컴포넌트
  */
-const PlatformSelector = ({ selectedPlatforms, onPlatformChange }) => {
+const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
   const platforms = [
     {
       id: 'youtube',
@@ -50,7 +50,7 @@ const PlatformSelector = ({ selectedPlatforms, onPlatformChange }) => {
       <div className="grid grid-cols-2 gap-4">
         {platforms.map((platform) => {
           const Icon = platform.icon;
-          const isSelected = selectedPlatforms.includes(platform.id);
+          const isSelected = selectedPlatform === platform.id;
           
           return (
             <motion.button
@@ -124,7 +124,7 @@ const PlatformSelector = ({ selectedPlatforms, onPlatformChange }) => {
       </div>
       
       {/* 선택된 플랫폼 안내 */}
-      {selectedPlatforms.length > 0 && (
+      {selectedPlatform && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -132,14 +132,9 @@ const PlatformSelector = ({ selectedPlatforms, onPlatformChange }) => {
         >
           <p className="text-sm text-blue-700 dark:text-blue-300">
             <span className="font-semibold">
-              {selectedPlatforms.map(platformId => 
-                platforms.find(p => p.id === platformId)?.name
-              ).join(', ')}
+              {platforms.find(p => p.id === selectedPlatform)?.name}
             </span>
-            {selectedPlatforms.length === 1 
-              ? ' 플랫폼이 선택되었습니다.' 
-              : ' 플랫폼들이 선택되었습니다.'
-            } 아래 정보를 입력해주세요.
+            {' 플랫폼이 선택되었습니다. 아래 정보를 입력해주세요.'}
           </p>
         </motion.div>
       )}
