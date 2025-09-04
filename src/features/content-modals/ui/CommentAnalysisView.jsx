@@ -6,7 +6,9 @@ const CommentAnalysisView = ({ data }) => {
     return <div className="text-center text-gray-500">데이터가 없습니다.</div>;
   }
 
-  const { top_comments, atmosphere } = data;
+  console.log("CommentAnalysisView data:", data);
+  const { topComments, atmosphere } = data;
+  console.log("CommentAnalysisView topComments:", topComments);
 
   return (
     <div className="space-y-4">
@@ -18,7 +20,7 @@ const CommentAnalysisView = ({ data }) => {
         <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200">인기 댓글</h4>
         <div className="max-h-60 overflow-y-auto pr-2">
           <ul className="space-y-3">
-            {top_comments && top_comments.map((comment, index) => (
+            {topComments && topComments.map((comment, index) => (
               <li key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">{comment.author}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{comment.text}</p>

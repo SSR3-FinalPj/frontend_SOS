@@ -28,6 +28,7 @@ const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
           commentData = await getRedditCommentAnalysis(contentId);
         }
         setCommentAnalysisData(commentData);
+        console.log("Reddit Comment Analysis Data:", commentData);
       } catch (err) {
         setError(String(err));
       } finally {
