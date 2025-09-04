@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { format_date, format_date_for_api } from '@/domain/dashboard/logic/dashboard-utils';
-import { getYouTubeUploadsByRange, get_traffic_source_summary, getYouTubeChannelId, getRedditChannelInfo, getRedditUploadsByRange, getYouTubeVideosByChannelId } from '@/common/api/api';
+import { getYouTubeUploadsByRange, getTrafficSourceSummary, getYouTubeChannelId, getRedditChannelInfo, getRedditUploadsByRange, getYouTubeVideosByChannelId } from '@/common/api/api';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 
 const initialEndDate = new Date();
@@ -198,7 +198,7 @@ export const useAnalyticsStore = create(
 
         fetchTrafficSourceData: async () => {
           const { date_range, selected_platform } = get();
-          
+
           if (selected_platform !== 'youtube' || !date_range?.from || !date_range?.to) {
             return;
           }
@@ -206,89 +206,28 @@ export const useAnalyticsStore = create(
           set({ isTrafficLoading: true, trafficError: null });
 
           try {
-            // Fetch channelId here
-            const channelInfo = await getYouTubeChannelId();
-            if (!channelInfo || !channelInfo.channelId) {
-              throw new Error('YouTube 채널 정보를 찾을 수 없습니다.');
-            }
-            const channelId = channelInfo.channelId;
+            const startDate = format_date_for_api(date_range.from);
+            const endDate = format_date_for_api(date_range.to);
 
-            // Replace get_all_videos() with getYouTubeVideosByChannelId
-            const videosResponse = await getYouTubeVideosByChannelId(channelId, { sortBy: 'latest', limit: 100 }); // Fetch all relevant videos
-            
-            const videos = videosResponse?.videos || videosResponse || [];
-            if (!Array.isArray(videos)) {
-              throw new Error('영상 목록이 배열 형태가 아닙니다.');
+            const response = await getTrafficSourceSummary(startDate, endDate);
+
+            if (!response || !Array.isArray(response.data)) {
+              throw new Error('잘못된 트래픽 소스 데이터 형식입니다.');
             }
 
-            const startDate = date_range.from.getTime();
-            const endDate = date_range.to.getTime();
-            
-            const filteredVideos = videos.filter(video => {
-              if (!video.publishedAt) return false;
-              const publishDate = new Date(video.publishedAt).getTime();
-              return publishDate >= startDate && publishDate <= endDate;
-            });
-
-
-            if (filteredVideos.length === 0) {
-              set({ 
-                trafficSourceData: [],
-                isTrafficLoading: false,
-                trafficError: null
-              });
-              return;
-            }
-
-            const trafficPromises = filteredVideos.map(async (video, index) => {
-              const videoId = video.videoId || video.id;
-              
-              try {
-                const result = await get_traffic_source_summary(videoId);
-                return { videoId, result, index };
-              } catch (error) {
-                return { videoId, result: null, index };
-              }
-            });
-
-            const trafficResults = await Promise.all(trafficPromises);
-
-            const trafficSummary = {};
-            
-            trafficResults.forEach((item) => {
-              if (!item || !item.result) return;
-              
-              const result = item.result;
-              
-              if (!Array.isArray(result.data)) {
-                return;
-              }
-              
-              result.data.forEach(dataItem => {
-                const categoryCode = dataItem.categoryCode || '기타';
-                const totalViews = parseInt(dataItem.totalViews) || 0;
-                
-                if (trafficSummary[categoryCode]) {
-                  trafficSummary[categoryCode] += totalViews;
-                } else {
-                  trafficSummary[categoryCode] = totalViews;
-                }
-              });
-            });
-
-            const chartData = Object.entries(trafficSummary).map(([categoryCode, totalViews]) => ({
-              name: getCategoryName(categoryCode),
-              value: totalViews
+            const chartData = response.data.map(item => ({
+              name: getCategoryName(item.insightTrafficSourceType),
+              value: parseInt(item.views) || 0,
             })).filter(item => item.value > 0);
 
-            set({ 
+            set({
               trafficSourceData: chartData,
               isTrafficLoading: false,
               trafficError: null
             });
 
           } catch (error) {
-            set({ 
+            set({
               trafficSourceData: null,
               isTrafficLoading: false,
               trafficError: error.message || '트래픽 소스 데이터를 불러오는데 실패했습니다.'
@@ -311,7 +250,10 @@ function getCategoryName(categoryCode) {
     'DISCOVERY': '추천/탐색',
     'OWNED': '채널/구독/재생목록',
     'EXTERNAL': '외부ㆍ직접/임베드',
-   
+    'EXT_URL': '외부ㆍ직접/임베드',
+    'SHORTS': '쇼츠',
+    'YT_CHANNEL': '채널/구독/재생목록',
+
     // 기존 예상 코드들 (호환성 유지)
     'YT_SEARCH': '검색',
     'SUGGESTED_VIDEO': '추천/탐색', 
