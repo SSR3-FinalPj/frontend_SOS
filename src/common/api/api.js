@@ -780,6 +780,30 @@ export async function uploadToYouTube(resultId, videoDetails) {
 
 /* ------------------ Reddit 업로드 API ------------------ */
 /**
+ * 파일 확장자를 기반으로 미디어 타입을 결정하는 함수
+ * @param {string} resultKey - 결과 파일의 키 또는 경로
+ * @returns {string} "image" 또는 "video"
+ */
+function determineMediaTypeFromResultKey(resultKey) {
+  if (!resultKey || typeof resultKey !== 'string') {
+    return 'video'; // 기본값으로 video 사용
+  }
+  
+  const extension = resultKey.toLowerCase().split('.').pop();
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+  const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v'];
+  
+  if (imageExtensions.includes(extension)) {
+    return 'image';
+  } else if (videoExtensions.includes(extension)) {
+    return 'video';
+  } else {
+    // 알 수 없는 확장자는 video로 기본 처리
+    return 'video';
+  }
+}
+
+/**
  * Reddit에 콘텐츠를 업로드하는 함수
  * @param {string|number} resultId - 결과 ID
  * @param {Object} redditData - Reddit 업로드 정보
@@ -789,15 +813,33 @@ export async function uploadToYouTube(resultId, videoDetails) {
  */
 export async function uploadToReddit(resultId, redditData) {
   try {
-    // API 요청 바디 구성
+    // 1. 해당 resultId의 JobResult 정보 조회하여 미디어 타입 결정
+    let kind = 'video'; // 기본값
+    try {
+      const videoResults = await getVideoResultId();
+      const targetResult = videoResults.find(result => result.resultId == resultId);
+      
+      if (targetResult && targetResult.resultKey) {
+        kind = determineMediaTypeFromResultKey(targetResult.resultKey);
+        console.log('Determined media type:', kind, 'from resultKey:', targetResult.resultKey);
+      } else {
+        console.warn('Could not find JobResult for resultId:', resultId, 'using default kind:', kind);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch JobResult for media type determination:', error, 'using default kind:', kind);
+    }
+
+    // 2. API 요청 바디 구성 (kind 포함)
     const requestBody = {
       subreddit: redditData.subreddit || '',
-      title: redditData.title || ''
+      title: redditData.title || '',
+      kind: kind
     };
 
     console.log('Reddit upload request:', {
       resultId,
-      requestBody
+      requestBody,
+      determinedKind: kind
     });
 
     // Reddit 업로드 API 호출
