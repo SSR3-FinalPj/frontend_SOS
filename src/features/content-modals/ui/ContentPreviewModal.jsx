@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/common/ui/dialog';
 import { Button } from '@/common/ui/button';
 import { Clock, BarChart2, X as XIcon, ExternalLink } from 'lucide-react';
-import { get_traffic_source_summary, getCommentAnalysis, getRedditContentById, getRedditCommentAnalysis } from '@/common/api/api';
-import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
+import { getCommentAnalysis, getRedditContentById, getRedditCommentAnalysis } from '@/common/api/api';
 import CommentAnalysisView from './CommentAnalysisView';
 
 const ContentPreviewModal = ({ 
@@ -15,7 +14,6 @@ const ContentPreviewModal = ({
   viewMode = 'simple' // 'simple' or 'detailed'
 }) => {
   const navigate = useNavigate();
-  const [trafficSourceData, setTrafficSourceData] = useState(null);
   const [commentAnalysisData, setCommentAnalysisData] = useState(null);
   const [redditContent, setRedditContent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,18 +23,13 @@ const ContentPreviewModal = ({
       if (!item) return;
 
       setLoading(true);
-      setTrafficSourceData(null);
       setCommentAnalysisData(null);
       setRedditContent(null);
 
       try {
         if (item.platform === 'YouTube') {
           if (viewMode === 'detailed') {
-            const [trafficData, commentData] = await Promise.all([
-              get_traffic_source_summary(item.id),
-              getCommentAnalysis(item.id)
-            ]);
-            setTrafficSourceData(trafficData);
+            const commentData = await getCommentAnalysis(item.id);
             setCommentAnalysisData(commentData);
           }
         } else if (item.platform === 'Reddit') {
@@ -196,7 +189,6 @@ const ContentPreviewModal = ({
               </div>
             ) : null}
           </div>
-          {item.platform === 'YouTube' && <TrafficSourceChart data={trafficSourceData} />}
         </div>
         <div className="col-span-1">
           <DialogClose asChild>
@@ -233,4 +225,4 @@ const ContentPreviewModal = ({
   );
 };
 
-export default React.memo(ContentPreviewModal);
+export default ContentPreviewModal;
