@@ -58,7 +58,7 @@ src
 - **`containers`**: `Sidebar`, `DashboardLayout`, `HeroSection`처럼 여러 컴포넌트를 조합하여 만든, 재사용 가능한 큰 UI 단위입니다.
 - **`features`**: '로그인하기', '콘텐츠 생성하기'처럼 사용자의 특정 행동과 관련된 UI와 로직을 모두 포함하는 기능의 최소 단위입니다.
 - **`domain`**: `dashboard`, `youtube`처럼 애플리케이션의 핵심 데이터(상태)와 그 데이터를 다루는 순수 비즈니스 로직을 담고 있습니다.
-- **`common`**: `Button`, `Input` 같은 순수 UI 컴포넌트, `axios` 인스턴스, 범용 커스텀 훅 등 프로젝트 어디서든 재사용 가능한 코드를 포함합니다.
+- **`common`**: `Button`, `Input` 같은 순수 UI 컴포넌트, `fetch` API 래퍼, 범용 커스텀 훅 등 프로젝트 어디서든 재사용 가능한 코드를 포함합니다.
 
 ## ✨ 주요 코드 컨벤션 (Key Code Conventions)
 
@@ -92,9 +92,11 @@ Sheets로 내보내기
 
 ## 💻 기술 스택 (Tech Stack)
 
-- **Framework**: React
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
+- **Core & Framework**: React, Vite
+- **API Client**: fetch API
+- **Routing**: React Router
 - **State Management**: Zustand
+- **Styling & UI Components**: Tailwind CSS, Radix UI, Lucide React
+- **Charts & Data Visualization**: Recharts
 - **Animation**: Framer Motion
-- **API Client**: Axios
+- **Utilities**: React Day Picker, tailwind-merge, clsx
