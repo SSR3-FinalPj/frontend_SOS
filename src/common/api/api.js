@@ -832,11 +832,8 @@ export async function uploadToYouTube(resultId, videoDetails) {
 }
 
 /* ------------------ Reddit 업로드 API ------------------ */
-/**
- * 파일 확장자를 기반으로 미디어 타입을 결정하는 함수
- * @param {string} resultKey - 결과 파일의 키 또는 경로
- * @returns {string} "image" 또는 "video"
- */
+// TODO: Reddit 업로드 시 미디어 타입 결정 로직 (나중에 사용 예정)
+/*
 function determineMediaTypeFromResultKey(resultKey) {
   if (!resultKey || typeof resultKey !== 'string') {
     return 'video'; // 기본값으로 video 사용
@@ -855,6 +852,7 @@ function determineMediaTypeFromResultKey(resultKey) {
     return 'video';
   }
 }
+*/
 
 /**
  * Reddit에 콘텐츠를 업로드하는 함수
@@ -866,6 +864,8 @@ function determineMediaTypeFromResultKey(resultKey) {
  */
 export async function uploadToReddit(resultId, redditData) {
   try {
+    // TODO: 미디어 타입 결정 로직 (나중에 사용 예정)
+    /*
     // 1. 해당 resultId의 JobResult 정보 조회하여 미디어 타입 결정
     let kind = 'video'; // 기본값
     try {
@@ -893,6 +893,18 @@ export async function uploadToReddit(resultId, redditData) {
       resultId,
       requestBody,
       determinedKind: kind
+    });
+    */
+
+    // API 요청 바디 구성
+    const requestBody = {
+      subreddit: redditData.subreddit || '',
+      title: redditData.title || ''
+    };
+
+    console.log('Reddit upload request:', {
+      resultId,
+      requestBody
     });
 
     // Reddit 업로드 API 호출
