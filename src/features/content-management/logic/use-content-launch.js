@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '@/common/api/api';
+import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId, uploadToYouTube, uploadToReddit } from '@/common/api/api';
 
 /**
  * 백엔드에서 오는 날짜 형식을 안전하게 파싱하는 함수
@@ -1185,6 +1185,156 @@ export const use_content_launch = create(
           selected_video_id: null,
           selected_video_data: null
         });
+      },
+
+      /**
+       * 멀티 플랫폼 게시 처리 함수 (Promise.allSettled 기반)
+       * @param {Object} publishForm - 게시 폼 데이터
+       * @param {Object} item - 게시할 아이템 정보
+       * @returns {Promise<Object>} 게시 결과
+       */
+      handle_multi_platform_publish: async (publishForm, item) => {
+        if (!item || !publishForm) {
+          throw new Error('게시 아이템 또는 폼 데이터가 누락되었습니다.');
+        }
+
+        const { start_upload, finish_upload } = get();
+        const item_id = item.video_id || item.temp_id || item.id;
+        const resultId = item.result_id || item.resultId || item.id;
+        
+        if (!resultId) {
+          throw new Error('게시에 필요한 resultId가 누락되었습니다.');
+        }
+        
+        try {
+          // 업로드 시작 표시
+          start_upload(item_id);
+          
+          // 업로드할 API 호출 목록 구성
+          const uploadPromises = [];
+          
+          publishForm.platforms.forEach(platform => {
+            if (platform === 'youtube') {
+              uploadPromises.push({
+                platform: 'youtube',
+                promise: uploadToYouTube(resultId, publishForm)
+              });
+            } else if (platform === 'reddit') {
+              if (!publishForm.subreddit?.trim()) {
+                uploadPromises.push({
+                  platform: 'reddit',
+                  promise: Promise.reject(new Error('Reddit 업로드에 필요한 subreddit이 누락되었습니다.'))
+                });
+              } else {
+                const redditData = {
+                  subreddit: publishForm.subreddit.trim(),
+                  title: publishForm.title.trim()
+                };
+                uploadPromises.push({
+                  platform: 'reddit',
+                  promise: uploadToReddit(resultId, redditData)
+                });
+              }
+            }
+          });
+          
+          // Promise.allSettled로 모든 요청을 병렬 실행
+          const settledResults = await Promise.allSettled(
+            uploadPromises.map(({ promise }) => promise)
+          );
+          
+          // 결과를 플랫폼별로 처리하고 개별 알림 생성
+          const results = [];
+          
+          settledResults.forEach((result, index) => {
+            const platformName = uploadPromises[index].platform;
+            
+            if (result.status === 'fulfilled') {
+              results.push({
+                platform: platformName,
+                success: true,
+                data: result.value
+              });
+              
+              // 성공 알림 개별 생성
+              import('@/features/real-time-notifications/logic/notification-store').then(({ useNotificationStore }) => {
+                useNotificationStore.getState().add_notification({
+                  type: 'success',
+                  message: `"${publishForm.title}" 영상이 ${platformName}에 성공적으로 업로드되었습니다!`,
+                  data: {
+                    platform: platformName,
+                    item_id,
+                    upload_data: result.value
+                  }
+                });
+              });
+              
+            } else {
+              results.push({
+                platform: platformName,
+                success: false,
+                error: result.reason?.message || '알 수 없는 오류가 발생했습니다.'
+              });
+              
+              // 실패 알림 개별 생성
+              import('@/features/real-time-notifications/logic/notification-store').then(({ useNotificationStore }) => {
+                useNotificationStore.getState().add_notification({
+                  type: 'error',
+                  message: `${platformName} 업로드에 실패했습니다: ${result.reason?.message || '알 수 없는 오류'}`,
+                  data: {
+                    platform: platformName,
+                    item_id,
+                    error: result.reason?.message
+                  }
+                });
+              });
+            }
+          });
+          
+          // 성공한 플랫폼이 있으면 아이템 상태를 'uploaded'로 변경
+          const successfulPlatforms = results.filter(r => r.success);
+          if (successfulPlatforms.length > 0) {
+            set((state) => ({
+              pending_videos: state.pending_videos.map(video => {
+                const video_id = video.video_id || video.temp_id || video.id;
+                return video_id === item_id 
+                  ? { ...video, status: 'uploaded' }
+                  : video;
+              })
+            }));
+            
+            // 폴더 목록 갱신
+            get().fetch_folders();
+          }
+          
+          return {
+            success: successfulPlatforms.length > 0,
+            results: results,
+            item_id: item_id,
+            successful_platforms: successfulPlatforms.map(r => r.platform),
+            failed_platforms: results.filter(r => !r.success).map(r => r.platform)
+          };
+          
+        } catch (error) {
+          console.error('멀티 플랫폼 게시 실패:', error);
+          
+          // 전체 실패 알림
+          import('@/features/real-time-notifications/logic/notification-store').then(({ useNotificationStore }) => {
+            useNotificationStore.getState().add_notification({
+              type: 'error',
+              message: `게시에 실패했습니다: ${error.message}`,
+              data: { 
+                item_id,
+                error: error.message
+              }
+            });
+          });
+          
+          throw error;
+        } finally {
+          // 업로드 완료 처리 (성공/실패 관계없이)
+          finish_upload(item_id);
+        }
       },
 
     }),

@@ -268,31 +268,39 @@ export async function getYouTubeUploadsByRange(startDate, endDate, channelId) {
   return await res.json();
 }
 
+
+/* ------------------ traffic-source-summary 조회 ------------------ */
+
 /**
- * 특정 영상의 트래픽 소스 요약 조회
- * @param {string} videoId - 유튜브 영상 ID
- * @returns {Promise} 트래픽 소스 데이터
+ * 특정 기간의 트래픽 소스 요약 조회
+ * @param {string} startDate - 시작일 (YYYY-MM-DD)
+ * @param {string} endDate - 종료일 (YYYY-MM-DD)
+ * @returns {Promise<{data: Array, message: string, status: number}>}
  */
-export async function get_traffic_source_summary(videoId) {
-  if (!videoId) {
-    throw new Error('Video ID가 필요합니다.');
+export async function getTrafficSourceSummary(startDate, endDate) {
+  if (!startDate || !endDate) {
+    throw new Error("startDate, endDate are required.");
   }
 
-  const url = `/api/youtube/traffic-source-summary/${videoId}`;
-
-  const res = await apiFetch(url, {
-    method: 'POST'
+  const res = await apiFetch("/api/youtube/traffic-source-summary", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ startDate, endDate }),
   });
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
-    throw new Error(`트래픽 소스 조회 실패: ${res.status} - ${errorData.message}`);
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(
+      `트래픽 소스 요약 조회 실패: ${res.status} - ${
+        errorData.message || "알 수 없는 오류"
+      }`
+    );
   }
-  
-  const responseData = await res.json();
-  
-  return responseData;
+
+  return await res.json(); // { data: [...], message, status }
 }
+
+
 /* ------------------ Reddit 대시보드 데이터 조회 ------------------ */
 /**
  * @param {string} startDate - 시작일 (YYYY-MM-DD)
@@ -377,6 +385,82 @@ export async function getRedditUploadsByRange(startDate, endDate, channelId) {
 }
 
 
+/* ------------------ Reddit 댓글 분석 API ------------------ */
+/**
+ * 특정 Reddit 게시글의 댓글 분석 결과 조회
+ * @param {string} postId - Reddit 게시글 ID
+ * @returns {Promise<{topComments: Array, atmosphere: string}>}
+ */
+export async function getRedditCommentAnalysis(postId) {
+  if (!postId) {
+    throw new Error("postId is required");
+  }
+
+  // ⚠️ 현재는 videoId로 보내야 함
+  // TODO: 백엔드가 수정되면 { postId } 로 변경 필요
+  const res = await apiFetch("/api/reddit/commentAnalystic", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ videoId: postId }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: "알 수 없는 오류가 발생했습니다." }));
+    throw new Error(`Reddit 댓글 분석 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}
+
+
+/* ------------------ Reddit 특정 게시글 상세 조회 ------------------ */
+/**
+ * 특정 Reddit 게시글 상세 정보를 가져오는 함수
+ * @param {string} postId - Reddit 게시글 ID
+ * @returns {Promise<Object>} 게시글 상세 데이터
+ */
+export async function getRedditContentById(postId) {
+  if (!postId) {
+    throw new Error("postId is required.");
+  }
+
+  const res = await apiFetch(`/api/reddit/contents/${postId}`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: "알 수 없는 오류가 발생했습니다." }));
+    throw new Error(`Reddit 게시글 상세 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}
+
+
+/* ------------------Demographics 차트 조회 ------------------ */
+
+
+export async function getYouTubeDailyDemographics(startDate, endDate) {
+  try {
+    const res = await apiFetch(`/api/youtube/daily-demographics`, {
+      method: "POST",
+      body: JSON.stringify({ startDate, endDate }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        `유튜브 데모그래픽 조회 실패: ${res.status} - ${errorData.message || "알 수 없는 오류"}`
+      );
+    }
+
+    const data = await res.json();
+    return data; // { data: [...], message, status }
+  } catch (error) {
+    console.error("❌ getYouTubeDailyDemographics error:", error);
+    throw error;
+  }
+}
 
 /* ------------------ 영상 데이터 조회 (SSE 사전 로딩용) ------------------ */
 /**
@@ -774,6 +858,107 @@ export async function uploadToYouTube(resultId, videoDetails) {
     return result;
   } catch (error) {
     console.error('YouTube upload error:', error);
+    throw error;
+  }
+}
+
+/* ------------------ Reddit 업로드 API ------------------ */
+// TODO: Reddit 업로드 시 미디어 타입 결정 로직 (나중에 사용 예정)
+/*
+function determineMediaTypeFromResultKey(resultKey) {
+  if (!resultKey || typeof resultKey !== 'string') {
+    return 'video'; // 기본값으로 video 사용
+  }
+  
+  const extension = resultKey.toLowerCase().split('.').pop();
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+  const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v'];
+  
+  if (imageExtensions.includes(extension)) {
+    return 'image';
+  } else if (videoExtensions.includes(extension)) {
+    return 'video';
+  } else {
+    // 알 수 없는 확장자는 video로 기본 처리
+    return 'video';
+  }
+}
+*/
+
+/**
+ * Reddit에 콘텐츠를 업로드하는 함수
+ * @param {string|number} resultId - 결과 ID
+ * @param {Object} redditData - Reddit 업로드 정보
+ * @param {string} redditData.subreddit - 대상 subreddit 이름
+ * @param {string} redditData.title - 게시물 제목
+ * @returns {Promise<Object>} 업로드 결과
+ */
+export async function uploadToReddit(resultId, redditData) {
+  try {
+    // TODO: 미디어 타입 결정 로직 (나중에 사용 예정)
+    /*
+    // 1. 해당 resultId의 JobResult 정보 조회하여 미디어 타입 결정
+    let kind = 'video'; // 기본값
+    try {
+      const videoResults = await getVideoResultId();
+      const targetResult = videoResults.find(result => result.resultId == resultId);
+      
+      if (targetResult && targetResult.resultKey) {
+        kind = determineMediaTypeFromResultKey(targetResult.resultKey);
+        console.log('Determined media type:', kind, 'from resultKey:', targetResult.resultKey);
+      } else {
+        console.warn('Could not find JobResult for resultId:', resultId, 'using default kind:', kind);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch JobResult for media type determination:', error, 'using default kind:', kind);
+    }
+
+    // 2. API 요청 바디 구성 (kind 포함)
+    const requestBody = {
+      subreddit: redditData.subreddit || '',
+      title: redditData.title || '',
+      kind: kind
+    };
+
+    console.log('Reddit upload request:', {
+      resultId,
+      requestBody,
+      determinedKind: kind
+    });
+    */
+
+    // API 요청 바디 구성
+    const requestBody = {
+      subreddit: redditData.subreddit || '',
+      title: redditData.title || ''
+    };
+
+    console.log('Reddit upload request:', {
+      resultId,
+      requestBody
+    });
+
+    // Reddit 업로드 API 호출
+    const response = await apiFetch(`/api/reddit/upload/${resultId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Reddit upload failed:', response.status, errorText);
+      throw new Error(`Reddit upload failed: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('Reddit upload success:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('Reddit upload error:', error);
     throw error;
   }
 }

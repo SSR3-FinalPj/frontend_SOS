@@ -13,9 +13,9 @@ import SSEProvider from '@/common/ui/SSEProvider';
 export default function App() {
   const { isDarkMode, setIsDarkMode } = usePageStore();
   const { platforms } = usePlatformStore();
-  usePlatformInitializer();
 
   const [bootDone, setBootDone] = useState(false);
+  usePlatformInitializer(bootDone);
   const navigate = useNavigate();
   const location = useLocation();
 

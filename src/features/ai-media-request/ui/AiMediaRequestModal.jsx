@@ -13,7 +13,6 @@ import PlatformSelector from '@/common/ui/PlatformSelector';
 import LocationSelector from '@/common/ui/location-selector';
 import ImageUploader from '@/common/ui/image-uploader';
 import NaturalPromptInput from '@/common/ui/natural-prompt-input';
-import RedditRequestForm from '@/features/reddit-media-request/ui/RedditRequestForm';
 import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media-request-form';
 
 /**
@@ -42,14 +41,10 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     handle_prompt_change,
     handle_submit,
     handle_success_modal_close
-  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success);
+  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success, selectedPlatform);
 
   // 플랫폼 변경 핸들러
   const handlePlatformChange = useCallback((platform) => {
-    // Reddit 플랫폼 선택 방지
-    if (platform === 'reddit') {
-      return;
-    }
     setSelectedPlatform(platform);
   }, []);
 
@@ -121,10 +116,10 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
               onPlatformChange={handlePlatformChange}
             />
 
-            {/* 플랫폼별 조건부 폼 렌더링 */}
-            {selectedPlatform === 'youtube' && (
+            {/* 플랫폼 선택 시 공통 폼 렌더링 */}
+            {selectedPlatform && (
               <>
-                {/* YouTube 폼 - 기존 컴포넌트들 */}
+                {/* 공통 폼 - 모든 플랫폼에서 사용 */}
                 <LocationSelector
                   selected_location={selected_location}
                   on_location_select={handle_location_select}
@@ -139,17 +134,32 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
                   prompt_text={prompt_text}
                   on_prompt_change={handle_prompt_change}
                 />
-              </>
-            )}
 
-            {selectedPlatform === 'reddit' && (
-              <>
-                {/* Reddit 폼 - 새로운 컴포넌트 */}
-                <RedditRequestForm
-                  onRequestSuccess={on_request_success}
-                  selectedVideoData={selectedVideoData}
-                  isPriority={isPriority}
-                />
+                {/* Reddit 전용 필드 */}
+                {selectedPlatform === 'reddit' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"></div>
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                        Subreddit 설정
+                      </h3>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        게시할 Subreddit
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="예: funny, pics, videos (r/ 없이 입력)"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        게시할 서브레딧의 이름을 입력하세요.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -164,29 +174,23 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
               취소
             </Button>
             
-            {/* YouTube 제출 버튼 */}
-            {selectedPlatform === 'youtube' && (
-              <Button
-                onClick={handle_submit}
-                disabled={!is_form_valid}
-                className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
-              >
-                {is_submitting ? '요청 중...' : '동영상 생성 요청'}
-              </Button>
-            )}
-
-            {/* Reddit 제출 버튼 */}
-            {selectedPlatform === 'reddit' && (
-              <Button
-                onClick={() => {
-                  // Reddit 기능 비활성화로 인해 아무 동작 안함
-                }}
-                disabled={true} // 항상 비활성화
-                className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-gray-800 dark:text-white disabled:opacity-50 font-semibold"
-              >
-                이미지 생성 (준비 중)
-              </Button>
-            )}
+            {/* 통합 제출 버튼 */}
+            <Button
+              onClick={handle_submit}
+              disabled={!is_form_valid}
+              className={`font-semibold disabled:opacity-50 ${
+                selectedPlatform === 'youtube'
+                  ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30'
+                  : 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30'
+              } text-gray-800 dark:text-white`}
+            >
+              {is_submitting 
+                ? '요청 중...' 
+                : selectedPlatform === 'youtube' 
+                  ? '동영상 생성 요청' 
+                  : '이미지 생성 요청'
+              }
+            </Button>
           </div>
         </motion.div>
       </motion.div>
