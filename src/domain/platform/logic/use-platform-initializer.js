@@ -37,7 +37,7 @@ export const usePlatformInitializer = () => {
   }, [setPlatformStatus, setChannelInfo]);
 
   useEffect(() => {
-    initializePlatforms();
+    // initializePlatforms();
   }, [initializePlatforms]);
 
   // This hook no longer returns a loading state, as it's now managed in the store.
