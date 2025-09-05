@@ -3,8 +3,8 @@ import { create } from 'zustand';
 
 const usePlatformStore = create((set) => ({
   platforms: {
-    google: { connected: false, linked: false, loading: true },
-    reddit: { connected: false, loading: true },
+    google: { connected: false, linked: false, loading: false },
+    reddit: { connected: false, loading: false },
   },
   setPlatformStatus: (platform, status) =>
     set((state) => ({

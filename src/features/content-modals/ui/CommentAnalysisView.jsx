@@ -3,12 +3,12 @@ import { ThumbsUp, MessageCircle } from 'lucide-react';
 
 const CommentAnalysisView = ({ data }) => {
   if (!data) {
-    return <div className="text-center text-gray-500">데이터가 없습니다.</div>;
+    return <div className="text-center text-gray-500">충분한 댓글 데이터가 없습니다.</div>;
   }
 
-  console.log("CommentAnalysisView data:", data);
-  const { topComments, atmosphere } = data;
-  console.log("CommentAnalysisView topComments:", topComments);
+  // atmosphere 그대로, topComments는 API 응답 키 두 가지 모두 대응
+  const atmosphere = data.atmosphere;
+  const topComments = data.topComments || data["top comments"];
 
   return (
     <div className="space-y-4">
@@ -20,22 +20,28 @@ const CommentAnalysisView = ({ data }) => {
         <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200">인기 댓글</h4>
         <div className="max-h-60 overflow-y-auto pr-2">
           <ul className="space-y-3">
-            {topComments && topComments.map((comment, index) => (
-              <li key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">{comment.author}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{comment.text}</p>
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">
-                  <div className="flex items-center gap-1">
+            {Array.isArray(topComments) && topComments.length > 0 ? (
+              topComments.map((comment, index) => (
+                <li key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
+                    {comment.author}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{comment.text}</p>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">
+                    <div className="flex items-center gap-1">
                       <ThumbsUp className="w-3 h-3" />
                       <span>{comment.likes_or_score}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
+                    </div>
+                    <div className="flex items-center gap-1">
                       <MessageCircle className="w-3 h-3" />
                       <span>{comment.replies}</span>
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-500 text-sm">인기 댓글이 없습니다.</li>
+            )}
           </ul>
         </div>
       </div>

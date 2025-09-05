@@ -14,9 +14,9 @@ const AnalyticsPage = () => {
     const videoIdFromUrl = searchParams.get('videoId');
     const platformFromUrl = searchParams.get('platform');
     if (videoIdFromUrl) {
-      const video = mockContentData.find(item => item.id === parseInt(videoIdFromUrl));
-      setSelectedVideoId(videoIdFromUrl);
-      setSelectedVideoTitle(video ? video.title : `Video ${videoIdFromUrl}`);
+      // const video = mockContentData.find(item => item.id === parseInt(videoIdFromUrl));
+      // setSelectedVideoId(videoIdFromUrl);
+      // setSelectedVideoTitle(video ? video.title : `Video ${videoIdFromUrl}`);
       setSelectedPlatform(platformFromUrl || 'youtube');
     } else {
       setSelectedVideoId(null);
@@ -32,11 +32,12 @@ const AnalyticsPage = () => {
     setSearchParams(searchParams);
   };
 
-  const handleOpenAnalysisModal = (id, title, platform) => {
-    setSelectedVideoId(id);
+  const handleOpenAnalysisModal = ({ contentId, title, platform }) => {
+    setSelectedVideoId(contentId);
     setSelectedVideoTitle(title);
     setSelectedPlatform(platform);
-    searchParams.set('videoId', id);
+    searchParams.set('videoId', contentId);
+    searchParams.set('title', title);
     searchParams.set('platform', platform);
     setSearchParams(searchParams);
   };
