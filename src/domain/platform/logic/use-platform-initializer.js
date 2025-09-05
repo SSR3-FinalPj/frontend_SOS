@@ -4,7 +4,7 @@ import { usePlatformStore } from '@/domain/platform/logic/store';
 import { useYouTubeStore } from '@/domain/youtube/logic/store';
 import { getGoogleStatus, getRedditStatus } from '@/common/api/api';
 
-export const usePlatformInitializer = () => {
+export const usePlatformInitializer = (bootDone) => {
   const { setPlatformStatus } = usePlatformStore();
   const { setChannelInfo } = useYouTubeStore();
 
@@ -37,8 +37,10 @@ export const usePlatformInitializer = () => {
   }, [setPlatformStatus, setChannelInfo]);
 
   useEffect(() => {
-    // initializePlatforms();
-  }, [initializePlatforms]);
+    if (bootDone) {
+      initializePlatforms();
+    }
+  }, [bootDone, initializePlatforms]);
 
   // This hook no longer returns a loading state, as it's now managed in the store.
 };
