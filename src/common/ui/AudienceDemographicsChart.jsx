@@ -10,7 +10,7 @@ const AudienceDemographicsChart = ({ data }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
     >
-      <GlassCard className="p-6" hover={true}>
+      <GlassCard className="p-6" hover={false}>
         <motion.div 
           className="flex items-center gap-4 mb-6"
           initial={{ opacity: 0, x: -20 }}

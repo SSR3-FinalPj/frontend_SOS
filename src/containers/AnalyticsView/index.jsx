@@ -3,7 +3,7 @@
  * 상세 분석 페이지 뷰
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -18,12 +18,14 @@ import { Calendar as CalendarComponent } from '@/common/ui/calendar';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import { get_kpi_data_from_api } from '@/domain/dashboard/logic/dashboard-utils';
+import { getYouTubeChannelId, getYouTubeVideosByChannelId, getRedditChannelInfo, getRedditUploadsByRange } from '@/common/api/api';
 import AnalyticsFilterSidebar from '@/containers/AnalyticsFilterSidebar/index';
 import Notification from '@/common/ui/notification';
 import AudienceDemoContainer from '@/containers/AudienceDemoContainer/index'; // ✅ 수정
 import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import UploadedContentList from '@/features/content-management/ui/UploadedContentList';
 import IntegratedAnalyticsView from '@/containers/IntegratedAnalyticsView';
+import PerformanceHighlight from '@/features/analytics/ui/PerformanceHighlight';
 
 const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClick }) => {
   const navigate = useNavigate();
@@ -44,6 +46,51 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
     handle_calendar_range_select,
     fetchSummaryData
   } = useAnalyticsStore();
+
+  // 콘텐츠 데이터 관리
+  const [contentData, setContentData] = useState([]);
+
+  // 콘텐츠 데이터 fetch
+  useEffect(() => {
+    const fetchContentData = async () => {
+      if (!date_range?.from || !date_range?.to) return;
+
+      try {
+        const start = new Date(date_range.from);
+        const end = new Date(date_range.to);
+
+        if (selected_platform === 'youtube') {
+          const channelInfo = await getYouTubeChannelId();
+          if (channelInfo?.channelId) {
+            const videoData = await getYouTubeVideosByChannelId(channelInfo.channelId, { 
+              sortBy: 'latest', 
+              limit: 50 
+            });
+            const filteredVideos = videoData.videos?.filter(video => {
+              const publishedAt = new Date(video.publishedAt);
+              return publishedAt >= start && publishedAt <= end;
+            }) || [];
+            setContentData(filteredVideos);
+          }
+        } else if (selected_platform === 'reddit') {
+          const channelInfo = await getRedditChannelInfo();
+          if (channelInfo?.channelId) {
+            const postData = await getRedditUploadsByRange(
+              date_range.from.toISOString().slice(0, 10),
+              date_range.to.toISOString().slice(0, 10),
+              channelInfo.channelId
+            );
+            setContentData(postData.posts || []);
+          }
+        }
+      } catch (error) {
+        console.error('Content data fetch error:', error);
+        setContentData([]);
+      }
+    };
+
+    fetchContentData();
+  }, [selected_platform, date_range]);
 
   React.useEffect(() => {
     const isYoutubeConnected = platforms.google.connected;
@@ -114,7 +161,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4">
           {view_type === 'integrated' ? (
             <IntegratedAnalyticsView />
           ) : platforms.google.loading || platforms.reddit.loading ? (
@@ -136,8 +183,8 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
               </button>
             </div>
           ) : (
-            <div className="space-y-8">
-              <div className="grid grid-cols-3 gap-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+              <div className="grid grid-cols-3 gap-4">
                 {kpiData.map((kpi, index) => {
                   const Icon = kpi.icon;
                   return (
@@ -146,7 +193,7 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 relative`}
+                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-lg p-3 shadow-sm relative`}
                     >
                       {isLoading && (
                         <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 rounded-2xl flex items-center justify-center backdrop-blur-sm">
@@ -154,16 +201,20 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
                         </div>
                       )}
                       
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-xl ${kpi.iconBg} flex items-center justify-center`}>
-                          <Icon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                      <div className="flex items-center justify-between mb-2">
+                        <div className={`w-8 h-8 rounded-md ${kpi.iconBg} flex items-center justify-center`}>
+                          <Icon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{kpi.label}</p>
-                        <p className="text-2xl font-semibold text-gray-800 dark:text-white">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{kpi.label}</p>
+                        <p className="text-lg font-semibold text-gray-800 dark:text-white mb-1">
                           {isLoading ? "로딩 중..." : kpi.value}
                         </p>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-green-600 dark:text-green-400">↗ +12.3%</span>
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400">vs 지난주</span>
+                        </div>
                         {error && (
                           <p className="text-xs text-red-500 dark:text-red-400 mt-1">
                             데이터 로딩 실패
@@ -175,15 +226,23 @@ const DetailedAnalyticsView = ({ current_view, set_current_view, onVideoCardClic
                 })}
               </div>
 
-              <UploadedContentList 
-                startDate={date_range?.from} 
-                endDate={date_range?.to} 
-                onVideoCardClick={onVideoCardClick} 
-                selectedPlatform={selected_platform} 
-              />
+              <div className="grid grid-cols-2 gap-6">
+                <UploadedContentList 
+                  startDate={date_range?.from} 
+                  endDate={date_range?.to} 
+                  onVideoCardClick={onVideoCardClick} 
+                  selectedPlatform={selected_platform} 
+                />
+                
+                <PerformanceHighlight 
+                  contentData={contentData}
+                  summaryData={summaryData}
+                  selectedPlatform={selected_platform}
+                />
+              </div>
 
               {selected_platform === 'youtube' && (
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-2 gap-6">
                   {/* AudienceDemoContainer로 교체 */}
                   <AudienceDemoContainer 
                     startDate={date_range?.from} 

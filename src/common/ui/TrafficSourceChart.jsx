@@ -7,13 +7,13 @@ import { traffic_source_data } from '@/domain/dashboard/logic/dashboard-constant
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { cn } from '@/common/utils/ui-utils';
 
-// 프로젝트 표준 그라데이션 색상 시스템 (5개 카테고리용)
+// 구분하기 쉬운 다양한 색상 시스템 (5개 카테고리용)
 const GRADIENT_COLORS = [
-  'hsl(217, 91%, 60%)', // 파란색 기본 - 검색
-  'hsl(262, 83%, 58%)', // 보라색 기본 - 추천/탐색
-  'hsl(245, 58%, 51%)', // 파란색-보라색 중간 - 채널/구독
-  'hsl(280, 100%, 70%)', // 밝은 보라색 - 외부
-  'hsl(200, 80%, 55%)' // 청록색 - 기타
+  'hsl(217, 91%, 60%)', // 파란색 - 검색
+  'hsl(142, 71%, 45%)', // 초록색 - 추천/탐색  
+  'hsl(25, 95%, 53%)', // 주황색 - 채널/구독
+  'hsl(348, 83%, 47%)', // 빨간색 - 외부
+  'hsl(262, 83%, 58%)' // 보라색 - 기타
 ];
 
 // 커스텀 툴팁 컴포넌트
@@ -63,7 +63,6 @@ const CustomLegend = ({ payload }) => (
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.9 + index * 0.1, ease: [0.16, 1, 0.3, 1] }}
-        whileHover={{ scale: 1.05, y: -2 }}
       >
         <div 
           className="w-3 h-3 rounded-full"
@@ -152,7 +151,7 @@ const TrafficSourceChart = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
     >
-      <GlassCard className="p-6" hover={true}>
+      <GlassCard className="p-6" hover={false}>
         {/* 헤더 섹션 */}
         <motion.div 
           className="flex items-center gap-4 mb-6"
