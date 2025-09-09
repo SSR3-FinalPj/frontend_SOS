@@ -274,7 +274,9 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         on_close={close_preview_modal}
         mode="launch"
         on_edit={(item) => {
-          // 전용 수정 모달 열기
+          // 미리보기 모달이 먼저 닫힌 후 수정 모달 열기
+          // GeneratedVideoPreviewModal에서 이미 on_close()를 호출하므로
+          // 여기서는 수정 모달만 열면 됨
           set_is_edit_modal_open(true);
         }}
       />

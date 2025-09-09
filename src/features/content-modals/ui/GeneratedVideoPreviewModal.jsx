@@ -210,7 +210,14 @@ const GeneratedVideoPreviewModal = ({
             </Button>
             {mode === 'launch' ? (
               <Button 
-                onClick={() => on_edit && on_edit(item)}
+                onClick={() => {
+                  // 모달을 먼저 닫고 편집 모드로 전환
+                  on_close();
+                  // 약간의 지연 후 편집 콜백 호출 (모달 닫기 애니메이션 완료 후)
+                  setTimeout(() => {
+                    on_edit && on_edit(item);
+                  }, 150);
+                }}
                 className="w-full bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-yellow-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
               >
                 <Wand2 className="h-5 w-5 mr-2" />
