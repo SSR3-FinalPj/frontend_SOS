@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/common/ui/dialog';
 import { Button } from '@/common/ui/button';
-import { Clock, BarChart2, Download, X as XIcon } from 'lucide-react';
+import { Clock, BarChart2, Download, X as XIcon, Wand2 } from 'lucide-react';
 import { getVideoStreamUrl, getVideoDownloadUrl } from '@/common/api/api';
 
 const GeneratedVideoPreviewModal = ({ 
   is_open, 
   item, 
   dark_mode, 
-  on_close 
+  on_close,
+  mode = 'analytics',
+  on_edit
 }) => {
   const navigate = useNavigate();
 
@@ -206,13 +208,23 @@ const GeneratedVideoPreviewModal = ({
               <Download className="h-5 w-5 mr-2" />
               {isDownloading ? '다운로드 중...' : '다운로드'}
             </Button>
-            <Button 
-              onClick={handleViewAnalytics}
-              className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
-            >
-              <BarChart2 className="h-5 w-5 mr-2" />
-              분석하기
-            </Button>
+            {mode === 'launch' ? (
+              <Button 
+                onClick={() => on_edit && on_edit(item)}
+                className="w-full bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-yellow-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
+              >
+                <Wand2 className="h-5 w-5 mr-2" />
+                수정하기
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleViewAnalytics}
+                className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
+              >
+                <BarChart2 className="h-5 w-5 mr-2" />
+                분석하기
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

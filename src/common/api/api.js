@@ -962,3 +962,53 @@ export async function uploadToReddit(resultId, redditData) {
     throw error;
   }
 }
+
+/* ------------------ 영상 재생성 API ------------------ */
+/**
+ * 기존 영상을 새로운 프롬프트로 재생성 요청하는 함수
+ * @param {string|number} videoId - 재생성할 영상의 ID
+ * @param {string} prompt - 새로운 프롬프트 텍스트
+ * @returns {Promise<Object>} 재생성 요청 결과
+ */
+export async function regenerateVideo(videoId, prompt) {
+  try {
+    if (!videoId) {
+      throw new Error('영상 ID가 필요합니다.');
+    }
+    
+    if (!prompt || !prompt.trim()) {
+      throw new Error('재생성할 프롬프트가 필요합니다.');
+    }
+
+    console.log('Video regeneration request:', {
+      videoId,
+      prompt: prompt.trim()
+    });
+
+    // 영상 재생성 API 호출
+    const response = await apiFetch('/api/videos/regenerate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        videoId: videoId,
+        prompt: prompt.trim()
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Video regeneration failed:', response.status, errorText);
+      throw new Error(`영상 재생성 실패: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('Video regeneration success:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('Video regeneration error:', error);
+    throw error;
+  }
+}

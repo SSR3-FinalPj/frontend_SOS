@@ -171,27 +171,26 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
                 </p>
               </div>
 
-              {/* 우선순위 재생성 요청 버튼 (PROCESSING 영상이 있을 때만 표시) */}
-              {pending_videos.filter(video => video.status === 'PROCESSING').length > 0 && (
+              {/* 영상 수정 요청 버튼 (준비됨/완료 영상이 선택된 상태에서만 표시) */}
+              {selected_video_data && (selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded') && (
                 <div className="flex flex-col">
                   <Button
                     onClick={() => {
-                      set_is_priority_confirm_modal_open(true);
+                      // 수정 모드로 AI 미디어 요청 모달 열기
+                      set_is_priority_mode(false);
+                      set_is_request_modal_open(true);
                     }}
                     className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-orange-600 dark:text-orange-300 shadow-lg font-semibold rounded-2xl"
                     size="lg"
                   >
                     <RefreshCw className="w-5 h-5 mr-2" />
-                    {selected_video_data ? '선택한 영상으로 재생성' : '성공작으로 다시 만들기'}
+영상 수정하기
                   </Button>
                   
                   
                   {/* 설명 텍스트 */}
                   <p className={`text-xs mt-2 ${dark_mode ? 'text-orange-200/80' : 'text-orange-600/70'} font-medium max-w-xs`}>
-                    {selected_video_data 
-                      ? `"${selected_video_data.title}"을(를) 기반으로 재생성합니다`
-                      : '현재 생성 중인 작업을 중단하고 새로 시작합니다'
-                    }
+                    "프롬프트만 입력하여 {selected_video_data.title}의 새로운 버전을 생성합니다"
                   </p>
                 </div>
               )}
@@ -269,6 +268,11 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         item={preview_modal.item}
         dark_mode={dark_mode}
         on_close={close_preview_modal}
+        mode="launch"
+        on_edit={(item) => {
+          // 수정 모달 열기
+          set_is_request_modal_open(true);
+        }}
       />
 
       {/* 게시 모달 */}
@@ -291,6 +295,7 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         isPriority={is_priority_mode}
         selectedVideoData={selected_video_data}
         on_request_success={handleRequestSuccess}
+        isEditMode={selected_video_data && (selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded')}
       />
 
       {/* 우선순위 재생성 확인 모달 */}
