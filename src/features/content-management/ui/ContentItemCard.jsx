@@ -96,18 +96,10 @@ const ContentItemCard = ({
         >
           {item.status === 'PROCESSING' ? (
             <>
-              {/* PROCESSING 상태: 배경 이미지 (회색 필터) */}
-              {item.image_url ? (
-                <img 
-                  src={item.image_url} 
-                  alt="썸네일"
-                  className="w-full h-full object-cover filter grayscale"
-                />
-              ) : (
-                <div className={`w-full h-full ${
-                  dark_mode ? 'bg-gray-600/50' : 'bg-gray-100'
-                }`} />
-              )}
+              {/* PROCESSING 상태: 어두운 배경만 표시 */}
+              <div className={`w-full h-full ${
+                dark_mode ? 'bg-gray-700' : 'bg-gray-800'
+              }`} />
               
               {/* PROCESSING 오버레이: 고양이 + 타이머 */}
               <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">

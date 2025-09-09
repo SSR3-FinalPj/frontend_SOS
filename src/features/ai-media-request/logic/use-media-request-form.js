@@ -120,17 +120,8 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     set_is_submitting(true);
 
     try {
-      // 이미지를 Base64로 변환 (UI 표시용)
-      const convert_to_base64 = (file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-        });
-      };
-
-      const image_url = await convert_to_base64(uploaded_file);
+      // 이미지 URL 생성 (UI 표시용)
+      const image_url = URL.createObjectURL(uploaded_file);
       
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creation_date = new Date().toISOString().split('T')[0];
@@ -138,7 +129,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
       const last_request_info = {
         location: selected_location,
-        image_url: image_url,
+        image_url: null,
         prompt: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
         platform: selectedPlatform,
         timestamp: new Date().toISOString()
