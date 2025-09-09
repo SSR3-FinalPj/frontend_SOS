@@ -985,14 +985,14 @@ export async function regenerateVideo(videoId, prompt) {
       prompt: prompt.trim()
     });
 
-    // 영상 재생성 API 호출
+    // 영상 재생성 API 호출 (resultId 우선 사용)
     const response = await apiFetch('/api/videos/regenerate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        videoId: videoId,
+        resultId: videoId,  // resultId로 변경하여 백엔드와 일치
         prompt: prompt.trim()
       }),
     });

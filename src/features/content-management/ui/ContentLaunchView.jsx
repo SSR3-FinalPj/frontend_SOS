@@ -9,6 +9,8 @@ import ContentFolderCard from '@/features/content-management/ui/ContentFolderCar
 import GeneratedVideoPreviewModal from '@/features/content-modals/ui/GeneratedVideoPreviewModal';
 import ContentPublishModal from '@/features/content-modals/ui/ContentPublishModal';
 import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestModal';
+import VideoEditModal from '@/features/video-edit/ui/VideoEditModal';
+import TestControlPanel from '@/common/ui/TestControlPanel';
 import { Button } from '@/common/ui/button';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
@@ -24,6 +26,9 @@ import SuccessModal from '@/common/ui/success-modal';
 const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   // AI 미디어 요청 모달 상태
   const [is_request_modal_open, set_is_request_modal_open] = useState(false);
+  
+  // 영상 수정 모달 상태
+  const [is_edit_modal_open, set_is_edit_modal_open] = useState(false);
   
   // 우선순위 확인 모달 상태
   const [is_priority_confirm_modal_open, set_is_priority_confirm_modal_open] = useState(false);
@@ -171,14 +176,13 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
                 </p>
               </div>
 
-              {/* 영상 수정 요청 버튼 (준비됨/완료 영상이 선택된 상태에서만 표시) */}
-              {selected_video_data && (selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded') && (
+              {/* 영상 수정 요청 버튼 (생성 중, 준비됨, 완료 영상이 선택된 상태에서만 표시) */}
+              {selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded') && (
                 <div className="flex flex-col">
                   <Button
                     onClick={() => {
-                      // 수정 모드로 AI 미디어 요청 모달 열기
-                      set_is_priority_mode(false);
-                      set_is_request_modal_open(true);
+                      // 전용 수정 모달 열기
+                      set_is_edit_modal_open(true);
                     }}
                     className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-orange-600 dark:text-orange-300 shadow-lg font-semibold rounded-2xl"
                     size="lg"
@@ -270,8 +274,8 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         on_close={close_preview_modal}
         mode="launch"
         on_edit={(item) => {
-          // 수정 모달 열기
-          set_is_request_modal_open(true);
+          // 전용 수정 모달 열기
+          set_is_edit_modal_open(true);
         }}
       />
 
@@ -295,7 +299,15 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         isPriority={is_priority_mode}
         selectedVideoData={selected_video_data}
         on_request_success={handleRequestSuccess}
-        isEditMode={selected_video_data && (selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded')}
+        isEditMode={selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded')}
+      />
+
+      {/* 영상 수정 모달 */}
+      <VideoEditModal
+        is_open={is_edit_modal_open}
+        on_close={() => set_is_edit_modal_open(false)}
+        selected_video={selected_video_data}
+        dark_mode={dark_mode}
       />
 
       {/* 우선순위 재생성 확인 모달 */}
@@ -319,6 +331,11 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         message="AI 미디어 제작 요청이 성공적으로 전송되었습니다!"
         title="요청 완료"
       />
+
+      {/* 테스트 컨트롤 패널 (개발 환경에서만 표시) */}
+      {process.env.NODE_ENV === 'development' && (
+        <TestControlPanel dark_mode={dark_mode} />
+      )}
     </div>
   );
 });
