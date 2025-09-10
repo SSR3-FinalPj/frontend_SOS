@@ -7,7 +7,6 @@ import { getYouTubeVideosByChannelId, getRedditChannelPosts } from '@/common/api
 import { useYouTubeStore } from '@/domain/youtube/logic/store';
 import { useRedditStore } from '@/domain/reddit/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
-import { mockContentData } from '@/common/utils/mock-data';
 import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
 import ContentPreviewModal from '@/features/content-modals/ui/ContentPreviewModal';
@@ -21,7 +20,7 @@ function ContentListView({
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-  
+
   const [contents, setContents] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -42,6 +41,12 @@ function ContentListView({
     { id: 'reddit', label: 'Reddit' }
   ];
 
+  const sortOptions = [
+    { id: 'latest', label: '최신순' },
+    { id: 'oldest', label: '오래된순' },
+    { id: 'likes', label: '좋아요순' },
+    { id: 'comments', label: '댓글순' }
+  ];
   const availablePlatforms = platformOptions.filter(p => {
     if (p.id === 'all') return platforms.google.connected && platforms.reddit.connected;
     if (p.id === 'youtube') return platforms.google.connected;
@@ -68,7 +73,7 @@ function ContentListView({
         setLoading(false);
         return;
       }
-      
+
       try {
         let allData = [];
 
@@ -78,10 +83,10 @@ function ContentListView({
               sortBy: sortOrder,
               // No pagination here, fetch all and paginate after merge
             });
-            const formattedYtData = ytData.videos.map(v => ({...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, title: v.title, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount}));
+            const formattedYtData = ytData.videos.map(v => ({ ...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, title: v.title, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount }));
             allData.push(...formattedYtData);
           } else if (selectedPlatform === 'youtube') {
-             setError('YouTube 채널이 연결되지 않았습니다.');
+            setError('YouTube 채널이 연결되지 않았습니다.');
           }
         }
 
@@ -98,6 +103,7 @@ function ContentListView({
               comments: p.comment_count,
               url: p.url,
               sub_reddit: p.sub_reddit,
+              rd_video_url: p.rd_video_url
             }));
             allData.push(...formattedRedditData);
           } else if (selectedPlatform === 'reddit') {
@@ -107,8 +113,20 @@ function ContentListView({
 
         if (sortOrder === 'latest') {
           allData.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-        } else {
+        } else if (sortOrder === 'oldest') {
           allData.sort((a, b) => new Date(a.uploadDate) - new Date(b.uploadDate));
+        } else if (sortOrder === 'likes') {
+          allData.sort((a, b) => {
+            const aLikes = a.likes || a.upvotes || 0;
+            const bLikes = b.likes || b.upvotes || 0;
+            return bLikes - aLikes;
+          });
+        } else if (sortOrder === 'comments') {
+          allData.sort((a, b) => {
+            const aComments = a.comments || 0;
+            const bComments = b.comments || 0;
+            return bComments - aComments;
+          });
         }
 
         const totalItems = allData.length;
@@ -249,9 +267,9 @@ function ContentListView({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={`transition-all duration-200 ${selectedPlatform === platform.id
-                  ? 'text-blue-600 dark:text-blue-400 font-semibold'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
+                ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                }`}
             >
               {platform.label}
             </motion.button>
@@ -265,7 +283,7 @@ function ContentListView({
             className="flex items-center gap-2 px-4 py-2 bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 rounded-lg hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
           >
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {sortOrder === 'latest' ? '최신순' : '오래된순'}
+              {sortOptions.find(opt => opt.id === sortOrder)?.label || '정렬'}
             </span>
             <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${sortDropdownOpen ? 'rotate-180' : ''}`} />
           </motion.button>
@@ -280,7 +298,10 @@ function ContentListView({
               >
                 {[
                   { id: 'latest', label: '최신순' },
-                  { id: 'oldest', label: '오래된순' }
+                  { id: 'oldest', label: '오래된순' },
+                  { id: 'likes', label: '좋아요순' },
+                  { id: 'comments', label: '댓글순' }
+
                 ].map((sort) => (
                   <motion.button
                     key={sort.id}
@@ -291,9 +312,9 @@ function ContentListView({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 ${sortOrder === sort.id
-                        ? 'bg-blue-500 text-white shadow-lg'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                    }`}
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                      }`}
                   >
                     {sort.label}
                   </motion.button>
@@ -331,19 +352,37 @@ function ContentListView({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                onClick={() => open_preview_modal({...content, title: content.title,})}
+                onClick={() => open_preview_modal({ ...content, title: content.title, })}
               >
                 <motion.div
                   whileHover={{ y: -8, scale: 1.02 }}
                   className="cursor-pointer backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col"
                 >
                   <div className="aspect-video overflow-hidden bg-gray-200 dark:bg-gray-700">
-                    {content.platform === 'Reddit' && !content.thumbnail ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-4 text-center">
+                    {content.platform === 'Reddit' && content.rd_video_url ? (
+                      // 🔹 Reddit이고 rd_video_url이 있으면 video 표시
+                      <video
+                        src={content.rd_video_url}
+                        autoPlay   // 자동재생
+                        muted      // 🔹 필수 (안 하면 대부분 브라우저에서 차단됨)
+                        loop       // 반복 재생 (원하는 경우)
+                        playsInline // 모바일에서 전체화면 강제 방지
+                        controls   // 원하면 유지
+                        className="w-full h-full object-cover"
+                      />
+                    ) : content.platform === 'Reddit' && !content.thumbnail ? (
+                      // 🔹 Reddit인데 썸네일도 없을 경우 fallback
+                      <div className="w-full h-full flex flex-col items-center justify-center 
+                    bg-orange-500/20 dark:bg-orange-500/10 
+                    text-orange-700 dark:text-orange-300 
+                    p-4 text-center">
                         <img src={RedditIcon} alt="Reddit Icon" className="w-12 h-12 mb-2" />
-                        <span className="font-semibold text-lg line-clamp-2">{content.sub_reddit}</span>
+                        <span className="font-semibold text-lg line-clamp-2">
+                          {content.sub_reddit}
+                        </span>
                       </div>
                     ) : (
+                      // 🔹 기본 썸네일
                       <img
                         src={content.thumbnail}
                         alt={content.title}
@@ -410,9 +449,9 @@ function ContentListView({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${currentPage === 1
-                        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                    }`}
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                      }`}
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="hidden sm:block">이전</span>
@@ -428,9 +467,9 @@ function ContentListView({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={`w-10 h-10 rounded-lg transition-all duration-200 ${currentPage === page
-                            ? 'bg-blue-500 text-white shadow-lg'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                        }`}
+                          ? 'bg-blue-500 text-white shadow-lg'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                          }`}
                       >
                         {page}
                       </motion.button>
@@ -444,9 +483,9 @@ function ContentListView({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${currentPage === totalPages
-                        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                    }`}
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                      }`}
                   >
                     <span className="hidden sm:block">다음</span>
                     <ChevronRight className="w-4 h-4" />
