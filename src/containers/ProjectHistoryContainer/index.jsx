@@ -4,7 +4,7 @@
  * FSD 컨테이너 패턴: 데이터 변환, 상태 관리, 비즈니스 로직 담당
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/common/ui/card';
 import { Button } from '@/common/ui/button';
 import { Badge } from '@/common/ui/badge';
@@ -15,7 +15,9 @@ import {
   Folder,
   Lightbulb,
   Image,
-  FileText
+  FileText,
+  Plus,
+  RefreshCw
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ContentTreeView from '@/features/content-tree/ui/ContentTreeView';
@@ -23,6 +25,9 @@ import GeneratedVideoPreviewModal from '@/features/content-modals/ui/GeneratedVi
 import ContentPublishModal from '@/features/content-modals/ui/ContentPublishModal';
 import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestModal';
 import VideoEditModal from '@/features/video-edit/ui/VideoEditModal';
+import ConfirmationModal from '@/common/ui/confirmation-modal';
+import SuccessModal from '@/common/ui/success-modal';
+import TestControlPanel from '@/common/ui/TestControlPanel';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
 
@@ -93,33 +98,76 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     pending_videos,
     uploading_items,
     selected_video_data,
-    simulate_upload
+    selected_video_id,
+    simulate_upload,
+    fetch_folders,
+    add_pending_video,
+    replace_processing_video,
+    select_video,
+    handle_multi_platform_publish
   } = use_content_launch();
 
   // 모달 상태 관리
   const {
-    is_preview_modal_open,
-    is_publish_modal_open,
-    selected_item_for_modal,
+    preview_modal,
+    publish_modal,
+    publish_form: modal_publish_form,
     open_preview_modal,
     close_preview_modal,
     open_publish_modal,
-    close_publish_modal
+    close_publish_modal,
+    toggle_platform,
+    update_publish_form
   } = use_content_modals();
 
   // 추가 모달 상태
   const [is_request_modal_open, set_is_request_modal_open] = useState(false);
   const [is_edit_modal_open, set_is_edit_modal_open] = useState(false);
-  const [publish_form, set_publish_form] = useState({
-    platforms: [],
-    title: '',
-    description: '',
-    tags: '',
-    privacyStatus: 'private',
-    categoryId: '22',
-    madeForKids: false,
-    subreddit: ''
-  });
+  const [is_priority_confirm_modal_open, set_is_priority_confirm_modal_open] = useState(false);
+  const [is_priority_mode, set_is_priority_mode] = useState(false);
+  const [is_success_modal_open, set_is_success_modal_open] = useState(false);
+  const [pending_video_data, set_pending_video_data] = useState(null);
+
+  // 컴포넌트 마운트 시 폴더 데이터 로딩
+  useEffect(() => {
+    fetch_folders();
+  }, [fetch_folders]);
+
+  // 요청 성공 핸들러 (낙관적 UI 패턴 적용)
+  const handleRequestSuccess = (requestData) => {
+    set_pending_video_data(requestData);
+    set_is_success_modal_open(true);
+    set_is_request_modal_open(false);
+  };
+  
+  // 성공 모달 닫기 핸들러 - 실제 비디오 카드 추가
+  const handleSuccessModalClose = () => {
+    if (pending_video_data) {
+      const { video_data, creation_date, isPriority } = pending_video_data;
+      
+      if (isPriority) {
+        replace_processing_video(video_data, creation_date);
+      } else {
+        add_pending_video(video_data, creation_date);
+      }
+      
+      set_pending_video_data(null);
+    }
+    set_is_success_modal_open(false);
+  };
+
+  // 게시 완료 핸들러 (FSD 아키텍처 준수)
+  const handle_final_publish = async () => {
+    if (!publish_modal.item || !modal_publish_form) return;
+
+    try {
+      await handle_multi_platform_publish(modal_publish_form, publish_modal.item);
+    } catch (error) {
+      console.error('게시 실패:', error);
+    } finally {
+      close_publish_modal();
+    }
+  };
 
   // 프로젝트 확장/축소 상태 관리
   const [expanded_projects, set_expanded_projects] = useState(new Set());
@@ -197,54 +245,222 @@ function ProjectHistoryContainer({ dark_mode = false }) {
    * 게시 핸들러
    */
   const handle_publish = (item) => {
-    set_publish_form(prev => ({
-      ...prev,
-      title: item.title || ''
-    }));
     open_publish_modal(item);
   };
 
-  /**
-   * 폼 업데이트 핸들러
-   */
-  const handle_form_update = (field, value) => {
-    set_publish_form(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  // 프로젝트가 없을 때도 콘텐츠 생성 버튼 표시
+  const render_empty_state = () => (
+    <div className="text-center py-12">
+      <Folder className={`w-12 h-12 mx-auto mb-4 ${
+        dark_mode ? 'text-gray-600' : 'text-gray-400'
+      }`} />
+      <h3 className={`mb-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+        아직 생성된 프로젝트가 없습니다
+      </h3>
+      <p className={`text-sm mb-6 ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
+        AI와 함께 첫 번째 콘텐츠를 만들어보세요
+      </p>
+      
+      {/* 빈 상태에서도 콘텐츠 생성 버튼 표시 */}
+      <Button
+        onClick={() => {
+          set_is_priority_mode(false);
+          set_is_request_modal_open(true);
+        }}
+        className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white shadow-lg font-semibold rounded-2xl"
+        size="lg"
+      >
+        <Plus className="w-5 h-5 mr-2" />
+        새로운 미디어 제작 요청
+      </Button>
+    </div>
+  );
 
-  /**
-   * 플랫폼 토글 핸들러
-   */
-  const handle_platform_toggle = (platform) => {
-    set_publish_form(prev => ({
-      ...prev,
-      platforms: prev.platforms.includes(platform)
-        ? prev.platforms.filter(p => p !== platform)
-        : [...prev.platforms, platform]
-    }));
-  };
+  // 모든 모달들을 렌더링하는 함수
+  const render_modals = () => (
+    <>
+      {/* 기존 모달들 */}
+      {preview_modal.open && preview_modal.item && (
+        <GeneratedVideoPreviewModal
+          is_open={preview_modal.open}
+          item={preview_modal.item}
+          dark_mode={dark_mode}
+          on_close={close_preview_modal}
+          mode="launch"
+          on_edit={(_item) => {
+            close_preview_modal();
+            set_is_edit_modal_open(true);
+          }}
+        />
+      )}
+
+      {publish_modal.open && publish_modal.item && (
+        <ContentPublishModal
+          is_open={publish_modal.open}
+          item={publish_modal.item}
+          publish_form={modal_publish_form}
+          dark_mode={dark_mode}
+          on_close={close_publish_modal}
+          on_publish={handle_final_publish}
+          on_toggle_platform={toggle_platform}
+          on_update_form={update_publish_form}
+        />
+      )}
+
+      {/* 추가 모달들 */}
+      <AIMediaRequestModal
+        is_open={is_request_modal_open}
+        on_close={() => set_is_request_modal_open(false)}
+        isPriority={is_priority_mode}
+        selectedVideoData={selected_video_data}
+        on_request_success={handleRequestSuccess}
+        isEditMode={selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded')}
+        dark_mode={dark_mode}
+      />
+
+      {is_edit_modal_open && selected_video_data && (
+        <VideoEditModal
+          is_open={is_edit_modal_open}
+          video_data={selected_video_data}
+          dark_mode={dark_mode}
+          on_close={() => set_is_edit_modal_open(false)}
+          on_save={(edited_data) => {
+            console.log('Video edited:', edited_data);
+            set_is_edit_modal_open(false);
+          }}
+        />
+      )}
+
+      <ConfirmationModal
+        isOpen={is_priority_confirm_modal_open}
+        onClose={() => set_is_priority_confirm_modal_open(false)}
+        onConfirm={() => {
+          set_is_priority_mode(true);
+          set_is_request_modal_open(true);
+          set_is_priority_confirm_modal_open(false);
+        }}
+        title="영상 생성 작업 교체"
+        message="현재 생성 중인 영상 생성이 중단되고 새롭게 생성을 시작합니다."
+      />
+      
+      <SuccessModal
+        is_open={is_success_modal_open}
+        on_close={handleSuccessModalClose}
+        message="AI 미디어 제작 요청이 성공적으로 전송되었습니다!"
+        title="요청 완료"
+      />
+
+      {/* 테스트 컨트롤 패널 (개발 환경에서만 표시) */}
+      {process.env.NODE_ENV === 'development' && (
+        <TestControlPanel dark_mode={dark_mode} />
+      )}
+    </>
+  );
 
   // 프로젝트가 없을 때 빈 상태 표시
   if (projects.length === 0) {
     return (
-      <div className="text-center py-12">
-        <Folder className={`w-12 h-12 mx-auto mb-4 ${
-          dark_mode ? 'text-gray-600' : 'text-gray-400'
-        }`} />
-        <h3 className={`mb-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
-          아직 생성된 프로젝트가 없습니다
-        </h3>
-        <p className={`text-sm ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
-          AI와 함께 첫 번째 콘텐츠를 만들어보세요
-        </p>
+      <div className="space-y-4">
+        {render_empty_state()}
+        
+        {/* 모든 모달들 */}
+        {render_modals()}
       </div>
     );
   }
 
+
   return (
     <div className="space-y-4">
+      {/* 액션 버튼 및 통계 섹션 */}
+      <div className="flex items-start justify-between gap-4 mb-6">
+        {/* 버튼 영역 */}
+        <div className="flex items-start gap-4">
+          {/* 새로운 미디어 제작 요청 버튼 */}
+          <div className="flex flex-col">
+            <Button
+              onClick={() => {
+                set_is_priority_mode(false);
+                set_is_request_modal_open(true);
+              }}
+              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white shadow-lg font-semibold rounded-2xl"
+              size="lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              새로운 미디어 제작 요청
+            </Button>
+            
+            <p className={`text-xs mt-2 ${dark_mode ? 'text-blue-200/80' : 'text-blue-600/70'} font-medium max-w-xs`}>
+              AI로 새로운 영상을 생성합니다
+            </p>
+          </div>
+
+          {/* 영상 수정 요청 버튼 */}
+          {selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded') && (
+            <div className="flex flex-col">
+              <Button
+                onClick={() => {
+                  set_is_edit_modal_open(true);
+                }}
+                className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-orange-600 dark:text-orange-300 shadow-lg font-semibold rounded-2xl"
+                size="lg"
+              >
+                <RefreshCw className="w-5 h-5 mr-2" />
+                영상 수정하기
+              </Button>
+              
+              <p className={`text-xs mt-2 ${dark_mode ? 'text-orange-200/80' : 'text-orange-600/70'} font-medium max-w-xs`}>
+                프롬프트만 입력하여 {selected_video_data.title}의 새로운 버전을 생성합니다
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {/* 통계 정보 */}
+        <div className="flex items-center gap-4">
+          <div className={`${ 
+            dark_mode 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          } rounded-xl px-4 py-2 border shadow-sm`}>
+            <div className="text-center">
+              <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+                {folders.reduce((sum, folder) => sum + folder.item_count, 0)}
+              </div>
+              <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>총 콘텐츠</div>
+            </div>
+          </div>
+          
+          <div className={`${
+            dark_mode 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          } rounded-xl px-4 py-2 border shadow-sm`}>
+            <div className="text-center">
+              <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+                {folders.length}
+              </div>
+              <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>프로젝트</div>
+            </div>
+          </div>
+          
+          {/* 데이터 초기화 버튼 */}
+          {pending_videos.length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  localStorage.removeItem('content-launch-storage');
+                  window.location.reload();
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-lg"
+                size="sm"
+              >
+                데이터 초기화
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
       {projects.map((project) => {
         const is_expanded = expanded_projects.has(project.id);
         const project_contents = all_contents[project.id] || [];
@@ -345,56 +561,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       })}
 
       {/* 모든 모달들 */}
-      {is_preview_modal_open && selected_item_for_modal && (
-        <GeneratedVideoPreviewModal
-          is_open={is_preview_modal_open}
-          item={selected_item_for_modal}
-          dark_mode={dark_mode}
-          on_close={close_preview_modal}
-          mode="launch"
-          on_edit={(item) => {
-            close_preview_modal();
-            set_is_edit_modal_open(true);
-          }}
-        />
-      )}
-
-      {is_publish_modal_open && selected_item_for_modal && (
-        <ContentPublishModal
-          is_open={is_publish_modal_open}
-          item={selected_item_for_modal}
-          publish_form={publish_form}
-          dark_mode={dark_mode}
-          on_close={close_publish_modal}
-          on_publish={(platforms, form) => {
-            console.log('Publishing to platforms:', platforms, form);
-            close_publish_modal();
-          }}
-          on_toggle_platform={handle_platform_toggle}
-          on_update_form={handle_form_update}
-        />
-      )}
-
-      {is_edit_modal_open && selected_item_for_modal && (
-        <VideoEditModal
-          is_open={is_edit_modal_open}
-          video_data={selected_item_for_modal}
-          dark_mode={dark_mode}
-          on_close={() => set_is_edit_modal_open(false)}
-          on_save={(edited_data) => {
-            console.log('Video edited:', edited_data);
-            set_is_edit_modal_open(false);
-          }}
-        />
-      )}
-
-      {is_request_modal_open && (
-        <AIMediaRequestModal
-          is_open={is_request_modal_open}
-          on_close={() => set_is_request_modal_open(false)}
-          dark_mode={dark_mode}
-        />
-      )}
+      {render_modals()}
     </div>
   );
 }
