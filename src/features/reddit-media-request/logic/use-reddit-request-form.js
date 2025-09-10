@@ -99,17 +99,8 @@ export const useRedditRequestForm = (onRequestSuccess = null, isPriority = false
     setIsSubmitting(true);
 
     try {
-      // 이미지를 Base64로 변환 (UI 표시용)
-      const convertToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-        });
-      };
-
-      const imageUrl = await convertToBase64(uploadedFile);
+      // 이미지 URL 생성 (UI 표시용)
+      const imageUrl = URL.createObjectURL(uploadedFile);
       
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creationDate = new Date().toISOString().split('T')[0];
