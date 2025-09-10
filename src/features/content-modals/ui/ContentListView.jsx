@@ -463,6 +463,7 @@ function ContentListView({
         dark_mode={isDarkMode}
         on_close={close_preview_modal}
         viewMode="simple"
+        mode="analytics"
       />
     </div>
   );

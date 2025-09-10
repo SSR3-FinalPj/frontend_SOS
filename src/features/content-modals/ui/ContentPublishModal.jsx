@@ -561,12 +561,14 @@ const ContentPublishModal = ({
           )}
 
           {/* 액션 버튼 */}
-          <div className="flex items-center gap-3 pt-4 sticky bottom-0 bg-inherit">
+          <div className={`flex items-center gap-3 pt-6 border-t ${
+            dark_mode ? 'border-gray-600/30' : 'border-gray-300/30'
+          } sticky bottom-0 bg-inherit`}>
             <Button
               variant="outline"
               onClick={on_close}
               className={`flex-1 ${
-                dark_mode ? 'border-gray-600/60 hover:bg-gray-700/60' : 'border-gray-300/60 hover:bg-gray-100'
+                dark_mode ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-gray-100 border-gray-200 hover:bg-gray-200'
               } rounded-xl`}
             >
               취소
