@@ -103,6 +103,7 @@ function ContentListView({
               comments: p.comment_count,
               url: p.url,
               sub_reddit: p.sub_reddit,
+              rd_video_url: p.rd_video_url
             }));
             allData.push(...formattedRedditData);
           } else if (selectedPlatform === 'reddit') {
@@ -362,7 +363,11 @@ function ContentListView({
                       // 🔹 Reddit이고 rd_video_url이 있으면 video 표시
                       <video
                         src={content.rd_video_url}
-                        controls
+                        autoPlay   // 자동재생
+                        muted      // 🔹 필수 (안 하면 대부분 브라우저에서 차단됨)
+                        loop       // 반복 재생 (원하는 경우)
+                        playsInline // 모바일에서 전체화면 강제 방지
+                        controls   // 원하면 유지
                         className="w-full h-full object-cover"
                       />
                     ) : content.platform === 'Reddit' && !content.thumbnail ? (
