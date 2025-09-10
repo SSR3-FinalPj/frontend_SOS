@@ -156,7 +156,7 @@ const GeneratedVideoPreviewModal = ({
                   };
                   fetchVideoUrl();
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500/60 to-purple-500/60 border border-blue-500/60 hover:from-blue-500/70 hover:to-purple-500/70 text-white text-sm rounded-lg transition-colors shadow-lg"
               >
                 다시 시도
               </button>
@@ -202,7 +202,7 @@ const GeneratedVideoPreviewModal = ({
           <div className="flex flex-col gap-3 w-40 flex-shrink-0">
             <Button 
               onClick={handleDownload}
-              disabled={isDownloading}
+              disabled={isDownloading || !!error}
               className="w-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-emerald-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-5 w-5 mr-2" />
@@ -218,7 +218,8 @@ const GeneratedVideoPreviewModal = ({
                     on_edit && on_edit(item);
                   }, 150);
                 }}
-                className="w-full bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-yellow-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
+                disabled={!!error}
+                className="w-full bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-yellow-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Wand2 className="h-5 w-5 mr-2" />
                 수정하기
@@ -226,7 +227,8 @@ const GeneratedVideoPreviewModal = ({
             ) : (
               <Button 
                 onClick={handleViewAnalytics}
-                className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
+                disabled={!!error}
+                className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <BarChart2 className="h-5 w-5 mr-2" />
                 분석하기
