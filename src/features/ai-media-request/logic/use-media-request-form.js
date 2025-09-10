@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
-import { uploadImageToS3Complete } from '@/common/api/api';
+import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/api';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 
 /**
@@ -120,17 +120,8 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     set_is_submitting(true);
 
     try {
-      // 이미지를 Base64로 변환 (UI 표시용)
-      const convert_to_base64 = (file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-        });
-      };
-
-      const image_url = await convert_to_base64(uploaded_file);
+      // 이미지 URL 생성 (UI 표시용)
+      const image_url = URL.createObjectURL(uploaded_file);
       
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creation_date = new Date().toISOString().split('T')[0];
@@ -138,7 +129,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
       const last_request_info = {
         location: selected_location,
-        image_url: image_url,
+        image_url: null,
         prompt: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
         platform: selectedPlatform,
         timestamp: new Date().toISOString()
@@ -225,6 +216,63 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     }
   }, [selected_location, uploaded_file, prompt_text, selectedPlatform, reset_form, on_request_success, isPriority]);
 
+  // 영상 재생성 핸들러
+  const handle_regenerate = useCallback(async () => {
+    // selectedVideoData가 있는지 확인
+    if (!selectedVideoData) {
+      alert('재생성할 영상이 선택되지 않았습니다.');
+      return;
+    }
+
+    // 프롬프트 텍스트 검증
+    if (!prompt_text || !prompt_text.trim()) {
+      alert('재생성할 프롬프트를 입력해주세요.');
+      return;
+    }
+
+    set_is_submitting(true);
+
+    try {
+      // selectedVideoData에서 videoId 추출 (video_id, temp_id, id 순으로 우선순위)
+      const videoId = selectedVideoData.video_id || selectedVideoData.temp_id || selectedVideoData.id;
+      
+      if (!videoId) {
+        throw new Error('영상 ID를 찾을 수 없습니다.');
+      }
+
+      console.log('영상 재생성 요청:', {
+        videoId,
+        prompt: prompt_text.trim(),
+        selectedVideoData
+      });
+
+      // 영상 재생성 API 호출
+      const result = await regenerateVideo(videoId, prompt_text.trim());
+
+      // 성공 시 폼 초기화 및 모달 닫기
+      reset_form();
+      
+      // 성공 알림
+      useNotificationStore.getState().add_notification({
+        type: 'success',
+        message: '영상 재생성 요청이 성공적으로 전송되었습니다.',
+        data: { 
+          videoId,
+          result
+        }
+      });
+
+      // 모달 닫기
+      on_close();
+      
+    } catch (error) {
+      console.error('영상 재생성 실패:', error);
+      alert(`영상 재생성에 실패했습니다: ${error.message}`);
+    } finally {
+      set_is_submitting(false);
+    }
+  }, [selectedVideoData, prompt_text, reset_form, on_close]);
+
   // 폼 검증 상태 (플랫폼 선택 포함)
   const is_form_valid = selected_location && uploaded_file && selectedPlatform && !is_submitting;
 
@@ -242,6 +290,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     handle_file_change,
     handle_prompt_change,
     handle_submit,
+    handle_regenerate,
     handle_success_modal_close,
     reset_form
   };

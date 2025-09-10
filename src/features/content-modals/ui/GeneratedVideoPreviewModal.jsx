@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/common/ui/dialog';
 import { Button } from '@/common/ui/button';
-import { Clock, BarChart2, Download, X as XIcon } from 'lucide-react';
+import { Clock, BarChart2, Download, X as XIcon, Wand2 } from 'lucide-react';
 import { getVideoStreamUrl, getVideoDownloadUrl } from '@/common/api/api';
 
 const GeneratedVideoPreviewModal = ({ 
   is_open, 
   item, 
   dark_mode, 
-  on_close 
+  on_close,
+  mode = 'analytics',
+  on_edit
 }) => {
   const navigate = useNavigate();
 
@@ -154,7 +156,7 @@ const GeneratedVideoPreviewModal = ({
                   };
                   fetchVideoUrl();
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500/60 to-purple-500/60 border border-blue-500/60 hover:from-blue-500/70 hover:to-purple-500/70 text-white text-sm rounded-lg transition-colors shadow-lg"
               >
                 다시 시도
               </button>
@@ -200,19 +202,38 @@ const GeneratedVideoPreviewModal = ({
           <div className="flex flex-col gap-3 w-40 flex-shrink-0">
             <Button 
               onClick={handleDownload}
-              disabled={isDownloading}
+              disabled={isDownloading || !!error}
               className="w-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-emerald-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-5 w-5 mr-2" />
               {isDownloading ? '다운로드 중...' : '다운로드'}
             </Button>
-            <Button 
-              onClick={handleViewAnalytics}
-              className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
-            >
-              <BarChart2 className="h-5 w-5 mr-2" />
-              분석하기
-            </Button>
+            {mode === 'launch' ? (
+              <Button 
+                onClick={() => {
+                  // 모달을 먼저 닫고 편집 모드로 전환
+                  on_close();
+                  // 약간의 지연 후 편집 콜백 호출 (모달 닫기 애니메이션 완료 후)
+                  setTimeout(() => {
+                    on_edit && on_edit(item);
+                  }, 150);
+                }}
+                disabled={!!error}
+                className="w-full bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-yellow-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Wand2 className="h-5 w-5 mr-2" />
+                수정하기
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleViewAnalytics}
+                disabled={!!error}
+                className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <BarChart2 className="h-5 w-5 mr-2" />
+                분석하기
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
