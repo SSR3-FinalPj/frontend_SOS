@@ -13,23 +13,31 @@ function EnhancedPlatformCard({ platform, index }) {
       transition={{ delay: index * 0.2, duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
       className="h-full"
     >
-      <div className={`${platform.bgColor} ${platform.borderColor} border rounded-2xl h-full flex flex-col shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.01]`}>
+      <div className={`${platform.bgColor} ${platform.borderColor} border rounded-2xl h-full flex flex-col shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.01] relative`}>
+        
         {/* Header Section - 총점수 제거 */}
         <div className="p-4 pb-3">
-          <div className="flex items-center gap-4 mb-6">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center`}>
-              <Icon className="w-10 h-10" />
+          <div className="flex justify-between items-start mb-6">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center`}>
+                <Icon className="w-10 h-10" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">{platform.name}</h3>
+                <p className="text-base text-gray-600 dark:text-gray-400">{platform.description}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">{platform.name}</h3>
-              <p className="text-base text-gray-600 dark:text-gray-400">{platform.description}</p>
-              {platform.totalVideos !== undefined && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">전체 업로드 된 영상: {platform.totalVideos}개</p>
-              )}
-              {platform.totalPosts !== undefined && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">전체 업로드 된 포스트: {platform.totalPosts}개</p>
-              )}
+            
+            {(platform.totalVideos !== undefined || platform.totalPosts !== undefined) && (
+              <div className="bg-black/5 dark:bg-white/5 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-gray-800 dark:text-white">
+                  {platform.totalVideos !== undefined ? platform.totalVideos : platform.totalPosts}
                 </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {platform.totalVideos !== undefined ? "총 동영상" : "총 게시글"}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Metrics Section - 텍스트 크기 증가 */}
