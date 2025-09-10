@@ -257,3 +257,183 @@ export function generateInitialTestData() {
     })
   ];
 }
+
+/**
+ * 백엔드 API 구조의 중첩된 트리 테스트 데이터 생성
+ * result_id + children 구조로 버전 트리를 생성
+ * @param {Object} options - 생성 옵션
+ * @param {number} options.root_count - 루트 노드 개수 (기본: 2)
+ * @param {number} options.max_depth - 최대 깊이 (기본: 3) 
+ * @param {number} options.children_per_node - 노드당 자식 개수 (기본: 2-4)
+ * @returns {Array} 백엔드 API 구조의 트리 데이터
+ */
+export function generateNestedTreeTestData(options = {}) {
+  const {
+    root_count = 2,
+    max_depth = 3,
+    children_per_node = 3
+  } = options;
+  
+  let current_result_id = 1;
+  
+  /**
+   * 재귀적으로 트리 노드 생성
+   * @param {number} depth - 현재 깊이 (0부터 시작)
+   * @param {number} parent_result_id - 부모 result_id (루트는 null)
+   * @param {string} version_suffix - 버전 접미사
+   * @returns {Object} 트리 노드
+   */
+  const generate_tree_node = (depth = 0, parent_result_id = null, version_suffix = '') => {
+    const result_id = current_result_id++;
+    const location = getRandomItem(SAMPLE_LOCATIONS);
+    const platform = getRandomItem(['youtube', 'reddit']);
+    const titles = SAMPLE_TITLES[platform] || SAMPLE_TITLES.youtube;
+    const base_title = getRandomItem(titles);
+    
+    // 깊이에 따른 제목 생성
+    let title;
+    if (depth === 0) {
+      title = `${location.name} - ${base_title} [원본]`;
+    } else {
+      title = `${location.name} - ${base_title} [v${version_suffix}]`;
+    }
+    
+    const node = {
+      result_id,
+      title,
+      location_id: location.poi_id,
+      location_name: location.name,
+      user_request: getRandomItem(SAMPLE_PROMPTS),
+      platform,
+      status: getRandomItem(['ready', 'uploaded']), // 트리 표시용이므로 완료된 상태만
+      start_time: getRandomDate(),
+      created_at: getRandomDate(),
+      video_id: `${platform}_${result_id}_${Math.random().toString(36).substr(2, 6)}`,
+      resultId: result_id,
+      version: depth === 0 ? '1.0' : `1.${depth}${version_suffix}`,
+      children: []
+    };
+    
+    // 최대 깊이에 도달하지 않았으면 자식 노드 생성
+    if (depth < max_depth - 1) {
+      const child_count = Math.floor(Math.random() * children_per_node) + 1; // 1-children_per_node개
+      
+      for (let i = 0; i < child_count; i++) {
+        const child_version_suffix = version_suffix ? `${version_suffix}.${i + 1}` : `${i + 1}`;
+        node.children.push(
+          generate_tree_node(depth + 1, result_id, child_version_suffix)
+        );
+      }
+    }
+    
+    return node;
+  };
+  
+  // 루트 노드들 생성
+  const tree_data = [];
+  for (let i = 0; i < root_count; i++) {
+    tree_data.push(generate_tree_node(0, null, ''));
+  }
+  
+  return tree_data;
+}
+
+/**
+ * 간단한 트리 구조 테스트 데이터 (가로 배치 테스트용)
+ * @returns {Array} 미리 정의된 간단한 트리 구조
+ */
+export function generateSimpleTreeTestData() {
+  return [
+    {
+      result_id: 1,
+      title: "강남역 - AI 마케팅 전략 가이드 [원본 v1.0]",
+      location_id: "test_gangnam_001",
+      location_name: "강남역",
+      platform: "youtube",
+      status: "ready",
+      version: "1.0",
+      created_at: new Date().toISOString(),
+      children: [
+        {
+          result_id: 3,
+          title: "강남역 - AI 마케팅 전략 가이드 [파생 v1.1]",
+          location_id: "test_gangnam_001", 
+          location_name: "강남역",
+          platform: "youtube",
+          status: "ready",
+          version: "1.1",
+          created_at: new Date().toISOString(),
+          children: []
+        },
+        {
+          result_id: 4,
+          title: "강남역 - AI 마케팅 전략 가이드 [파생 v1.2]",
+          location_id: "test_gangnam_001",
+          location_name: "강남역", 
+          platform: "youtube",
+          status: "uploaded",
+          version: "1.2",
+          created_at: new Date().toISOString(),
+          children: [
+            {
+              result_id: 6,
+              title: "강남역 - AI 마케팅 전략 가이드 [수정 v1.2.1]",
+              location_id: "test_gangnam_001",
+              location_name: "강남역",
+              platform: "youtube", 
+              status: "ready",
+              version: "1.2.1",
+              created_at: new Date().toISOString(),
+              children: []
+            }
+          ]
+        },
+        {
+          result_id: 5,
+          title: "강남역 - AI 마케팅 전략 가이드 [파생 v1.3]",
+          location_id: "test_gangnam_001",
+          location_name: "강남역",
+          platform: "youtube",
+          status: "ready", 
+          version: "1.3",
+          created_at: new Date().toISOString(),
+          children: []
+        },
+        {
+          result_id: 7,
+          title: "강남역 - AI 마케팅 전략 가이드 [파생 v1.4]",
+          location_id: "test_gangnam_001",
+          location_name: "강남역",
+          platform: "youtube",
+          status: "ready", 
+          version: "1.4",
+          created_at: new Date().toISOString(),
+          children: []
+        }
+      ]
+    },
+    {
+      result_id: 2,
+      title: "홍대입구 - 커뮤니티 마케팅 가이드 [원본 v1.0]",
+      location_id: "test_hongdae_002",
+      location_name: "홍대입구역",
+      platform: "reddit",
+      status: "uploaded",
+      version: "1.0",
+      created_at: new Date().toISOString(),
+      children: []
+    }
+  ];
+}
+
+/**
+ * 복잡한 트리 구조 테스트 데이터 (깊은 중첩 테스트용)
+ * @returns {Array} 4레벨 깊이의 복잡한 트리 구조
+ */
+export function generateComplexTreeTestData() {
+  return generateNestedTreeTestData({
+    root_count: 3,
+    max_depth: 4,
+    children_per_node: 4
+  });
+}

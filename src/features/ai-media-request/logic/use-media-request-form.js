@@ -9,15 +9,42 @@ import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/api';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 
 /**
+ * 테스트용 API 목업 함수들
+ */
+const mockS3Upload = async (file, locationId, prompt, platform) => {
+  // 실제 업로드 시간 시뮬레이션 (1-2초)
+  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+  
+  return {
+    jobId: `test_job_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    s3Key: `test-uploads/${platform}/${locationId}/${Date.now()}.jpg`,
+    success: true,
+    message: `테스트 모드: ${platform} 영상 생성 요청 완료`
+  };
+};
+
+const mockRegenerateVideo = async (videoId, prompt) => {
+  // 재생성 시간 시뮬레이션
+  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
+  
+  return {
+    success: true,
+    jobId: `regen_job_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    message: '테스트 모드: 영상 재생성 요청 완료'
+  };
+};
+
+/**
  * useMediaRequestForm 커스텀 훅
  * @param {Function} on_close - 모달 닫기 함수
  * @param {boolean} isPriority - 우선순위 재생성 모드 여부
  * @param {Object|null} selectedVideoData - 선택된 영상 데이터 (자동 import용)
  * @param {Function|null} on_request_success - 요청 성공 콜백 함수
  * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
+ * @param {boolean} testMode - 테스트 모드 여부 (백엔드 API 목업 사용)
  * @returns {Object} 폼 상태와 핸들러들
  */
-export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube') => {
+export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube', testMode = false) => {
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -148,19 +175,34 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         platform: selectedPlatform
       };
 
-      // 낙관적 UI: 즉시 UI에 반영
+      // 🔥 핵심 수정: 항상 스토어에 즉시 반영하여 데이터 일관성 보장
+      if (isPriority) {
+        use_content_launch.getState().replace_processing_video(video_data, creation_date);
+      } else {
+        use_content_launch.getState().add_pending_video(video_data, creation_date);
+      }
+      
+      // ⚡ 강화된 즉시 폴더 목록 갱신 - UI 실시간 업데이트 보장
+      const updateUI = async () => {
+        // 즉시 갱신
+        use_content_launch.getState().fetch_folders();
+        
+        // 상태 업데이트 완료 후 재갱신 (비동기 처리 완료 대기)
+        await new Promise(resolve => setTimeout(resolve, 30));
+        use_content_launch.getState().fetch_folders();
+        
+        console.log(`[미디어 요청] UI 상태 갱신 완료 - ${video_data.title} (${isPriority ? '우선순위' : '일반'})`);
+      };
+      
+      await updateUI();
+
+      // 추가 콜백 처리 (ProjectHistoryContainer의 성공 모달용)
       if (on_request_success) {
         on_request_success({
           video_data,
           creation_date,
           isPriority
         });
-      } else {
-        if (isPriority) {
-          use_content_launch.getState().replace_processing_video(video_data, creation_date);
-        } else {
-          use_content_launch.getState().add_pending_video(video_data, creation_date);
-        }
       }
 
       // 폼 초기화
@@ -174,13 +216,36 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 🔄 백그라운드 처리: S3 업로드를 비동기로 실행
       (async () => {
         try {
-          // S3 통합 업로드 함수 사용 - selectedPlatform 전달
-          const uploadResult = await uploadImageToS3Complete(
-            uploaded_file,
-            selected_location.poi_id,
-            prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-            selectedPlatform
-          );
+          let uploadResult;
+          
+          if (testMode) {
+            // 🧪 테스트 모드: 목업 API 사용
+            uploadResult = await mockS3Upload(
+              uploaded_file,
+              selected_location.poi_id,
+              prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
+              selectedPlatform
+            );
+            
+            // 테스트 모드 성공 알림
+            useNotificationStore.getState().add_notification({
+              type: 'info',
+              message: `🧪 ${uploadResult.message}`,
+              data: { 
+                platform: selectedPlatform,
+                temp_id: video_temp_id,
+                testMode: true
+              }
+            });
+          } else {
+            // 🚀 실제 모드: 실제 S3 업로드
+            uploadResult = await uploadImageToS3Complete(
+              uploaded_file,
+              selected_location.poi_id,
+              prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
+              selectedPlatform
+            );
+          }
           
           // ✅ jobId를 영상 데이터에 추가 (백엔드에서 받은 jobId 사용)
           if (uploadResult.jobId) {
@@ -203,7 +268,8 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
               platform: selectedPlatform,
               error: background_error.message,
               temp_id: video_temp_id,
-              failed_at: new Date().toISOString()
+              failed_at: new Date().toISOString(),
+              testMode
             }
           });
         }
@@ -247,7 +313,9 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       });
 
       // 영상 재생성 API 호출
-      const result = await regenerateVideo(videoId, prompt_text.trim());
+      const result = testMode 
+        ? await mockRegenerateVideo(videoId, prompt_text.trim())
+        : await regenerateVideo(videoId, prompt_text.trim());
 
       // 성공 시 폼 초기화 및 모달 닫기
       reset_form();
