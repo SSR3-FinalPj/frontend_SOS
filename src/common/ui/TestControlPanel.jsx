@@ -18,7 +18,9 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  TestTube
+  TestTube,
+  GitBranch,
+  TreePine
 } from 'lucide-react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
@@ -32,6 +34,11 @@ import {
   runErrorScenarios,
   logScenarioResult
 } from '@/common/utils/test-scenarios';
+import { 
+  generateSimpleTreeTestData, 
+  generateComplexTreeTestData,
+  generateNestedTreeTestData 
+} from '@/common/utils/test-data-generator';
 
 const TestControlPanel = ({ dark_mode = false }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -54,10 +61,17 @@ const TestControlPanel = ({ dark_mode = false }) => {
     close_preview_modal
   } = use_content_modals();
 
-  // 테스트 영상 생성 (PROCESSING 상태)
+  // 🧪 테스트 영상 생성 - 실제 플로우 사용
   const handleCreateTestVideo = () => {
-    const testData = generateTestVideoData('PROCESSING', selectedTestType);
-    add_pending_video(testData, new Date().toISOString().split('T')[0]);
+    // 실제 AIMediaRequestModal을 테스트 모드로 열기
+    const testEvent = new CustomEvent('test-open-ai-media-modal', {
+      detail: { 
+        testMode: true, 
+        platform: selectedTestType,
+        autoFill: true // 자동으로 테스트 데이터 채우기
+      }
+    });
+    window.dispatchEvent(testEvent);
   };
 
   // 상태 전환 테스트
@@ -77,17 +91,91 @@ const TestControlPanel = ({ dark_mode = false }) => {
     }
   };
 
-  // 다양한 상태의 테스트 데이터 일괄 생성
+  // 🧪 다양한 상태의 테스트 데이터 일괄 생성 - 실제 플로우 + 목업 데이터 조합
   const handleCreateFullTestSet = () => {
-    const statuses = ['PROCESSING', 'ready', 'uploaded', 'failed'];
+    // 먼저 실제 플로우로 PROCESSING 영상 몇 개 생성
     const platforms = ['youtube', 'reddit'];
     
-    statuses.forEach(status => {
-      platforms.forEach(platform => {
-        const testData = generateTestVideoData(status, platform);
-        add_pending_video(testData, new Date().toISOString().split('T')[0]);
-      });
+    platforms.forEach((platform, index) => {
+      setTimeout(() => {
+        const testEvent = new CustomEvent('test-open-ai-media-modal', {
+          detail: { 
+            testMode: true, 
+            platform: platform,
+            autoFill: true,
+            autoSubmit: true // 자동으로 제출까지 수행
+          }
+        });
+        window.dispatchEvent(testEvent);
+      }, index * 500); // 0.5초 간격으로 순차 실행
     });
+    
+    // 기존 상태 테스트용 목업 데이터도 추가 (ready, uploaded, failed)
+    setTimeout(() => {
+      const mockStatuses = ['ready', 'uploaded', 'failed'];
+      mockStatuses.forEach(status => {
+        platforms.forEach(platform => {
+          const testData = generateTestVideoData(status, platform);
+          add_pending_video(testData, new Date().toISOString().split('T')[0]);
+        });
+      });
+    }, 2000); // 실제 플로우 완료 후 목업 데이터 추가
+  };
+
+  // 🌳 백엔드 트리 구조 테스트 핸들러들
+  const handle_simple_tree_test = () => {
+    const tree_data = generateSimpleTreeTestData();
+    
+    // 커스텀 이벤트로 트리 데이터 전송
+    const testEvent = new CustomEvent('test-tree-structure', {
+      detail: { 
+        tree_data,
+        type: 'simple',
+        message: '간단한 트리 구조 테스트 데이터 생성됨'
+      }
+    });
+    window.dispatchEvent(testEvent);
+    
+    console.log('[트리 테스트] 간단한 트리 구조:', tree_data);
+    alert('간단한 트리 구조가 생성되었습니다. ProjectHistory에서 확인해보세요!');
+  };
+
+  const handle_complex_tree_test = () => {
+    const tree_data = generateComplexTreeTestData();
+    
+    // 커스텀 이벤트로 트리 데이터 전송
+    const testEvent = new CustomEvent('test-tree-structure', {
+      detail: { 
+        tree_data,
+        type: 'complex',
+        message: '복잡한 트리 구조 테스트 데이터 생성됨'
+      }
+    });
+    window.dispatchEvent(testEvent);
+    
+    console.log('[트리 테스트] 복잡한 트리 구조:', tree_data);
+    alert('복잡한 트리 구조가 생성되었습니다. ProjectHistory에서 확인해보세요!');
+  };
+
+  const handle_custom_tree_test = () => {
+    const tree_data = generateNestedTreeTestData({
+      root_count: 2,
+      max_depth: 3,
+      children_per_node: 3
+    });
+    
+    // 커스텀 이벤트로 트리 데이터 전송
+    const testEvent = new CustomEvent('test-tree-structure', {
+      detail: { 
+        tree_data,
+        type: 'custom',
+        message: '커스텀 트리 구조 테스트 데이터 생성됨'
+      }
+    });
+    window.dispatchEvent(testEvent);
+    
+    console.log('[트리 테스트] 커스텀 트리 구조:', tree_data);
+    alert('커스텀 트리 구조가 생성되었습니다. ProjectHistory에서 확인해보세요!');
   };
 
   const getStatusIcon = (status) => {
@@ -198,8 +286,12 @@ const TestControlPanel = ({ dark_mode = false }) => {
             <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={async () => {
-                  const result = await runVideoCreationScenario(use_content_launch.getState());
-                  logScenarioResult('영상 생성', result);
+                  // 새로운 ProjectHistoryContainer 구조에서 콘텐츠 생성 테스트
+                  const testEvent = new CustomEvent('test-open-ai-media-modal', {
+                    detail: { testMode: true, platform: selectedTestType }
+                  });
+                  window.dispatchEvent(testEvent);
+                  logScenarioResult('새 미디어 제작 모달 열기', { success: true });
                 }}
                 variant="outline"
                 size="sm"
@@ -240,8 +332,12 @@ const TestControlPanel = ({ dark_mode = false }) => {
               
               <Button
                 onClick={() => {
-                  const result = runEditScenario(use_content_launch.getState());
-                  logScenarioResult('수정', result);
+                  // 새로운 VideoEditModal 테스트
+                  const testEvent = new CustomEvent('test-open-video-edit-modal', {
+                    detail: { testMode: true, selectedVideo: pending_videos[0] }
+                  });
+                  window.dispatchEvent(testEvent);
+                  logScenarioResult('비디오 수정 모달 열기', { success: true });
                 }}
                 variant="outline"
                 size="sm"
@@ -279,6 +375,81 @@ const TestControlPanel = ({ dark_mode = false }) => {
               <AlertTriangle className="w-4 h-4 mr-2" />
               에러 상황 테스트
             </Button>
+          </div>
+
+          {/* 🌳 트리 구조 테스트 섹션 */}
+          <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+            <h5 className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              백엔드 트리 구조 테스트
+            </h5>
+            
+            <div className="grid grid-cols-1 gap-2">
+              <Button
+                onClick={handle_simple_tree_test}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                size="sm"
+              >
+                <GitBranch className="w-4 h-4 mr-2" />
+                간단한 트리 (1→3)
+              </Button>
+
+              <Button
+                onClick={handle_complex_tree_test}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                size="sm"
+              >
+                <TreePine className="w-4 h-4 mr-2" />
+                복잡한 트리 (4레벨)
+              </Button>
+
+              <Button
+                onClick={handle_custom_tree_test}
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
+                size="sm"
+              >
+                <TestTube className="w-4 h-4 mr-2" />
+                커스텀 트리 (3레벨)
+              </Button>
+            </div>
+          </div>
+
+          {/* 새로운 모달 테스트 버튼들 */}
+          <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+            <h5 className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              ProjectHistory 모달 테스트
+            </h5>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={() => {
+                  const testEvent = new CustomEvent('test-open-success-modal', {
+                    detail: { message: '테스트 성공 모달' }
+                  });
+                  window.dispatchEvent(testEvent);
+                }}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                성공
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  const testEvent = new CustomEvent('test-open-confirmation-modal', {
+                    detail: { title: '테스트 확인', message: '테스트용 확인 메시지' }
+                  });
+                  window.dispatchEvent(testEvent);
+                }}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                확인
+              </Button>
+            </div>
           </div>
 
           {/* 현재 상태 표시 */}
