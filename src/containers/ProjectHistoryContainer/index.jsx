@@ -4,7 +4,7 @@
  * FSD 컨테이너 패턴: 데이터 변환, 상태 관리, 비즈니스 로직 담당
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '@/common/ui/card';
 import { Button } from '@/common/ui/button';
 import { Badge } from '@/common/ui/badge';
@@ -128,32 +128,209 @@ function ProjectHistoryContainer({ dark_mode = false }) {
   const [is_success_modal_open, set_is_success_modal_open] = useState(false);
   const [pending_video_data, set_pending_video_data] = useState(null);
 
-  // 컴포넌트 마운트 시 폴더 데이터 로딩
-  useEffect(() => {
-    fetch_folders();
+  // 디바운스 타이머 ref
+  const debounce_timer_ref = useRef(null);
+
+  // 디바운스된 폴더 갱신 함수 (중복 호출 방지)
+  const debouncedFetchFolders = useCallback(() => {
+    if (debounce_timer_ref.current) {
+      clearTimeout(debounce_timer_ref.current);
+    }
+    
+    debounce_timer_ref.current = setTimeout(() => {
+      fetch_folders();
+      console.log('[디바운스] 폴더 목록 갱신 실행');
+    }, 200); // 200ms 디바운스로 증가하여 과도한 호출 방지
   }, [fetch_folders]);
 
-  // 요청 성공 핸들러 (낙관적 UI 패턴 적용)
-  const handleRequestSuccess = (requestData) => {
+  // 컴포넌트 마운트 시 폴더 데이터 로딩 및 실시간 동기화
+  useEffect(() => {
+    fetch_folders();
+    
+    // 🔍 개발 환경에서만 디버그 기능 활성화
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ProjectHistoryContainer] 컴포넌트 마운트됨 - 초기 폴더 로딩');
+      
+      // 전역 디버그 함수 등록 (함수 정의 후에 접근하도록 지연)
+      setTimeout(() => {
+        window.debugProjectHistory = {
+          checkSyncStatus: () => {
+            console.log('[디버그] 현재 동기화 상태:', {
+              folders_count: folders.length,
+              pending_videos_count: pending_videos.length,
+              folders: folders,
+              pending_videos: pending_videos
+            });
+          },
+          forceFolderUpdate: () => {
+            console.log('[디버그] 강제 폴더 업데이트 실행');
+            fetch_folders();
+          },
+          clearData: () => {
+            localStorage.removeItem('content-launch-storage');
+            window.location.reload();
+          }
+        };
+      }, 100);
+      
+      console.log('[ProjectHistoryContainer] 디버그 기능 활성화됨 - window.debugProjectHistory 사용 가능');
+    }
+  }, [fetch_folders]);
+
+  // 🔥 핵심 추가: pending_videos와 folders 변화 시 실시간 동기화 (디바운스 적용)
+  useEffect(() => {
+    // pending_videos가 변경될 때마다 디바운스된 폴더 목록 갱신
+    debouncedFetchFolders();
+  }, [pending_videos, debouncedFetchFolders]);
+
+  // 폴더 데이터 변화 감지 및 프로젝트 목록 자동 갱신
+  useEffect(() => {
+    // folders 데이터가 변경되면 convert_to_projects가 자동으로 호출되어 UI가 업데이트됨
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[상태 모니터링] folders 변경됨 - 개수: ${folders.length}`, folders);
+    }
+  }, [folders]);
+
+  // 🔍 상태 동기화 검증 useEffect
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[상태 검증] pending_videos: ${pending_videos.length}, folders: ${folders.length}`);
+      
+      // 불일치 감지 및 자동 복구
+      if (pending_videos.length > 0 && folders.length === 0) {
+        console.warn('⚠️ [상태 불일치] pending_videos가 있지만 folders가 비어있음 - 자동 복구 시도');
+        // 자동 복구: 1초 후 강제 폴더 갱신
+        setTimeout(() => {
+          console.log('🔄 [자동 복구] 폴더 목록 강제 갱신 실행');
+          fetch_folders();
+        }, 1000);
+      }
+      
+      if (pending_videos.length === 0 && folders.length > 0) {
+        console.warn('⚠️ [상태 불일치] folders가 있지만 pending_videos가 비어있음');
+        // 이 경우는 정상일 수 있음 (모든 영상이 완료되거나 삭제된 경우)
+      }
+    }
+  }, [pending_videos, folders, fetch_folders]);
+
+  // 테스트 패널과의 연동을 위한 이벤트 리스너 설정
+  useEffect(() => {
+    const handleTestOpenAIMediaModal = (event) => {
+      const { testMode, platform, autoFill, autoSubmit } = event.detail || {};
+      if (testMode) {
+        set_is_priority_mode(false);
+        set_is_request_modal_open(true);
+        
+        // 테스트 모드 정보를 상태로 저장하여 모달에 전달
+        set_pending_video_data({
+          testMode: true,
+          platform: platform || 'youtube',
+          autoFill: autoFill || false,
+          autoSubmit: autoSubmit || false
+        });
+        
+        console.log(`[TEST] AI 미디어 요청 모달 열기 - 플랫폼: ${platform}, 자동채움: ${autoFill}, 자동제출: ${autoSubmit}`);
+      }
+    };
+
+    const handleTestOpenVideoEditModal = (event) => {
+      const { testMode, selectedVideo } = event.detail || {};
+      if (testMode) {
+        set_is_edit_modal_open(true);
+        console.log(`[TEST] 비디오 수정 모달 열기 - 비디오:`, selectedVideo);
+      }
+    };
+
+    const handleTestOpenSuccessModal = (event) => {
+      const { message } = event.detail || {};
+      set_pending_video_data({ 
+        video_data: { title: '테스트 비디오', platform: 'youtube' },
+        creation_date: new Date().toISOString(),
+        isPriority: false 
+      });
+      set_is_success_modal_open(true);
+      console.log(`[TEST] 성공 모달 열기 - 메시지: ${message}`);
+    };
+
+    const handleTestOpenConfirmationModal = (event) => {
+      const { title, message } = event.detail || {};
+      set_is_priority_confirm_modal_open(true);
+      console.log(`[TEST] 확인 모달 열기 - 제목: ${title}, 메시지: ${message}`);
+    };
+
+    // 이벤트 리스너 등록
+    window.addEventListener('test-open-ai-media-modal', handleTestOpenAIMediaModal);
+    window.addEventListener('test-open-video-edit-modal', handleTestOpenVideoEditModal);
+    window.addEventListener('test-open-success-modal', handleTestOpenSuccessModal);
+    window.addEventListener('test-open-confirmation-modal', handleTestOpenConfirmationModal);
+    
+    // 🌳 트리 구조 테스트 이벤트 리스너
+    const handleTreeStructureTest = (event) => {
+      const { tree_data, type, message } = event.detail || {};
+      
+      if (tree_data) {
+        console.log(`[트리 테스트] ${type} 트리 구조 데이터 수신:`, tree_data);
+        set_tree_test_data(tree_data);
+        set_is_tree_test_mode(true);
+        
+        // 테스트 모드 알림
+        if (message) {
+          console.log(`[트리 테스트] ${message}`);
+        }
+      }
+    };
+    
+    window.addEventListener('test-tree-structure', handleTreeStructureTest);
+
+    // 클린업
+    return () => {
+      window.removeEventListener('test-open-ai-media-modal', handleTestOpenAIMediaModal);
+      window.removeEventListener('test-open-video-edit-modal', handleTestOpenVideoEditModal);
+      window.removeEventListener('test-open-success-modal', handleTestOpenSuccessModal);
+      window.removeEventListener('test-open-confirmation-modal', handleTestOpenConfirmationModal);
+      window.removeEventListener('test-tree-structure', handleTreeStructureTest);
+    };
+  }, []);
+
+  // 요청 성공 핸들러 (즉시 UI 업데이트 패턴)
+  const handleRequestSuccess = async (requestData) => {
+    // 🔥 핵심 수정: 성공 모달을 열기 전에 즉시 데이터 추가
+    const { video_data } = requestData;
+    
+    // 즉시 스토어에 데이터 추가 (이미 use-media-request-form.js에서 처리됨)
+    // 여기서는 추가적인 UI 상태 업데이트만 처리
+    
     set_pending_video_data(requestData);
     set_is_success_modal_open(true);
     set_is_request_modal_open(false);
+    
+    // ⚡ 강화된 즉시 폴더 목록 갱신 - 다중 시도로 확실한 UI 반영 보장
+    const ensureUIUpdate = async () => {
+      // 첫 번째 시도: 즉시 갱신
+      fetch_folders();
+      
+      // 두 번째 시도: 50ms 후 재갱신 (상태 업데이트 완료 대기)
+      setTimeout(() => {
+        fetch_folders();
+      }, 50);
+      
+      // 세 번째 시도: 200ms 후 최종 확인 갱신
+      setTimeout(() => {
+        fetch_folders();
+        console.log(`[UI 동기화] 파일 생성 요청 후 UI 업데이트 완료 - ${video_data.title}`);
+      }, 200);
+    };
+    
+    await ensureUIUpdate();
   };
   
-  // 성공 모달 닫기 핸들러 - 실제 비디오 카드 추가
+  // 성공 모달 닫기 핸들러 - 더 이상 데이터 추가하지 않음 (이미 완료됨)
   const handleSuccessModalClose = () => {
-    if (pending_video_data) {
-      const { video_data, creation_date, isPriority } = pending_video_data;
-      
-      if (isPriority) {
-        replace_processing_video(video_data, creation_date);
-      } else {
-        add_pending_video(video_data, creation_date);
-      }
-      
-      set_pending_video_data(null);
-    }
+    set_pending_video_data(null);
     set_is_success_modal_open(false);
+    
+    // 🔄 최종 확인차 디바운스된 폴더 목록 갱신
+    debouncedFetchFolders();
   };
 
   // 게시 완료 핸들러 (FSD 아키텍처 준수)
@@ -171,48 +348,63 @@ function ProjectHistoryContainer({ dark_mode = false }) {
 
   // 프로젝트 확장/축소 상태 관리
   const [expanded_projects, set_expanded_projects] = useState(new Set());
+  
+  // 🌳 트리 구조 테스트 데이터 상태
+  const [tree_test_data, set_tree_test_data] = useState(null);
+  const [is_tree_test_mode, set_is_tree_test_mode] = useState(false);
 
   /**
    * 기존 folders 데이터를 projects 구조로 변환
    */
-  const convert_to_projects = () => {
-    return folders.map(folder => ({
-      id: folder.id,
-      title: folder.name,
-      description: `${folder.videos?.length || 0}개의 영상이 포함된 프로젝트`,
-      category: 'social',
-      source_type: 'prompt',
-      content_count: folder.videos?.length || 0,
-      live_count: folder.videos?.filter(v => v.status === 'completed').length || 0,
-      last_activity: '최근 활동'
-    }));
-  };
+  const convert_to_projects = useCallback(() => {
+    return folders.map(folder => {
+      // 🔥 핵심 수정: folder.videos → folder.items로 변경, folder.id 안전성 보장
+      const items = folder.items || [];
+      const folder_id = folder.id || folder.date; // date를 fallback ID로 사용
+      
+      return {
+        id: folder_id,
+        title: folder.name || folder.display_date || folder.date,
+        description: `${items.length}개의 영상이 포함된 프로젝트`,
+        category: 'social',
+        source_type: 'prompt',
+        content_count: items.length,
+        live_count: items.filter(v => v.status === 'completed' || v.status === 'uploaded').length,
+        last_activity: '최근 활동'
+      };
+    });
+  }, [folders]);
 
   /**
    * 기존 videos 데이터를 contents 구조로 변환
    */
-  const convert_to_contents = () => {
+  const convert_to_contents = useCallback(() => {
     const all_contents = {};
     
     folders.forEach(folder => {
-      all_contents[folder.id] = (folder.videos || []).map(video => ({
-        id: video.id || video.resultId,
+      // 🔥 핵심 수정: folder.videos → folder.items로 변경
+      const items = folder.items || [];
+      console.log(`[convert_to_contents] 폴더 "${folder.date}" 아이템 개수: ${items.length}`, items);
+      
+      all_contents[folder.id || folder.date] = items.map(video => ({
+        id: video.id || video.temp_id || video.resultId,
         title: video.title || '제목 없음',
         type: 'video',
         version: '1.0',
         parentId: null,
         isLive: video.status === 'completed',
-        thumbnail: video.thumbnail || '',
-        createdAt: video.creation_date || new Date().toISOString(),
-        prompt: video.prompt || '',
+        thumbnail: video.thumbnail || video.image_url || '',
+        createdAt: video.creation_date || video.createdAt || new Date().toISOString(),
+        prompt: video.prompt || video.user_request || '',
         feedback: video.feedback || '',
         resultId: video.resultId,
         status: video.status
       }));
     });
 
+    console.log(`[convert_to_contents] 변환된 all_contents:`, all_contents);
     return all_contents;
-  };
+  }, [folders]);
 
   const projects = convert_to_projects();
   const all_contents = convert_to_contents();
@@ -248,7 +440,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     open_publish_modal(item);
   };
 
-  // 프로젝트가 없을 때도 콘텐츠 생성 버튼 표시
+  // 빈 상태 메시지만 표시 (버튼은 상단에 일관되게 배치)
   const render_empty_state = () => (
     <div className="text-center py-12">
       <Folder className={`w-12 h-12 mx-auto mb-4 ${
@@ -257,22 +449,9 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       <h3 className={`mb-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
         아직 생성된 프로젝트가 없습니다
       </h3>
-      <p className={`text-sm mb-6 ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
+      <p className={`text-sm ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
         AI와 함께 첫 번째 콘텐츠를 만들어보세요
       </p>
-      
-      {/* 빈 상태에서도 콘텐츠 생성 버튼 표시 */}
-      <Button
-        onClick={() => {
-          set_is_priority_mode(false);
-          set_is_request_modal_open(true);
-        }}
-        className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white shadow-lg font-semibold rounded-2xl"
-        size="lg"
-      >
-        <Plus className="w-5 h-5 mr-2" />
-        새로운 미디어 제작 요청
-      </Button>
     </div>
   );
 
@@ -310,12 +489,16 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       {/* 추가 모달들 */}
       <AIMediaRequestModal
         is_open={is_request_modal_open}
-        on_close={() => set_is_request_modal_open(false)}
+        on_close={() => {
+          set_is_request_modal_open(false);
+          set_pending_video_data(null); // 테스트 데이터도 초기화
+        }}
         isPriority={is_priority_mode}
         selectedVideoData={selected_video_data}
         on_request_success={handleRequestSuccess}
         isEditMode={selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded')}
         dark_mode={dark_mode}
+        testModeData={pending_video_data?.testMode ? pending_video_data : null}
       />
 
       {is_edit_modal_open && selected_video_data && (
@@ -357,113 +540,136 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     </>
   );
 
-  // 프로젝트가 없을 때 빈 상태 표시
-  if (projects.length === 0) {
-    return (
-      <div className="space-y-4">
-        {render_empty_state()}
-        
-        {/* 모든 모달들 */}
-        {render_modals()}
+  // 공통 액션 버튼 섹션 렌더링 함수
+  const render_action_buttons = () => (
+    <div className="flex items-start justify-between gap-4 mb-6">
+      {/* 버튼 영역 */}
+      <div className="flex items-start gap-4">
+        {/* 새로운 미디어 제작 요청 버튼 */}
+        <div className="flex flex-col">
+          <Button
+            onClick={() => {
+              set_is_priority_mode(false);
+              set_is_request_modal_open(true);
+            }}
+            className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white shadow-lg font-semibold rounded-2xl"
+            size="lg"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            새로운 미디어 제작 요청
+          </Button>
+          
+          <p className={`text-xs mt-2 ${dark_mode ? 'text-blue-200/80' : 'text-blue-600/70'} font-medium max-w-xs`}>
+            AI로 새로운 영상을 생성합니다
+          </p>
+        </div>
+
+        {/* 영상 수정 요청 버튼 */}
+        {selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded') && (
+          <div className="flex flex-col">
+            <Button
+              onClick={() => {
+                set_is_edit_modal_open(true);
+              }}
+              className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-orange-600 dark:text-orange-300 shadow-lg font-semibold rounded-2xl"
+              size="lg"
+            >
+              <RefreshCw className="w-5 h-5 mr-2" />
+              영상 수정하기
+            </Button>
+            
+            <p className={`text-xs mt-2 ${dark_mode ? 'text-orange-200/80' : 'text-orange-600/70'} font-medium max-w-xs`}>
+              프롬프트만 입력하여 {selected_video_data.title}의 새로운 버전을 생성합니다
+            </p>
+          </div>
+        )}
       </div>
-    );
-  }
+      
+      {/* 통계 정보 */}
+      <div className="flex items-center gap-4">
+        <div className={`${ 
+          dark_mode 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-white border-gray-200'
+        } rounded-xl px-4 py-2 border shadow-sm`}>
+          <div className="text-center">
+            <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+              {folders.reduce((sum, folder) => sum + folder.item_count, 0)}
+            </div>
+            <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>총 콘텐츠</div>
+          </div>
+        </div>
+        
+        <div className={`${
+          dark_mode 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-white border-gray-200'
+        } rounded-xl px-4 py-2 border shadow-sm`}>
+          <div className="text-center">
+            <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+              {folders.length}
+            </div>
+            <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>프로젝트</div>
+          </div>
+        </div>
+        
+        {/* 데이터 초기화 버튼 */}
+        {pending_videos.length > 0 && (
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                localStorage.removeItem('content-launch-storage');
+                window.location.reload();
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-lg"
+              size="sm"
+            >
+              데이터 초기화
+            </Button>
+          </div>
+        )}
+        
+        {/* 🌳 트리 테스트 모드 상태 표시 */}
+        {is_tree_test_mode && (
+          <div className={`${
+            dark_mode 
+              ? 'bg-emerald-800 border-emerald-600' 
+              : 'bg-emerald-50 border-emerald-200'
+          } rounded-xl px-4 py-2 border shadow-sm`}>
+            <div className="flex items-center gap-2">
+              <div className={`text-xs font-medium ${dark_mode ? 'text-emerald-200' : 'text-emerald-700'}`}>
+                트리 테스트 모드
+              </div>
+              <Button
+                onClick={() => {
+                  set_is_tree_test_mode(false);
+                  set_tree_test_data(null);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2 py-1 rounded"
+                size="sm"
+              >
+                해제
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
 
   return (
     <div className="space-y-4">
-      {/* 액션 버튼 및 통계 섹션 */}
-      <div className="flex items-start justify-between gap-4 mb-6">
-        {/* 버튼 영역 */}
-        <div className="flex items-start gap-4">
-          {/* 새로운 미디어 제작 요청 버튼 */}
-          <div className="flex flex-col">
-            <Button
-              onClick={() => {
-                set_is_priority_mode(false);
-                set_is_request_modal_open(true);
-              }}
-              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white shadow-lg font-semibold rounded-2xl"
-              size="lg"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              새로운 미디어 제작 요청
-            </Button>
-            
-            <p className={`text-xs mt-2 ${dark_mode ? 'text-blue-200/80' : 'text-blue-600/70'} font-medium max-w-xs`}>
-              AI로 새로운 영상을 생성합니다
-            </p>
-          </div>
-
-          {/* 영상 수정 요청 버튼 */}
-          {selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded') && (
-            <div className="flex flex-col">
-              <Button
-                onClick={() => {
-                  set_is_edit_modal_open(true);
-                }}
-                className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-orange-600 dark:text-orange-300 shadow-lg font-semibold rounded-2xl"
-                size="lg"
-              >
-                <RefreshCw className="w-5 h-5 mr-2" />
-                영상 수정하기
-              </Button>
-              
-              <p className={`text-xs mt-2 ${dark_mode ? 'text-orange-200/80' : 'text-orange-600/70'} font-medium max-w-xs`}>
-                프롬프트만 입력하여 {selected_video_data.title}의 새로운 버전을 생성합니다
-              </p>
-            </div>
-          )}
-        </div>
-        
-        {/* 통계 정보 */}
-        <div className="flex items-center gap-4">
-          <div className={`${ 
-            dark_mode 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border-gray-200'
-          } rounded-xl px-4 py-2 border shadow-sm`}>
-            <div className="text-center">
-              <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
-                {folders.reduce((sum, folder) => sum + folder.item_count, 0)}
-              </div>
-              <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>총 콘텐츠</div>
-            </div>
-          </div>
-          
-          <div className={`${
-            dark_mode 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border-gray-200'
-          } rounded-xl px-4 py-2 border shadow-sm`}>
-            <div className="text-center">
-              <div className={`text-lg font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
-                {folders.length}
-              </div>
-              <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>프로젝트</div>
-            </div>
-          </div>
-          
-          {/* 데이터 초기화 버튼 */}
-          {pending_videos.length > 0 && (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  localStorage.removeItem('content-launch-storage');
-                  window.location.reload();
-                }}
-                className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-lg"
-                size="sm"
-              >
-                데이터 초기화
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* 항상 상단에 배치되는 액션 버튼 섹션 */}
+      {render_action_buttons()}
+      
+      {/* 빈 상태일 때만 메시지 표시 */}
+      {projects.length === 0 && render_empty_state()}
       {projects.map((project) => {
         const is_expanded = expanded_projects.has(project.id);
         const project_contents = all_contents[project.id] || [];
+        
+        console.log(`[렌더링] 프로젝트 "${project.title}" (ID: ${project.id}) 콘텐츠 개수: ${project_contents.length}`, project_contents);
 
         return (
           <Card key={project.id} className={`overflow-hidden backdrop-blur-md border ${
@@ -546,9 +752,10 @@ function ProjectHistoryContainer({ dark_mode = false }) {
                   dark_mode ? 'bg-gray-800/30' : 'bg-gray-50/30'
                 }`}
               >
-                {/* ContentTreeView 재활용 */}
+                {/* ContentTreeView 재활용 - 트리 테스트 모드 지원 */}
                 <ContentTreeView
-                  contents={project_contents}
+                  tree_data={is_tree_test_mode ? tree_test_data : null}
+                  contents={!is_tree_test_mode ? project_contents : undefined}
                   dark_mode={dark_mode}
                   uploading_items={uploading_items}
                   on_preview={handle_preview}

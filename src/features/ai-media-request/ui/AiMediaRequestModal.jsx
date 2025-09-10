@@ -24,11 +24,11 @@ import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media
  * @param {Function} props.on_request_success - 요청 성공 시 콜백 함수
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
-const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null }) => {
+const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null, testModeData = null }) => {
   // 플랫폼 선택 상태
   const [selectedPlatform, setSelectedPlatform] = useState('youtube');
 
-  // YouTube 폼 상태 관리 커스텀 훅 사용
+  // YouTube 폼 상태 관리 커스텀 훅 사용 (테스트 모드 지원)
   const {
     selected_location,
     uploaded_file,
@@ -41,7 +41,14 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     handle_prompt_change,
     handle_submit,
     handle_success_modal_close
-  } = useMediaRequestForm(on_close, isPriority, selectedVideoData, on_request_success, selectedPlatform);
+  } = useMediaRequestForm(
+    on_close, 
+    isPriority, 
+    selectedVideoData, 
+    on_request_success, 
+    selectedPlatform, 
+    testModeData?.testMode || false // 테스트 모드 전달
+  );
 
   // 플랫폼 변경 핸들러
   const handlePlatformChange = useCallback((platform) => {
@@ -71,6 +78,58 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
       };
     }
   }, [is_open, handle_key_down]);
+
+  // 🧪 테스트 모드 자동 입력 처리
+  useEffect(() => {
+    if (is_open && testModeData?.testMode && testModeData?.autoFill) {
+      // 플랫폼 설정
+      if (testModeData.platform) {
+        setSelectedPlatform(testModeData.platform);
+      }
+      
+      // 약간의 지연 후 테스트 데이터 자동 입력
+      setTimeout(() => {
+        // 테스트용 위치 선택
+        const testLocation = {
+          poi_id: "test_location_001",
+          name: "테스트 위치 (강남역)",
+        };
+        handle_location_select(testLocation);
+        
+        // 테스트용 이미지 파일 생성
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = testModeData.platform === 'youtube' ? '#FF0000' : '#FF4500';
+        ctx.fillRect(0, 0, 200, 200);
+        ctx.fillStyle = 'white';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('테스트 이미지', 100, 100);
+        ctx.fillText(testModeData.platform.toUpperCase(), 100, 120);
+        
+        canvas.toBlob((blob) => {
+          const testFile = new File([blob], `test-${testModeData.platform}.png`, {
+            type: 'image/png'
+          });
+          handle_file_change(testFile);
+        });
+        
+        // 테스트용 프롬프트 입력
+        const testPrompt = `🧪 테스트 모드로 생성된 ${testModeData.platform === 'youtube' ? '영상' : '이미지'} 콘텐츠입니다.`;
+        handle_prompt_change(testPrompt);
+        
+        // 자동 제출 모드라면 추가 지연 후 제출
+        if (testModeData.autoSubmit) {
+          setTimeout(() => {
+            console.log(`[TEST AUTO-SUBMIT] ${testModeData.platform} 콘텐츠 자동 제출`);
+            handle_submit();
+          }, 1000);
+        }
+      }, 300);
+    }
+  }, [is_open, testModeData, handle_location_select, handle_file_change, handle_prompt_change, handle_submit]);
 
   if (!is_open) return null;
 

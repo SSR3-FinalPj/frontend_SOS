@@ -123,7 +123,9 @@ export const use_content_launch = create(
         }));
         
         // 상태 업데이트 후 폴더 목록 갱신
-        get().fetch_folders();
+        setTimeout(() => {
+          get().fetch_folders();
+        }, 50);
       },
 
       /**
@@ -139,7 +141,7 @@ export const use_content_launch = create(
       },
 
       /**
-       * API와 localStorage 데이터를 병합하여 폴더 목록을 가져오는 함수
+       * API와 localStorage 데이터를 병합하여 폴더 목록을 가져오는 함수 (강화된 버전)
        */
       fetch_folders: async () => {
         try {
@@ -148,6 +150,13 @@ export const use_content_launch = create(
           const api_folders = [];
           
           const pending_videos = get().pending_videos;
+          
+          // 🔍 디버그: 현재 pending_videos 상태 로깅
+          console.log(`[fetch_folders] 현재 pending_videos 개수: ${pending_videos.length}`, {
+            processing: pending_videos.filter(v => v.status === 'PROCESSING').length,
+            ready: pending_videos.filter(v => v.status === 'ready').length,
+            uploaded: pending_videos.filter(v => v.status === 'uploaded').length
+          });
           
           // pending_videos를 날짜별로 그룹화 (안전한 날짜 처리)
           const grouped_by_date = {};
@@ -193,6 +202,14 @@ export const use_content_launch = create(
           
           // API 폴더와 pending 폴더 병합
           const merged_folders = [...pending_folders, ...api_folders];
+          
+          // 🔍 디버그: 최종 폴더 상태 로깅
+          console.log(`[fetch_folders] 생성된 폴더 개수: ${merged_folders.length}`, merged_folders.map(f => ({
+            date: f.date,
+            display_date: f.display_date,
+            item_count: f.item_count,
+            items: f.items?.map(item => ({ title: item.title, status: item.status }))
+          })));
           
           set({ folders: merged_folders });
         } catch (error) {
@@ -263,6 +280,18 @@ export const use_content_launch = create(
         if (!smart_polling_active) {
           get().start_smart_polling();
         }
+        
+        // ⚡ 강화된 즉시 폴더 목록 갱신하여 UI 실시간 반영
+        const immediateUpdate = () => {
+          get().fetch_folders();
+          console.log(`[낙관적 UI] 새 영상 추가 후 폴더 목록 갱신 - ${new_pending_video.title}`);
+        };
+        
+        // 즉시 실행
+        immediateUpdate();
+        
+        // 상태 안정화 후 재실행
+        setTimeout(immediateUpdate, 50);
       },
       
       /**
@@ -328,8 +357,17 @@ export const use_content_launch = create(
           pending_videos: [...state.pending_videos.filter(video => video.status !== 'PROCESSING'), new_pending_video]
         }));
         
-        // 5. 폴더 목록 재갱신
-        get().fetch_folders();
+        // 5. 강화된 폴더 목록 재갱신
+        const updateAfterReplace = () => {
+          get().fetch_folders();
+          console.log(`[낙관적 UI] 우선순위 영상 교체 후 폴더 목록 갱신 - ${new_pending_video.title}`);
+        };
+        
+        // 즉시 실행
+        updateAfterReplace();
+        
+        // 상태 안정화 후 재실행
+        setTimeout(updateAfterReplace, 50);
       },
       
       /**
@@ -354,7 +392,9 @@ export const use_content_launch = create(
         }
         
         // 3. 상태 업데이트 후 폴더 목록 갱신
-        get().fetch_folders();
+        setTimeout(() => {
+          get().fetch_folders();
+        }, 50);
       },
       
       /**
@@ -371,7 +411,9 @@ export const use_content_launch = create(
         }));
         
         // 상태 업데이트 후 폴더 목록 갱신
-        get().fetch_folders();
+        setTimeout(() => {
+          get().fetch_folders();
+        }, 50);
       },
       
       /**
@@ -392,7 +434,9 @@ export const use_content_launch = create(
         }));
         
         // 상태 업데이트 후 폴더 목록 갱신
-        get().fetch_folders();
+        setTimeout(() => {
+          get().fetch_folders();
+        }, 50);
       },
       
       /**
@@ -414,7 +458,9 @@ export const use_content_launch = create(
         }));
         
         // 상태 업데이트 후 폴더 목록 갱신
-        get().fetch_folders();
+        setTimeout(() => {
+          get().fetch_folders();
+        }, 50);
       },
       
       /**
@@ -543,7 +589,9 @@ export const use_content_launch = create(
         }));
         
         // 상태 업데이트 후 폴더 목록 갱신
-        get().fetch_folders();
+        setTimeout(() => {
+          get().fetch_folders();
+        }, 50);
       },
 
 
