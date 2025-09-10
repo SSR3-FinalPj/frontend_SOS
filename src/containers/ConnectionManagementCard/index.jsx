@@ -65,7 +65,7 @@ function ConnectionManagementCard({ platformData }) {
             };
 
             return (
-              <div key={index} className="flex items-center justify-between p-4 bg-white/10 dark:bg-white/5 rounded-xl border border-white/20 dark:border-white/10">
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-br  flex items-center justify-center`}>
                     <Icon className="w-8 h-10 text-white" />
