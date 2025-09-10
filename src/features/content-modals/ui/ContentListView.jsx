@@ -7,7 +7,6 @@ import { getYouTubeVideosByChannelId, getRedditChannelPosts } from '@/common/api
 import { useYouTubeStore } from '@/domain/youtube/logic/store';
 import { useRedditStore } from '@/domain/reddit/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
-import { mockContentData } from '@/common/utils/mock-data';
 import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
 import ContentPreviewModal from '@/features/content-modals/ui/ContentPreviewModal';
@@ -42,6 +41,12 @@ function ContentListView({
     { id: 'reddit', label: 'Reddit' }
   ];
 
+  const sortOptions = [
+    { id: 'latest', label: '최신순' },
+    { id: 'oldest', label: '오래된순' },
+    { id: 'likes', label: '좋아요순' },
+    { id: 'comments', label: '댓글순' }
+  ];
   const availablePlatforms = platformOptions.filter(p => {
     if (p.id === 'all') return platforms.google.connected && platforms.reddit.connected;
     if (p.id === 'youtube') return platforms.google.connected;
@@ -107,8 +112,20 @@ function ContentListView({
 
         if (sortOrder === 'latest') {
           allData.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-        } else {
+        } else if (sortOrder === 'oldest') {
           allData.sort((a, b) => new Date(a.uploadDate) - new Date(b.uploadDate));
+        } else if (sortOrder === 'likes') {
+          allData.sort((a, b) => {
+            const aLikes = a.likes || a.upvotes || 0;
+            const bLikes = b.likes || b.upvotes || 0;
+            return bLikes - aLikes;
+          });
+        } else if (sortOrder === 'comments') {
+          allData.sort((a, b) => {
+            const aComments = a.comments || 0;
+            const bComments = b.comments || 0;
+            return bComments - aComments;
+          });
         }
 
         const totalItems = allData.length;
@@ -265,7 +282,7 @@ function ContentListView({
             className="flex items-center gap-2 px-4 py-2 bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 rounded-lg hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
           >
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {sortOrder === 'latest' ? '최신순' : '오래된순'}
+              {sortOptions.find(opt => opt.id === sortOrder)?.label || '정렬'}
             </span>
             <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${sortDropdownOpen ? 'rotate-180' : ''}`} />
           </motion.button>
@@ -280,7 +297,10 @@ function ContentListView({
               >
                 {[
                   { id: 'latest', label: '최신순' },
-                  { id: 'oldest', label: '오래된순' }
+                  { id: 'oldest', label: '오래된순' },
+                  { id: 'likes', label: '좋아요순' },
+                  { id: 'comments', label: '댓글순' }
+
                 ].map((sort) => (
                   <motion.button
                     key={sort.id}
