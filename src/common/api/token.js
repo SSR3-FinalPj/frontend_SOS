@@ -3,7 +3,6 @@ const listeners = new Set();
 
 export function setAccessToken(token) {
   accessTokenInMemory = token || null;
-  console.log("Current Access Token:", accessTokenInMemory);
   listeners.forEach(l => l(accessTokenInMemory));  
 }
 
