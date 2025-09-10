@@ -32,6 +32,8 @@ function ContentTreeView({
 }) {
   // 열린 패널들의 상태를 관리 (여러 패널 동시 열기 가능)
   const [openPanels, setOpenPanels] = useState(new Set());
+  // 서브 패널들의 상태를 관리 (2레벨+ 자식 표시용)
+  const [openSubPanels, setOpenSubPanels] = useState(new Set());
 
   // 외부 클릭 및 ESC 키로 패널 닫기
   useEffect(() => {
@@ -49,8 +51,9 @@ function ContentTreeView({
       const isClickOnBadgeOrPanel = event.target.closest('[data-panel-trigger]') || 
                                     event.target.closest('[data-panel-content]');
       
-      if (!isClickOnBadgeOrPanel && openPanels.size > 0) {
+      if (!isClickOnBadgeOrPanel && (openPanels.size > 0 || openSubPanels.size > 0)) {
         setOpenPanels(new Set());
+        setOpenSubPanels(new Set());
       }
     };
 
@@ -64,8 +67,9 @@ function ContentTreeView({
         return;
       }
 
-      if (event.key === 'Escape' && openPanels.size > 0) {
+      if (event.key === 'Escape' && (openPanels.size > 0 || openSubPanels.size > 0)) {
         setOpenPanels(new Set());
+        setOpenSubPanels(new Set());
       }
     };
 
@@ -78,8 +82,154 @@ function ContentTreeView({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [openPanels.size]);
+  }, [openPanels.size, openSubPanels.size]);
 
+
+  /**
+   * 서브 버전 패널 컴포넌트 - 2레벨+ 자식들을 표시
+   */
+  const SubVersionsPanel = ({ children, node_id, dark_mode, on_preview, on_publish }) => {
+    const isOpen = openSubPanels.has(node_id);
+    
+    // 중첩된 자식들을 플랫하게 변환
+    const flattenSubChildren = (nodes) => {
+      let flattened = [];
+      nodes.forEach(node => {
+        flattened.push(node);
+        if (node.children && node.children.length > 0) {
+          flattened.push(...flattenSubChildren(node.children));
+        }
+      });
+      return flattened;
+    };
+    
+    const subChildren = children ? flattenSubChildren(children) : [];
+    
+    if (!isOpen || subChildren.length === 0) return null;
+    
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 25
+          }}
+          className={`mt-3 p-4 rounded-xl border backdrop-blur-xl shadow-lg ${
+            dark_mode 
+              ? 'bg-gray-900/90 border-gray-700/50' 
+              : 'bg-white/90 border-gray-200/50'
+          }`}
+          style={{ maxWidth: '400px' }}
+          onClick={(e) => e.stopPropagation()}
+          data-panel-content="true"
+        >
+          {/* 서브 패널 헤더 */}
+          <div className={`text-sm font-semibold mb-3 flex items-center justify-between ${
+            dark_mode ? 'text-gray-200' : 'text-gray-800'
+          }`}>
+            <span>하위 버전들</span>
+            <button
+              onClick={() => toggleSubPanel(node_id)}
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${
+                dark_mode 
+                  ? 'hover:bg-gray-800 text-gray-400 hover:text-gray-300' 
+                  : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <div className="w-3 h-3 flex items-center justify-center text-sm font-light">✕</div>
+            </button>
+          </div>
+          
+          {/* 서브헤더 */}
+          <div className={`text-xs mb-3 ${
+            dark_mode ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            {subChildren.length}개의 하위 버전
+          </div>
+          
+          {/* 서브 버전 카드들 */}
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.05
+                }
+              }
+            }}
+            className="space-y-2"
+          >
+            {subChildren.map((child) => (
+              <motion.div
+                key={child.result_id || child.id}
+                variants={{
+                  hidden: { opacity: 0, x: -10 },
+                  visible: { opacity: 1, x: 0 }
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                  dark_mode 
+                    ? 'hover:bg-gray-800/50 border border-gray-700/30' 
+                    : 'hover:bg-gray-50 border border-gray-200/30'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  on_preview?.(child);
+                }}
+              >
+                {/* 미니 썸네일 */}
+                <div className="w-12 h-8 rounded-md overflow-hidden flex-shrink-0">
+                  {child.thumbnail ? (
+                    <img 
+                      src={child.thumbnail} 
+                      alt={child.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className={`w-full h-full flex items-center justify-center ${
+                      dark_mode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}>
+                      <Eye className="w-3 h-3 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* 정보 */}
+                <div className="flex-1 min-w-0">
+                  <div className={`text-xs font-medium truncate ${
+                    dark_mode ? 'text-gray-200' : 'text-gray-800'
+                  }`}>
+                    v{child.version || '1.0'} - {child.title || '제목 없음'}
+                  </div>
+                  <div className={`text-xs mt-0.5 ${
+                    child.status === 'completed' ? 'text-green-500' : 
+                    child.status === 'processing' ? 'text-yellow-500' : 
+                    'text-gray-500'
+                  }`}>
+                    {child.status === 'completed' ? '완료' : 
+                     child.status === 'processing' ? '처리중' : '대기'}
+                  </div>
+                </div>
+                
+                {/* 클릭 힌트 */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Eye className="w-3 h-3 text-gray-400" />
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
 
   /**
    * 서브 뱃지 컴포넌트 - 2레벨+ 자식이 있을 때 표시
@@ -122,18 +272,19 @@ function ContentTreeView({
     };
     
     return (
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`relative p-3 rounded-xl border backdrop-blur-sm cursor-pointer group transition-all duration-200 ${
-          cardStyles.bgColor
-        } ${cardStyles.borderColor} ${cardStyles.hoverBorder}`}
-        style={{ minWidth: '180px' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          on_preview?.(child);
-        }}
-      >
+      <div className="relative">
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className={`relative p-3 rounded-xl border backdrop-blur-sm cursor-pointer group transition-all duration-200 ${
+            cardStyles.bgColor
+          } ${cardStyles.borderColor} ${cardStyles.hoverBorder}`}
+          style={{ minWidth: '180px' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            on_preview?.(child);
+          }}
+        >
         {/* 썸네일 */}
         <div className="relative w-full h-20 rounded-lg overflow-hidden mb-2">
           {child.thumbnail ? (
@@ -189,13 +340,24 @@ function ContentTreeView({
           <SubVersionsBadge 
             childrenCount={child.children.length}
             onClick={() => {
-              // TODO: 하위 버전 패널 열기 로직 추가
-              console.log(`Opening sub-versions for ${child_id}`);
+              toggleSubPanel(child_id);
             }}
             dark_mode={dark_mode}
           />
         )}
-      </motion.div>
+        </motion.div>
+        
+        {/* 서브 버전 패널 (하위 자식이 있을 때만 렌더링) */}
+        {hasSubChildren && (
+          <SubVersionsPanel
+            children={child.children}
+            node_id={child_id}
+            dark_mode={dark_mode}
+            on_preview={on_preview}
+            on_publish={on_publish}
+          />
+        )}
+      </div>
     );
   };
 
@@ -204,6 +366,21 @@ function ContentTreeView({
    */
   const togglePanel = (nodeId) => {
     setOpenPanels(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+  };
+
+  /**
+   * 서브 패널 토글 함수 (2레벨+ 자식용)
+   */
+  const toggleSubPanel = (nodeId) => {
+    setOpenSubPanels(prev => {
       const newSet = new Set(prev);
       if (newSet.has(nodeId)) {
         newSet.delete(nodeId);
