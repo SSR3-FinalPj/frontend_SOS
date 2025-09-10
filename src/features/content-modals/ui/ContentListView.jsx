@@ -20,7 +20,7 @@ function ContentListView({
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-  
+
   const [contents, setContents] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,7 @@ function ContentListView({
         setLoading(false);
         return;
       }
-      
+
       try {
         let allData = [];
 
@@ -83,10 +83,10 @@ function ContentListView({
               sortBy: sortOrder,
               // No pagination here, fetch all and paginate after merge
             });
-            const formattedYtData = ytData.videos.map(v => ({...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, title: v.title, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount}));
+            const formattedYtData = ytData.videos.map(v => ({ ...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, title: v.title, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount }));
             allData.push(...formattedYtData);
           } else if (selectedPlatform === 'youtube') {
-             setError('YouTube 채널이 연결되지 않았습니다.');
+            setError('YouTube 채널이 연결되지 않았습니다.');
           }
         }
 
@@ -266,9 +266,9 @@ function ContentListView({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={`transition-all duration-200 ${selectedPlatform === platform.id
-                  ? 'text-blue-600 dark:text-blue-400 font-semibold'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
+                ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                }`}
             >
               {platform.label}
             </motion.button>
@@ -311,9 +311,9 @@ function ContentListView({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 ${sortOrder === sort.id
-                        ? 'bg-blue-500 text-white shadow-lg'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                    }`}
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                      }`}
                   >
                     {sort.label}
                   </motion.button>
@@ -351,19 +351,33 @@ function ContentListView({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                onClick={() => open_preview_modal({...content, title: content.title,})}
+                onClick={() => open_preview_modal({ ...content, title: content.title, })}
               >
                 <motion.div
                   whileHover={{ y: -8, scale: 1.02 }}
                   className="cursor-pointer backdrop-blur-xl bg-white/20 dark:bg-white/5 border border-white/30 dark:border-white/10 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col"
                 >
                   <div className="aspect-video overflow-hidden bg-gray-200 dark:bg-gray-700">
-                    {content.platform === 'Reddit' && !content.thumbnail ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-4 text-center">
+                    {content.platform === 'Reddit' && content.rd_video_url ? (
+                      // 🔹 Reddit이고 rd_video_url이 있으면 video 표시
+                      <video
+                        src={content.rd_video_url}
+                        controls
+                        className="w-full h-full object-cover"
+                      />
+                    ) : content.platform === 'Reddit' && !content.thumbnail ? (
+                      // 🔹 Reddit인데 썸네일도 없을 경우 fallback
+                      <div className="w-full h-full flex flex-col items-center justify-center 
+                    bg-orange-500/20 dark:bg-orange-500/10 
+                    text-orange-700 dark:text-orange-300 
+                    p-4 text-center">
                         <img src={RedditIcon} alt="Reddit Icon" className="w-12 h-12 mb-2" />
-                        <span className="font-semibold text-lg line-clamp-2">{content.sub_reddit}</span>
+                        <span className="font-semibold text-lg line-clamp-2">
+                          {content.sub_reddit}
+                        </span>
                       </div>
                     ) : (
+                      // 🔹 기본 썸네일
                       <img
                         src={content.thumbnail}
                         alt={content.title}
@@ -430,9 +444,9 @@ function ContentListView({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${currentPage === 1
-                        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                    }`}
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                      }`}
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="hidden sm:block">이전</span>
@@ -448,9 +462,9 @@ function ContentListView({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={`w-10 h-10 rounded-lg transition-all duration-200 ${currentPage === page
-                            ? 'bg-blue-500 text-white shadow-lg'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                        }`}
+                          ? 'bg-blue-500 text-white shadow-lg'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                          }`}
                       >
                         {page}
                       </motion.button>
@@ -464,9 +478,9 @@ function ContentListView({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${currentPage === totalPages
-                        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
-                    }`}
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
+                      }`}
                   >
                     <span className="hidden sm:block">다음</span>
                     <ChevronRight className="w-4 h-4" />
