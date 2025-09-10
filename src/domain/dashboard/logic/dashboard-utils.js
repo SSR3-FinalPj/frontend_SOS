@@ -12,7 +12,8 @@ import {
   Star 
 } from 'lucide-react';
 import { reddit_chart_data } from '@/domain/dashboard/logic/dashboard-constants';
-
+import YoutubeIcon from '@/assets/images/button/Youtube_Icon.svg?react';
+import RedditIcon from '@/assets/images/button/Reddit_Icon.svg?react';
 /**
  * 날짜를 한국어 형식으로 포맷팅
  * @param {Date} date - 포맷팅할 날짜
@@ -254,7 +255,7 @@ export const get_platform_data = (youtubeData, redditData) => {
     totalVideos: youtubeData?.total?.total_video_count?.toLocaleString() || 0, // Total number of videos from the 'total' object
     status: "활성",
     statusColor: "text-green-500",
-    icon: Play,
+    icon: YoutubeIcon,
     color: "from-red-500 to-red-600",
     bgColor: "bg-red-50/80 dark:bg-red-950/20",
     borderColor: "border-red-200/40 dark:border-red-800/30",
@@ -279,6 +280,10 @@ export const get_platform_data = (youtubeData, redditData) => {
   let totalUpvotes = redditData?.total?.total_upvote_count || 0;
   let totalRedditComments = redditData?.total?.total_comment_count || 0;
   let avgUpvoteRatio = redditData?.total?.total_upvote_ratio || 0;
+  let totalPosts = redditData?.total?.total_post_count || 0;
+  let redditEngagement = (totalPosts > 0)
+    ? ((totalUpvotes + totalRedditComments) / totalPosts).toFixed(2)
+    : "0.00";
   let processedRedditChartData = [];
 
   if (redditData && Array.isArray(redditData.daily)) {
@@ -294,9 +299,10 @@ export const get_platform_data = (youtubeData, redditData) => {
   const redditPlatform = { 
     name: "Reddit", 
     description: "커뮤니티 플랫폼",
+    totalPosts: redditData?.total?.total_post_count?.toLocaleString() || 0,
     status: "활성", 
     statusColor: "text-green-500",
-    icon: MessageSquare,
+    icon: RedditIcon,
     color: "from-orange-500 to-orange-600",
     bgColor: "bg-orange-50/80 dark:bg-orange-950/20",
     borderColor: "border-orange-200/40 dark:border-orange-800/30",
@@ -307,7 +313,7 @@ export const get_platform_data = (youtubeData, redditData) => {
       upvoteRatio: { value: `${(avgUpvoteRatio * 100).toFixed(0)}%`, label: "업보트 비율", icon: BarChart3 }
     },
     growth: {
-      value: `총 포스트 ${redditData?.total?.total_post_count?.toLocaleString() || 0}`,
+      value: `평균 참여 ${redditEngagement}`,
       period: "지난 7일",
       isPositive: true
     },

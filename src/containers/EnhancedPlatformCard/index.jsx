@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comm
 
 function EnhancedPlatformCard({ platform, index }) {
   const Icon = platform.icon;
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, x: index === 0 ? -40 : 40 }}
@@ -17,16 +17,19 @@ function EnhancedPlatformCard({ platform, index }) {
         {/* Header Section - 총점수 제거 */}
         <div className="p-4 pb-3">
           <div className="flex items-center gap-4 mb-6">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center shadow-md`}>
-              <Icon className="w-6 h-6 text-white" />
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center`}>
+              <Icon className="w-10 h-10" />
             </div>
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">{platform.name}</h3>
               <p className="text-base text-gray-600 dark:text-gray-400">{platform.description}</p>
               {platform.totalVideos !== undefined && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">최근 7일 영상: {platform.totalVideos}개</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">전체 업로드 된 영상: {platform.totalVideos}개</p>
               )}
-            </div>
+              {platform.totalPosts !== undefined && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">전체 업로드 된 포스트: {platform.totalPosts}개</p>
+              )}
+                </div>
           </div>
 
           {/* Metrics Section - 텍스트 크기 증가 */}
@@ -64,8 +67,16 @@ function EnhancedPlatformCard({ platform, index }) {
                       {platform.growth.value}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>참여율은 (좋아요 수 × 0.5 + 댓글 수 × 0.8) ÷ 조회수으로 계산됩니다.</p>
+                  <TooltipContent className="p-2 bg-white/80 backdrop-blur-sm rounded-md shadow-lg border border-gray-200 dark:bg-gray-900/80 dark:border-gray-700">
+                    {platform.name === "YouTube" ? (
+                      <p className="text-xs text-gray-800 leading-tight text-center dark:text-gray-200">
+                        참여율 = (좋아요 <span className="text-red-600 dark:text-red-400">×0.5</span> + 댓글 <span className="text-green-600 dark:text-green-400">×0.8</span>) ÷ 조회수
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-800 leading-tight text-center dark:text-gray-200">
+                        평균 참여 = (업보트 + 댓글) ÷ <span className="text-orange-600 dark:text-orange-400">총 포스트 수</span>
+                      </p>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -85,8 +96,8 @@ function EnhancedPlatformCard({ platform, index }) {
               </h4>
               <div className="flex items-center gap-3 text-xs">
                 <div className="flex items-center gap-1">
-                  <div 
-                    className="w-2 h-2 rounded-full" 
+                  <div
+                    className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: platform.chartMetrics.primary.color }}
                   />
                   <span className="text-gray-600 dark:text-gray-400">
@@ -94,8 +105,8 @@ function EnhancedPlatformCard({ platform, index }) {
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div 
-                    className="w-2 h-2 rounded-full" 
+                  <div
+                    className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: platform.chartMetrics.secondary.color }}
                   />
                   <span className="text-gray-600 dark:text-gray-400">
@@ -104,20 +115,20 @@ function EnhancedPlatformCard({ platform, index }) {
                 </div>
               </div>
             </div>
-            
+
             {/* Chart Container */}
             <div className="h-32 w-full bg-white/20 dark:bg-white/5 rounded-xl border border-white/30 dark:border-white/20 p-3">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={platform.chartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
-                  <XAxis 
-                    dataKey="day" 
-                    axisLine={false} 
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.7 }}
                   />
                   <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ 
+                  <Tooltip
+                    contentStyle={{
                       backgroundColor: 'rgba(255, 255, 255, 0.95)',
                       border: 'none',
                       borderRadius: '8px',
@@ -125,22 +136,22 @@ function EnhancedPlatformCard({ platform, index }) {
                       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                     }}
                   />
-                  <Line 
-                    type="monotone" 
+                  <Line
+                    type="monotone"
                     dataKey={platform.chartMetrics.primary.key}
                     stroke={platform.chartMetrics.primary.color}
                     strokeWidth={2}
                     dot={{ fill: platform.chartMetrics.primary.color, strokeWidth: 2, r: 3 }}
                     activeDot={{ r: 4, fill: platform.chartMetrics.primary.color }}
                   />
-                  <Line 
-                    type="monotone" 
+                  <Line
+                    type="monotone"
                     dataKey={platform.chartMetrics.secondary.key}
                     stroke={platform.chartMetrics.secondary.color}
                     strokeWidth={2}
                     dot={{ fill: platform.chartMetrics.secondary.color, strokeWidth: 2, r: 3 }}
                     strokeDasharray="6 3"
-                    activeDot={{ r: 4 , fill: platform.chartMetrics.secondary.color }}
+                    activeDot={{ r: 4, fill: platform.chartMetrics.secondary.color }}
                   />
                 </LineChart>
               </ResponsiveContainer>
