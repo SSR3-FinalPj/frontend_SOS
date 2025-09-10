@@ -5,7 +5,7 @@
  * 버전 3개 이후부터는 가로 스크롤 캐러셀 UI 적용
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Eye, GitBranch } from 'lucide-react';
 import { Button } from '@/common/ui/button';
 import { Badge } from '@/common/ui/badge';
@@ -30,26 +30,112 @@ function ContentTreeView({
   on_preview,
   on_publish 
 }) {
+  // 열린 패널들의 상태를 관리 (여러 패널 동시 열기 가능)
+  const [openPanels, setOpenPanels] = useState(new Set());
+
+  // 외부 클릭 및 ESC 키로 패널 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // 모달이 열려있는 경우 트리 패널 닫지 않음
+      const isModalOpen = document.querySelector('[role="dialog"]') || 
+                          document.querySelector('.modal') ||
+                          document.querySelector('[data-modal]');
+      
+      if (isModalOpen) {
+        return;
+      }
+
+      // 클릭한 요소가 뱃지나 패널 내부가 아닌 경우 모든 패널 닫기
+      const isClickOnBadgeOrPanel = event.target.closest('[data-panel-trigger]') || 
+                                    event.target.closest('[data-panel-content]');
+      
+      if (!isClickOnBadgeOrPanel && openPanels.size > 0) {
+        setOpenPanels(new Set());
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      // 모달이 열려있는 경우 트리 패널은 닫지 않음 (모달이 먼저 닫혀야 함)
+      const isModalOpen = document.querySelector('[role="dialog"]') || 
+                          document.querySelector('.modal') ||
+                          document.querySelector('[data-modal]');
+      
+      if (isModalOpen) {
+        return;
+      }
+
+      if (event.key === 'Escape' && openPanels.size > 0) {
+        setOpenPanels(new Set());
+      }
+    };
+
+    // 이벤트 리스너 등록
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+
+    // 클린업
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [openPanels.size]);
+
 
   /**
-   * 컴팩트한 버전 카드 컴포넌트 - Hover Preview에서 사용
+   * 서브 뱃지 컴포넌트 - 2레벨+ 자식이 있을 때 표시
    */
-  const CompactVersionCard = ({ child, dark_mode, on_preview, on_publish }) => {
+  const SubVersionsBadge = ({ childrenCount, onClick, dark_mode }) => {
+    if (!childrenCount || childrenCount === 0) return null;
+    
+    return (
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.();
+        }}
+        className={`mt-3 px-3 py-1 text-xs rounded-full transition-all duration-200 flex items-center gap-1 ${
+          dark_mode 
+            ? 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 border border-gray-700/50' 
+            : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/50'
+        }`}
+      >
+        <span>{childrenCount}개 하위버전</span>
+        <span className="text-xs opacity-60">›</span>
+      </motion.button>
+    );
+  };
+
+  /**
+   * 컴팩트한 버전 카드 컴포넌트 - Apple 스타일 적용
+   */
+  const CompactVersionCard = ({ child, dark_mode, on_preview, on_publish, level = 1 }) => {
     const child_id = child.result_id || child.id;
+    const hasSubChildren = child.children && child.children.length > 0;
+    
+    // 단순한 Apple 스타일 색상
+    const cardStyles = {
+      bgColor: dark_mode ? 'bg-gray-800/80' : 'bg-white/80',
+      borderColor: 'border-gray-300/30',
+      hoverBorder: dark_mode ? 'hover:border-gray-500/50' : 'hover:border-gray-400/50'
+    };
     
     return (
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className={`relative p-3 rounded-lg border backdrop-blur-sm cursor-pointer group transition-all duration-200 ${
-          dark_mode 
-            ? 'bg-gray-800/80 border-gray-600/50 hover:border-blue-400/50' 
-            : 'bg-white/80 border-gray-300/50 hover:border-blue-400/50'
-        }`}
+        className={`relative p-3 rounded-xl border backdrop-blur-sm cursor-pointer group transition-all duration-200 ${
+          cardStyles.bgColor
+        } ${cardStyles.borderColor} ${cardStyles.hoverBorder}`}
         style={{ minWidth: '180px' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          on_preview?.(child);
+        }}
       >
         {/* 썸네일 */}
-        <div className="relative w-full h-20 rounded-md overflow-hidden mb-2">
+        <div className="relative w-full h-20 rounded-lg overflow-hidden mb-2">
           {child.thumbnail ? (
             <img 
               src={child.thumbnail} 
@@ -64,23 +150,25 @@ function ContentTreeView({
             </div>
           )}
           
-          {/* 버전 뱃지 */}
+          {/* 레벨별 버전 뱃지 */}
           <div className="absolute top-1 right-1">
-            <Badge className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300">
+            <Badge className={`text-xs ${
+              dark_mode ? 'bg-gray-700/80 text-gray-300' : 'bg-gray-100/80 text-gray-600'
+            }`}>
               v{child.version || '1.0'}
             </Badge>
           </div>
         </div>
 
         {/* 제목 */}
-        <div className={`text-sm font-medium mb-1 truncate ${
+        <div className={`text-sm font-medium mb-2 truncate ${
           dark_mode ? 'text-gray-200' : 'text-gray-800'
         }`}>
           {child.title || '제목 없음'}
         </div>
 
         {/* 상태 */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <div className={`text-xs ${
             child.status === 'completed' ? 'text-green-500' : 
             child.status === 'processing' ? 'text-yellow-500' : 
@@ -90,99 +178,128 @@ function ContentTreeView({
              child.status === 'processing' ? '처리중' : '대기'}
           </div>
           
-          {/* 액션 버튼들 */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                on_preview?.(child);
-              }}
-            >
-              <Eye className="w-3 h-3" />
-            </Button>
+          {/* 클릭 힌트 아이콘 */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <Eye className="w-4 h-4 text-gray-400" />
           </div>
         </div>
+        
+        {/* 서브 버전 뱃지 (하위 자식이 있을 때만) */}
+        {hasSubChildren && (
+          <SubVersionsBadge 
+            childrenCount={child.children.length}
+            onClick={() => {
+              // TODO: 하위 버전 패널 열기 로직 추가
+              console.log(`Opening sub-versions for ${child_id}`);
+            }}
+            dark_mode={dark_mode}
+          />
+        )}
       </motion.div>
     );
   };
 
   /**
-   * 버전 뱃지 + Hover Preview 패널 컴포넌트
+   * 패널 토글 함수
+   */
+  const togglePanel = (nodeId) => {
+    setOpenPanels(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+  };
+
+
+  /**
+   * 버전 뱃지 + 클릭 패널 컴포넌트 (계층적 확장 방식)
    */
   const VersionsBadgeWithPreview = ({ children, node_id, node_version, dark_mode, on_preview, on_publish }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const [showPreview, setShowPreview] = useState(false);
+    const isOpen = openPanels.has(node_id);
+    const panelRef = useRef(null);
     
-    // 최대 4개까지만 미리보기에 표시
-    const previewChildren = children.slice(0, 4);
+    // 1레벨 자식만 표시하도록 수정 (깊은 자식들은 서브 뱃지로 처리)
+    const directChildren = children || [];
+    const totalCount = directChildren.length;
     
     return (
-      <div 
-        className="relative"
-        onMouseEnter={() => {
-          setIsHovered(true);
-          // 약간의 지연 후 패널 표시 (너무 빠른 호버 방지)
-          setTimeout(() => setShowPreview(true), 150);
-        }}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          setShowPreview(false);
-        }}
-      >
-        {/* 버전 뱃지 */}
+      <div className="relative">
+        {/* 클릭 가능한 버전 뱃지 */}
         <motion.div
           whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className="inline-flex items-center gap-1 cursor-pointer"
+          onClick={() => togglePanel(node_id)}
+          data-panel-trigger="true"
         >
-          <Badge 
-            className={`px-2 py-1 text-xs font-medium transition-all duration-200 ${
-              isHovered 
-                ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-400/50' 
+          <div 
+            className={`px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-2 ${
+              isOpen 
+                ? dark_mode
+                  ? 'bg-gray-700 text-gray-200 shadow-sm'
+                  : 'bg-gray-100 text-gray-700 shadow-sm'
                 : dark_mode 
-                  ? 'bg-gray-700/50 text-gray-300 border-gray-600/50' 
-                  : 'bg-gray-100/50 text-gray-600 border-gray-300/50'
+                  ? 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/80' 
+                  : 'bg-gray-50/60 text-gray-600 hover:bg-gray-100/80'
             }`}
-            variant="outline"
           >
-            <GitBranch className="w-3 h-3 mr-1" />
-            {children.length}개 버전
-          </Badge>
+            <GitBranch className="w-4 h-4" />
+            <span>{totalCount}개 버전</span>
+            {/* 토글 화살표 */}
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              ▼
+            </motion.div>
+          </div>
         </motion.div>
 
-        {/* Hover Preview 패널 */}
+        {/* 클릭 패널 (호버 대신 클릭으로 변경) */}
         <AnimatePresence>
-          {showPreview && (
+          {isOpen && (
             <motion.div
-              initial={{ opacity: 0, x: -20, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -20, scale: 0.95 }}
+              ref={panelRef}
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ 
                 type: "spring", 
                 stiffness: 300, 
-                damping: 25,
-                staggerChildren: 0.05
+                damping: 25
               }}
-              className={`absolute top-0 left-full ml-4 z-50 p-4 rounded-xl border backdrop-blur-md shadow-2xl ${
+              className={`absolute top-full left-0 mt-3 z-50 p-6 rounded-2xl border backdrop-blur-xl shadow-xl ${
                 dark_mode 
-                  ? 'bg-gray-800/95 border-gray-600/30' 
-                  : 'bg-white/95 border-gray-300/30'
+                  ? 'bg-gray-900/95 border-gray-700/50' 
+                  : 'bg-white/95 border-gray-200/50'
               }`}
-              style={{ minWidth: '400px', maxWidth: '600px' }}
+              style={{ minWidth: '420px', maxWidth: '500px' }}
+              onClick={(e) => e.stopPropagation()} // 패널 내부 클릭 시 이벤트 버블링 방지
+              data-panel-content="true"
             >
-              {/* 헤더 */}
-              <div className={`text-sm mb-3 flex items-center gap-2 ${
-                dark_mode ? 'text-gray-300' : 'text-gray-700'
+              {/* Apple 스타일 헤더 */}
+              <div className={`text-base font-semibold mb-4 flex items-center justify-between ${
+                dark_mode ? 'text-gray-200' : 'text-gray-800'
               }`}>
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                파생 버전들 (v{node_version || '1.0'} 기반)
+                <span>버전 히스토리</span>
+                <button
+                  onClick={() => togglePanel(node_id)}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    dark_mode 
+                      ? 'hover:bg-gray-800 text-gray-400 hover:text-gray-300' 
+                      : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="w-4 h-4 flex items-center justify-center text-lg font-light">✕</div>
+                </button>
               </div>
 
-              {/* 버전 카드 그리드 */}
+              {/* 1레벨 자식 카드들만 표시 */}
               <motion.div 
-                className="grid grid-cols-2 gap-3"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -195,37 +312,34 @@ function ContentTreeView({
                   }
                 }}
               >
-                {previewChildren.map((child, index) => (
-                  <motion.div
-                    key={child.result_id || child.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 10 },
-                      visible: { opacity: 1, y: 0 }
-                    }}
-                  >
-                    <CompactVersionCard
-                      child={child}
-                      dark_mode={dark_mode}
-                      on_preview={on_preview}
-                      on_publish={on_publish}
-                    />
-                  </motion.div>
-                ))}
+                {/* 단순한 서브헤더 */}
+                <div className={`text-sm mb-4 ${
+                  dark_mode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {totalCount}개의 버전
+                </div>
+                
+                {/* 1레벨 자식 카드들 */}
+                <div className="grid grid-cols-2 gap-4">
+                  {directChildren.map((child) => (
+                    <motion.div 
+                      key={child.result_id || child.id}
+                      variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        visible: { opacity: 1, y: 0 }
+                      }}
+                    >
+                      <CompactVersionCard
+                        child={child}
+                        dark_mode={dark_mode}
+                        on_preview={on_preview}
+                        on_publish={on_publish}
+                        level={1}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               </motion.div>
-
-              {/* 더 많은 버전이 있을 때 안내 */}
-              {children.length > 4 && (
-                <motion.div 
-                  className={`text-center mt-3 text-xs ${
-                    dark_mode ? 'text-gray-400' : 'text-gray-500'
-                  }`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  +{children.length - 4}개 버전 더 있음
-                </motion.div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

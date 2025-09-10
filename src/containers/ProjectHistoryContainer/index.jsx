@@ -464,7 +464,13 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           is_open={preview_modal.open}
           item={preview_modal.item}
           dark_mode={dark_mode}
-          on_close={close_preview_modal}
+          on_close={(e) => {
+            // 이벤트 버블링 방지 (트리 패널이 함께 닫히는 것을 방지)
+            if (e && e.stopPropagation) {
+              e.stopPropagation();
+            }
+            close_preview_modal();
+          }}
           mode="launch"
           on_edit={(_item) => {
             close_preview_modal();
