@@ -3,7 +3,7 @@
  * YouTube와 Reddit 플랫폼을 지원하는 통합 미디어 제작 요청 모달
  */
 
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -59,6 +59,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
   const handle_close = useCallback(() => {
     if (is_submitting) return;
     setSelectedPlatform('youtube'); // 플랫폼 초기화
+    autoSubmitExecutedRef.current = false; // 자동 제출 플래그 초기화
     on_close();
   }, [is_submitting, on_close]);
 
@@ -79,23 +80,38 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     }
   }, [is_open, handle_key_down]);
 
-  // 🧪 테스트 모드 자동 입력 처리
+  // 자동 제출 상태 추적을 위한 ref
+  const autoSubmitExecutedRef = useRef(false);
+  
+  // 🧪 TEST: 테스트 모드 자동 입력 처리 (의존성 배열 최적화)
   useEffect(() => {
     if (is_open && testModeData?.testMode && testModeData?.autoFill) {
+      // 이미 자동 제출이 실행되었다면 중복 실행 방지
+      if (autoSubmitExecutedRef.current) {
+        return;
+      }
+      
       // 플랫폼 설정
       if (testModeData.platform) {
         setSelectedPlatform(testModeData.platform);
       }
       
-      // 약간의 지연 후 테스트 데이터 자동 입력
+      // 즉시 테스트용 위치 선택 (타이밍 문제 해결)
+      console.log('[TEST MODE] 테스트 위치 자동 선택 시작');
+      const testLocation = {
+        poi_id: "POI001", // 백엔드 API 호환성을 위한 poi_id 사용
+        name: "강남역",
+        address: "서울특별시 강남구",
+        district: "강남구",
+        coordinates: { lat: 37.498095, lng: 127.027610 }
+      };
+      
+      // 위치 즉시 설정 (지연 없이)
+      handle_location_select(testLocation);
+      console.log('[TEST MODE] 위치 선택 완료:', testLocation);
+      
+      // 나머지 데이터는 약간의 지연 후 설정
       setTimeout(() => {
-        // 테스트용 위치 선택
-        const testLocation = {
-          poi_id: "test_location_001",
-          name: "테스트 위치 (강남역)",
-        };
-        handle_location_select(testLocation);
-        
         // 테스트용 이미지 파일 생성
         const canvas = document.createElement('canvas');
         canvas.width = 200;
@@ -114,22 +130,25 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
             type: 'image/png'
           });
           handle_file_change(testFile);
+          console.log('[TEST MODE] 테스트 이미지 생성 완료');
         });
         
         // 테스트용 프롬프트 입력
         const testPrompt = `🧪 테스트 모드로 생성된 ${testModeData.platform === 'youtube' ? '영상' : '이미지'} 콘텐츠입니다.`;
         handle_prompt_change(testPrompt);
+        console.log('[TEST MODE] 프롬프트 설정 완료:', testPrompt);
         
-        // 자동 제출 모드라면 추가 지연 후 제출
-        if (testModeData.autoSubmit) {
+        // 자동 제출 모드라면 추가 지연 후 제출 (중복 방지)
+        if (testModeData.autoSubmit && !autoSubmitExecutedRef.current) {
           setTimeout(() => {
-            console.log(`[TEST AUTO-SUBMIT] ${testModeData.platform} 콘텐츠 자동 제출`);
+            console.log(`[TEST AUTO-SUBMIT] ${testModeData.platform} 콘텐츠 자동 제출 실행`);
+            autoSubmitExecutedRef.current = true; // 실행 플래그 설정
             handle_submit();
           }, 1000);
         }
-      }, 300);
+      }, 200);
     }
-  }, [is_open, testModeData, handle_location_select, handle_file_change, handle_prompt_change, handle_submit]);
+  }, [is_open, testModeData?.testMode, testModeData?.autoFill, testModeData?.autoSubmit, testModeData?.platform]); // handle_submit 제거
 
   if (!is_open) return null;
 

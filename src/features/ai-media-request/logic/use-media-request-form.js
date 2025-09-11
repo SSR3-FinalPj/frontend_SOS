@@ -8,32 +8,12 @@ import { use_content_launch } from '@/features/content-management/logic/use-cont
 import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/api';
 import { generateTempVideoId } from '@/common/utils/unique-id';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
-
-/**
- * 테스트용 API 목업 함수들
- */
-const mockS3Upload = async (file, locationId, prompt, platform) => {
-  // 실제 업로드 시간 시뮬레이션 (1-2초)
-  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-  
-  return {
-    jobId: `test_job_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-    s3Key: `test-uploads/${platform}/${locationId}/${Date.now()}.jpg`,
-    success: true,
-    message: `테스트 모드: ${platform} 영상 생성 요청 완료`
-  };
-};
-
-const mockRegenerateVideo = async (videoId, prompt) => {
-  // 재생성 시간 시뮬레이션
-  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
-  
-  return {
-    success: true,
-    jobId: `regen_job_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-    message: '테스트 모드: 영상 재생성 요청 완료'
-  };
-};
+// 🧪 TEST-ONLY: 테스트 헬퍼 import (삭제 시 이 라인만 제거)
+import { 
+  processTestMediaRequest,
+  processTestFailure,
+  processTestRegeneration
+} from '@/common/utils/test-helpers';
 
 /**
  * useMediaRequestForm 커스텀 훅
@@ -165,16 +145,18 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
-      // 🚀 영상 데이터 생성 및 낙관적 UI 적용
+      // 🚀 영상 데이터 생성 및 낙관적 UI 적용 (poi_id 우선 사용)
       const video_temp_id = generateTempVideoId();
       const video_data = {
         temp_id: video_temp_id,
         title: `${selected_location.name} AI ${selectedPlatform === 'youtube' ? '영상' : '이미지'}`,
-        location_id: selected_location.poi_id,
+        poi_id: selected_location.poi_id, // 백엔드 API 주 필드
+        location_id: selected_location.poi_id, // 하위 호환성을 위한 중복 필드
         location_name: selected_location.name,
         image_url: image_url,
         user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
-        platform: selectedPlatform
+        platform: selectedPlatform,
+        status: testMode ? 'completed' : 'processing' // 🧪 TEST-ONLY: 테스트 모드에서는 즉시 완료 상태
       };
 
       // 🔥 핵심 수정: 항상 스토어에 즉시 반영하여 데이터 일관성 보장
@@ -221,24 +203,14 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
           let uploadResult;
           
           if (testMode) {
-            // 🧪 테스트 모드: 목업 API 사용
-            uploadResult = await mockS3Upload(
+            // 🧪 TEST-ONLY: 중앙화된 테스트 처리 함수 사용
+            uploadResult = await processTestMediaRequest(
               uploaded_file,
-              selected_location.poi_id,
+              selected_location,
               prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-              selectedPlatform
+              selectedPlatform,
+              video_temp_id
             );
-            
-            // 테스트 모드 성공 알림
-            useNotificationStore.getState().add_notification({
-              type: 'info',
-              message: `🧪 ${uploadResult.message}`,
-              data: { 
-                platform: selectedPlatform,
-                temp_id: video_temp_id,
-                testMode: true
-              }
-            });
           } else {
             // 🚀 실제 모드: 실제 S3 업로드
             uploadResult = await uploadImageToS3Complete(
@@ -259,21 +231,25 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
           }
           
         } catch (background_error) {
-          // 백그라운드 작업 실패 시 영상을 실패 상태로 전환
-          use_content_launch.getState().transition_to_failed(video_temp_id);
-          
-          // 사용자에게 실패 알림
-          useNotificationStore.getState().add_notification({
-            type: 'error',
-            message: `${selectedPlatform.toUpperCase()} 업로드에 실패했습니다: ${background_error.message}`,
-            data: { 
-              platform: selectedPlatform,
-              error: background_error.message,
-              temp_id: video_temp_id,
-              failed_at: new Date().toISOString(),
-              testMode
-            }
-          });
+          // 🧪 TEST-ONLY: 중앙화된 테스트 실패 처리 함수 사용
+          if (testMode) {
+            processTestFailure(video_temp_id, background_error, selectedPlatform);
+          } else {
+            use_content_launch.getState().transition_to_failed(video_temp_id);
+            
+            // 실제 모드 실패 알림
+            useNotificationStore.getState().add_notification({
+              type: 'error',
+              message: `${selectedPlatform.toUpperCase()} 업로드에 실패했습니다: ${background_error.message}`,
+              data: { 
+                platform: selectedPlatform,
+                error: background_error.message,
+                temp_id: video_temp_id,
+                failed_at: new Date().toISOString(),
+                testMode
+              }
+            });
+          }
         }
       })();
       
@@ -316,7 +292,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
 
       // 영상 재생성 API 호출
       const result = testMode 
-        ? await mockRegenerateVideo(videoId, prompt_text.trim())
+        ? await processTestRegeneration(videoId, prompt_text.trim())
         : await regenerateVideo(videoId, prompt_text.trim());
 
       // 성공 시 폼 초기화 및 모달 닫기

@@ -25,11 +25,22 @@ export const generateUniqueId = (prefix = 'id') => {
 };
 
 /**
- * 임시 영상 ID 생성 (temp- 접두사)
- * @returns {string} 고유한 임시 ID
+ * 임시 영상 ID 생성 (숫자 기반 - 백엔드 API 호환성)
+ * 🧪 TEST-ONLY: 백엔드 연동 후 실제 result_id 사용 시 이 함수는 삭제 예정
+ * @returns {number} 고유한 숫자 임시 ID
  */
 export const generateTempVideoId = () => {
-  return generateUniqueId('temp');
+  // 현재 타임스탬프 + 카운터로 고유한 숫자 ID 생성
+  const timestamp = Date.now();
+  const currentCounter = ++counter;
+  
+  // 카운터가 너무 커지면 리셋
+  if (counter > 999999) {
+    counter = 0;
+  }
+  
+  // 숫자 조합: 타임스탬프 뒤 3자리 + 카운터 (최대 6자리)
+  return parseInt(`${timestamp}${currentCounter.toString().padStart(3, '0')}`);
 };
 
 /**

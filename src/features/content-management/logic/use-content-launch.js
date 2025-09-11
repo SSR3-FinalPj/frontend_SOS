@@ -224,75 +224,37 @@ export const use_content_launch = create(
        * @param {string} creation_date - 생성 날짜 (YYYY-MM-DD 형식)
        */
       add_pending_video: (video_data, creation_date) => {
+        // 단일 진실 공급원: pending_videos만 갱신하고 folders는 파생시킨다.
         const new_pending_video = {
           temp_id: generateTempVideoId(),
           title: video_data.title || '새로운 AI 영상',
           status: 'PROCESSING',
-          
-          // ✨ 수정된 부분: 'created_at' 속성을 추가합니다.
-          // 폴링 시스템이 이 값을 기준으로 비디오를 찾습니다.
-          created_at: new Date().toISOString(), 
-          
+          created_at: new Date().toISOString(),
           start_time: new Date().toISOString(),
-          creationTime: new Date().toISOString(), // 'creationTime'은 오타일 수 있으나 일단 유지합니다.
+          creationTime: new Date().toISOString(),
           image_url: video_data.image_url,
           creation_date: creation_date,
           ...video_data
         };
-        
-        // 현재 folders 상태에서 creation_date와 일치하는 폴더 찾기
-        const current_folders = get().folders;
-        const existing_folder_index = current_folders.findIndex(folder => folder.date === creation_date);
-        
-        if (existing_folder_index !== -1) {
-          // 기존 폴더가 있는 경우: 해당 폴더의 items 맨 뒤에 추가 (시간순 정렬)
-          const updated_folders = [...current_folders];
-          updated_folders[existing_folder_index] = {
-            ...updated_folders[existing_folder_index],
-            items: [...updated_folders[existing_folder_index].items, new_pending_video],
-            item_count: updated_folders[existing_folder_index].item_count + 1
-          };
-          set({ folders: updated_folders });
-        } else {
-          // 새로운 폴더 생성: 현재 날짜로 폴더를 만들고 전체 폴더 목록 맨 앞에 추가 (안전한 날짜 파싱 적용)
-          const new_folder = {
-            date: creation_date,
-            display_date: parseSafeDate(creation_date + 'T00:00:00').toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }),
-            item_count: 1,
-            items: [new_pending_video]
-          };
-          
-          set((state) => ({
-            folders: [new_folder, ...state.folders]
-          }));
-        }
-        
-        // pending_videos 상태도 업데이트 (localStorage 저장용) - 시간순 정렬
+
+        // pending_videos에만 추가
         set((state) => ({
           pending_videos: [...state.pending_videos, new_pending_video]
         }));
-        
-        // 🚀 새로운 PROCESSING 영상 추가 시 스마트 폴링 자동 시작
+
+        // 새로운 PROCESSING 항목이 생겼다면 스마트 폴링 시작
         const { smart_polling_active } = get();
         if (!smart_polling_active) {
           get().start_smart_polling();
         }
-        
-        // ⚡ 강화된 즉시 폴더 목록 갱신하여 UI 실시간 반영
-        const immediateUpdate = () => {
+
+        // 파생 상태 folders는 항상 fetch_folders로 재구성
+        const refreshFolders = () => {
           get().fetch_folders();
-          console.log(`[낙관적 UI] 새 영상 추가 후 폴더 목록 갱신 - ${new_pending_video.title}`);
+          console.log(`[파생 상태 갱신] 새 영상 추가 후 폴더 재생성 - ${new_pending_video.title}`);
         };
-        
-        // 즉시 실행
-        immediateUpdate();
-        
-        // 상태 안정화 후 재실행
-        setTimeout(immediateUpdate, 50);
+        refreshFolders();
+        setTimeout(refreshFolders, 50);
       },
       
       /**

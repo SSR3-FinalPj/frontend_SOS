@@ -38,6 +38,23 @@ const ContentItemCard = ({
   selected_video_id,
   on_video_select
 }) => {
+  // 🧪 TEST-ONLY: ContentItemCard에서 받은 item 데이터 로깅 (타입 안전 검사)
+  const isTestItem = (
+    item.title?.includes('AI 영상') ||
+    (typeof item.id === 'string' && item.id.includes('temp-')) ||
+    (typeof item.temp_id === 'string' && item.temp_id.includes('temp-')) ||
+    (typeof item.temp_id === 'number' && item.temp_id > 1700000000000)
+  );
+  if (isTestItem) {
+    console.log(`[CONTENT CARD] 표시될 item 데이터:`, {
+      item,
+      title: item.title,
+      id: item.id,
+      temp_id: item.temp_id,
+      video_id: item.video_id
+    });
+  }
+  
   // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
   const item_id = item.video_id || item.temp_id || item.id;
   const is_uploading = uploading_items.includes(item_id);

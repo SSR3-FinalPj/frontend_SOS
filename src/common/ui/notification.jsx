@@ -31,7 +31,8 @@ const Notification = () => {
     unread_count,
     mark_as_read, 
     mark_all_as_read, 
-    remove_notification 
+    remove_notification,
+    clear_all_notifications
   } = useNotificationStore();
 
   // 드롭다운 위치 계산 함수
@@ -76,6 +77,14 @@ const Notification = () => {
   const handleMarkAllRead = useCallback(() => {
     mark_all_as_read();
   }, [mark_all_as_read]);
+
+  // 모든 알림 삭제 처리
+  const handleClearAllNotifications = useCallback(() => {
+    if (confirm('모든 알림을 삭제하시겠습니까?')) {
+      clear_all_notifications();
+      setIsOpen(false); // 드롭다운 닫기
+    }
+  }, [clear_all_notifications]);
 
   // 알림 삭제 핸들러
   const handleRemoveNotification = useCallback((e, notificationId) => {
@@ -151,17 +160,30 @@ const Notification = () => {
                     알림
                   </h3>
                 </div>
-                {unread_count > 0 && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleMarkAllRead}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-blue-50/80 dark:bg-blue-900/30 rounded-lg transition-all duration-200 hover:bg-blue-100/80 dark:hover:bg-blue-900/50"
-                  >
-                    <Check className="w-3 h-3" />
-                    모두 읽음
-                  </motion.button>
-                )}
+                <div className="flex items-center gap-2">
+                  {unread_count > 0 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleMarkAllRead}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-blue-50/80 dark:bg-blue-900/30 rounded-lg transition-all duration-200 hover:bg-blue-100/80 dark:hover:bg-blue-900/50"
+                    >
+                      <Check className="w-3 h-3" />
+                      모두 읽음
+                    </motion.button>
+                  )}
+                  {notifications.length > 0 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleClearAllNotifications}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 bg-red-50/80 dark:bg-red-900/30 rounded-lg transition-all duration-200 hover:bg-red-100/80 dark:hover:bg-red-900/50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      모두 삭제
+                    </motion.button>
+                  )}
+                </div>
               </div>
               {unread_count > 0 && (
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-medium">

@@ -1,6 +1,9 @@
 /**
- * 간소화된 테스트 컨트롤 패널
+ * 🧪 TEST COMPONENT - 간소화된 테스트 컨트롤 패널
  * 핵심 기능 5가지만 제공: 생성, 미리보기, 수정, 업로드, 자식노드 생성
+ * 
+ * ⚠️ 주의: 이 컴포넌트는 테스트 목적으로만 사용됩니다.
+ * 프로덕션 환경에서는 이 파일을 삭제해야 합니다.
  */
 
 import React, { useState } from 'react';
@@ -25,12 +28,14 @@ const TestControlPanel = ({ dark_mode = false }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('youtube');
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [isCreating, setIsCreating] = useState(false); // 생성 중 상태
   
   const {
     pending_videos,
     folders,
     simulate_upload,
-    select_video
+    select_video,
+    add_pending_video
   } = use_content_launch();
 
   const {
@@ -65,17 +70,30 @@ const TestControlPanel = ({ dark_mode = false }) => {
     return all_videos;
   }, [folders, pending_videos]);
 
-  // 1. 영상 생성
+  // 1. 영상 생성 (중복 방지 로직 포함)
   const handleCreateVideo = () => {
+    if (isCreating) {
+      alert('이미 영상 생성 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    
+    setIsCreating(true);
+    
+    // 🧪 TEST: AI 미디어 모달 열기 이벤트 발생
     const testEvent = new CustomEvent('test-open-ai-media-modal', {
       detail: { 
         testMode: true, 
         platform: selectedPlatform,
         autoFill: true,
-        autoSubmit: false
+        autoSubmit: true // 자동 제출 활성화
       }
     });
     window.dispatchEvent(testEvent);
+    
+    // 3초 후 생성 버튼 다시 활성화 (충분한 시간 후)
+    setTimeout(() => {
+      setIsCreating(false);
+    }, 3000);
   };
 
   // 2. 미리보기
@@ -124,33 +142,62 @@ const TestControlPanel = ({ dark_mode = false }) => {
       return;
     }
 
-    // 간단한 트리 구조 데이터 생성
-    const parentId = selectedVideo.result_id || selectedVideo.id || Date.now();
-    const childId = parentId + 1;
+    // 자식 영상 데이터 생성 (poi_id 우선, 백엔드 API 호환성 강화)
+    const basePoi = selectedVideo.poi_id || selectedVideo.location_id || "POI001";
+    const childVideoData = {
+      temp_id: generateReactKey(Date.now(), 'child_video'),
+      title: `${selectedVideo.title || '테스트 영상'} - 수정본 v${Math.floor(Math.random() * 10) + 2}`,
+      poi_id: basePoi, // 백엔드 API 주 필드 (uploadImageToS3Complete 호환)
+      location_id: basePoi, // 하위 호환성을 위한 중복 필드
+      location_name: selectedVideo.location_name || '강남역',
+      image_url: selectedVideo.image_url || '/placeholder-image.jpg',
+      thumbnail: selectedVideo.thumbnail || selectedVideo.image_url || '/placeholder-image.jpg', // thumbnail 추가
+      user_request: `${selectedVideo.title}의 개선된 버전`,
+      prompt: `${selectedVideo.title}의 개선된 버전`, // prompt 필드 추가
+      platform: selectedVideo.platform || selectedPlatform,
+      status: 'ready',
+      parent_id: selectedVideo.result_id || selectedVideo.id || selectedVideo.temp_id,
+      version: `1.${Math.floor(Math.random() * 10) + 1}`,
+      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(), // 중복 필드로 호환성 보장
+      creation_date: new Date().toISOString().split('T')[0] // 날짜 형식 추가
+    };
+
+    // 현재 날짜로 자식 영상을 실제 스토어에 추가
+    const creation_date = new Date().toISOString().split('T')[0];
+    add_pending_video(childVideoData, creation_date);
     
+    // 추가 동기화: fetch_folders 호출하여 ProjectHistoryContainer 즉시 갱신
+    setTimeout(() => {
+      const { fetch_folders } = use_content_launch.getState();
+      fetch_folders();
+      console.log('[테스트 패널] 자식 노드 생성 후 폴더 목록 갱신 실행');
+    }, 100);
+
+    // 트리 구조를 위한 이벤트도 발생 (버전 네비게이션용)
+    const parentId = selectedVideo.result_id || selectedVideo.id || selectedVideo.temp_id;
     const treeData = [
       {
         result_id: parentId,
         title: selectedVideo.title || `테스트 영상 (부모)`,
         platform: selectedVideo.platform || selectedPlatform,
-        status: 'ready',
+        status: selectedVideo.status || 'ready',
         version: '1.0',
-        created_at: new Date().toISOString(),
+        created_at: selectedVideo.created_at || new Date().toISOString(),
         children: [
           {
-            result_id: childId,
-            title: `${selectedVideo.title || '테스트 영상'} - 수정본`,
-            platform: selectedVideo.platform || selectedPlatform,
-            status: 'ready', 
-            version: '1.1',
-            created_at: new Date().toISOString(),
+            result_id: childVideoData.temp_id,
+            title: childVideoData.title,
+            platform: childVideoData.platform,
+            status: childVideoData.status,
+            version: childVideoData.version,
+            created_at: childVideoData.created_at,
             children: []
           }
         ]
       }
     ];
 
-    // 트리 구조 테스트 이벤트 발생
     const testEvent = new CustomEvent('test-tree-structure', {
       detail: { 
         tree_data: treeData,
@@ -160,7 +207,7 @@ const TestControlPanel = ({ dark_mode = false }) => {
     });
     window.dispatchEvent(testEvent);
     
-    alert('자식 버전이 생성되었습니다. 버전 네비게이션에서 확인해보세요!');
+    alert(`자식 버전 "${childVideoData.title}"이 생성되었습니다!`);
   };
 
   // 영상 선택 핸들러
@@ -281,9 +328,19 @@ const TestControlPanel = ({ dark_mode = false }) => {
               onClick={handleCreateVideo}
               className="w-full bg-green-500 hover:bg-green-600 text-white"
               size="sm"
+              disabled={isCreating}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              1. 영상 생성
+              {isCreating ? (
+                <>
+                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  생성 중...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  1. 영상 생성
+                </>
+              )}
             </Button>
 
             {/* 2. 미리보기 */}

@@ -59,6 +59,16 @@ const SingleVideoViewer = ({
     id: currentNode.result_id || currentNode.id,
     type: 'video'
   };
+  
+  // 🧪 TEST: SingleVideoViewer에서 받은 currentNode 데이터 로깅
+  if (currentNode.title?.includes('AI 영상') || currentNode.result_id?.includes('temp-')) {
+    console.log(`[SINGLE VIDEO] currentNode 데이터:`, {
+      currentNode,
+      cardItem,
+      title: currentNode.title,
+      result_id: currentNode.result_id
+    });
+  }
 
   return (
     <motion.div

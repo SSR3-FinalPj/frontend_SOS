@@ -194,55 +194,8 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     }, 200); // 200ms 디바운스로 증가하여 과도한 호출 방지
   }, [fetch_folders]);
 
-  // 컴포넌트 마운트 시 폴더 데이터 로딩 및 실시간 동기화
-  useEffect(() => {
-    fetch_folders();
-    
-    // 🔍 개발 환경에서만 디버그 기능 활성화
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[ProjectHistoryContainer] 컴포넌트 마운트됨 - 초기 폴더 로딩');
-      
-      // 전역 디버그 함수 등록 (함수 정의 후에 접근하도록 지연)
-      setTimeout(() => {
-        window.debugProjectHistory = {
-          checkSyncStatus: () => {
-            const all_videos_from_folders = [];
-            folders.forEach(folder => {
-              if (folder.items) all_videos_from_folders.push(...folder.items);
-            });
-            
-            console.log('[디버그] 현재 동기화 상태:', {
-              folders_count: folders.length,
-              pending_videos_count: pending_videos.length,
-              videos_from_folders: all_videos_from_folders.length,
-              projects_count: convert_to_projects().length,
-              folders: folders,
-              pending_videos: pending_videos,
-              all_videos_from_folders: all_videos_from_folders
-            });
-          },
-          forceFolderUpdate: () => {
-            console.log('[디버그] 강제 폴더 업데이트 실행');
-            fetch_folders();
-          },
-          clearData: () => {
-            localStorage.removeItem('content-launch-storage');
-            window.location.reload();
-          },
-          showVideoDetails: () => {
-            const projects = convert_to_projects();
-            const contents = convert_to_contents();
-            console.log('[디버그] 생성된 프로젝트 및 콘텐츠:', {
-              projects: projects,
-              contents: contents
-            });
-          }
-        };
-      }, 100);
-      
-      console.log('[ProjectHistoryContainer] 디버그 기능 활성화됨 - window.debugProjectHistory 사용 가능');
-    }
-  }, [fetch_folders]);
+  // 컴포넌트 마운트 시 강제 fetch_folders 호출 제거
+  // Zustand persist가 초기 상태를 복원하므로 별도 초기 페치가 필요하지 않습니다.
 
   // 🔥 핵심 추가: pending_videos와 folders 변화 시 실시간 동기화 (디바운스 적용)
   useEffect(() => {
@@ -292,8 +245,8 @@ function ProjectHistoryContainer({ dark_mode = false }) {
         set_pending_video_data({
           testMode: true,
           platform: platform || 'youtube',
-          autoFill: autoFill || false,
-          autoSubmit: autoSubmit || false
+          autoFill: autoFill !== false, // 기본값을 true로 변경
+          autoSubmit: autoSubmit === true // 명시적으로 true일 때만 자동 제출
         });
         
         console.log(`[TEST] AI 미디어 요청 모달 열기 - 플랫폼: ${platform}, 자동채움: ${autoFill}, 자동제출: ${autoSubmit}`);
@@ -370,6 +323,16 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     set_pending_video_data(requestData);
     set_is_success_modal_open(true);
     set_is_request_modal_open(false);
+    
+    // 📊 ProjectHistoryContainer 전용: 새로 생성된 영상의 프로젝트 자동 확장 (poi_id 우선)
+    const videoLocationId = video_data.poi_id || video_data.location_id;
+    if (videoLocationId) {
+      setTimeout(() => {
+        const projectId = `project_${videoLocationId}`;
+        set_expanded_projects(prev => new Set([...prev, projectId]));
+        console.log(`[자동 확장] 프로젝트 ${projectId} 확장됨 (poi_id 우선)`);
+      }, 500);
+    }
     
     // ⚡ 강화된 즉시 폴더 목록 갱신 - 다중 시도로 확실한 UI 반영 보장
     const ensureUIUpdate = async () => {
@@ -498,22 +461,42 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     const location_groups = groupVideosByLocation(all_videos);
     
     location_groups.forEach(group => {
-      all_contents[group.id] = group.items.map(video => ({
-        id: video.id || video.temp_id || video.resultId,
-        title: video.title || '제목 없음',
-        type: 'video',
-        version: video.version || '1.0', // 버전 정보 활용
-        parentId: null,
-        isLive: video.status === 'completed',
-        thumbnail: video.thumbnail || video.image_url || '',
-        createdAt: video.creation_date || video.createdAt || new Date().toISOString(),
-        prompt: video.prompt || video.user_request || '',
-        feedback: video.feedback || '',
-        resultId: video.resultId,
-        status: video.status,
-        location_id: video.location_id || video.poi_id, // 장소 정보 보존
-        location_name: group.name // 장소명 추가
-      }));
+      all_contents[group.id] = group.items.map(video => {
+        // 🧪 TEST-ONLY: 디버깅을 위한 로그 (타입 안전 검사 적용)
+        const isTestData = (
+          (typeof video.temp_id === 'string' && video.temp_id.includes('temp-')) ||
+          (typeof video.temp_id === 'number' && video.temp_id > 1700000000000) || // 타임스탬프 기반 숫자 ID 감지
+          video.title?.includes('🧪') || 
+          video.title?.includes('AI 영상')
+        );
+        if (isTestData) {
+          console.log(`[DEBUG] 영상 데이터 매핑:`, {
+            original_video: video,
+            mapped_title: video.title || '제목 없음',
+            video_id: video.id || video.temp_id || video.resultId,
+            status: video.status,
+            location_id: video.location_id,
+            poi_id: video.poi_id
+          });
+        }
+        
+        return {
+          id: video.id || video.temp_id || video.resultId,
+          title: video.title || '제목 없음',
+          type: 'video',
+          version: video.version || '1.0', // 버전 정보 활용
+          parentId: null,
+          isLive: video.status === 'completed',
+          thumbnail: video.thumbnail || video.image_url || '',
+          createdAt: video.creation_date || video.createdAt || new Date().toISOString(),
+          prompt: video.prompt || video.user_request || '',
+          feedback: video.feedback || '',
+          resultId: video.resultId,
+          status: video.status,
+          location_id: video.location_id || video.poi_id, // 장소 정보 보존
+          location_name: group.name // 장소명 추가
+        };
+      });
     });
 
     return all_contents;
@@ -637,7 +620,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
         on_request_success={handleRequestSuccess}
         isEditMode={selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded')}
         dark_mode={dark_mode}
-        testModeData={pending_video_data?.testMode ? pending_video_data : null}
+        testModeData={pending_video_data?.testMode ? pending_video_data : null} // 테스트 모드 데이터 전달
       />
 
       {is_edit_modal_open && selected_video_data && (
@@ -970,6 +953,11 @@ function ProjectHistoryContainer({ dark_mode = false }) {
 
       {/* 모든 모달들 */}
       {render_modals()}
+
+      {/* 테스트 컨트롤 패널 (개발 환경에서만 표시) */}
+      {process.env.NODE_ENV === 'development' && (
+        <TestControlPanel dark_mode={dark_mode} />
+      )}
     </div>
   );
 }

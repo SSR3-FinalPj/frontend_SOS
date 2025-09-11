@@ -37,13 +37,29 @@ const VersionNavigationSystem = ({
   
   // 트리 데이터 처리 (treeData가 있으면 사용, 없으면 contents를 변환)
   const processedTreeData = React.useMemo(() => {
+    // 🧪 TEST: VersionNavigationSystem에 전달된 데이터 로깅
+    if (contents && contents.length > 0) {
+      const hasTestData = contents.some(c => c.title?.includes('AI 영상') || c.id?.includes('temp-'));
+      if (hasTestData) {
+        console.log(`[VERSION NAV] 받은 contents 데이터:`, contents);
+      }
+    }
+    
     if (treeData && Array.isArray(treeData) && treeData.length > 0) {
       return treeData;
     }
     
     // contents를 트리 구조로 변환 (기존 로직 유지)
     if (contents && contents.length > 0) {
-      return convertToTreeData(contents);
+      const converted = convertToTreeData(contents);
+      
+      // 🧪 TEST: 변환된 트리 데이터 로깅
+      const hasTestData = converted.some(c => c.title?.includes('AI 영상') || c.result_id?.includes('temp-'));
+      if (hasTestData) {
+        console.log(`[VERSION NAV] 변환된 트리 데이터:`, converted);
+      }
+      
+      return converted;
     }
     
     return [];
