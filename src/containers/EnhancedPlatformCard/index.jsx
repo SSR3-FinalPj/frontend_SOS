@@ -4,7 +4,6 @@ import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as Recharts
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip';
 
 function EnhancedPlatformCard({ platform, index }) {
-  const Icon = platform.icon;
 
   return (
     <motion.div
@@ -20,7 +19,7 @@ function EnhancedPlatformCard({ platform, index }) {
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center`}>
-                <Icon className="w-10 h-10" />
+                <img src={platform.icon} alt={platform.name} className="w-10 h-10" />
               </div>
               <div>
                 <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">{platform.name}</h3>
