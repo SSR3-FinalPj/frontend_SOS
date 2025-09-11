@@ -7,6 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/api';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
+import { useMediaRequestStore } from '@/common/stores/media-request-store';
 
 /**
  * 테스트용 API 목업 함수들
@@ -45,6 +46,9 @@ const mockRegenerateVideo = async (videoId, prompt) => {
  * @returns {Object} 폼 상태와 핸들러들
  */
 export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube', testMode = false) => {
+  // Media request store
+  const { setLastVideoRequest } = useMediaRequestStore();
+  
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -153,7 +157,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creation_date = new Date().toISOString().split('T')[0];
       
-      // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
+      // 마지막 요청 정보를 store에 저장 (자동 생성용)
       const last_request_info = {
         location: selected_location,
         image_url: null,
@@ -161,7 +165,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         platform: selectedPlatform,
         timestamp: new Date().toISOString()
       };
-      localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
+      setLastVideoRequest(last_request_info);
       
       // 🚀 영상 데이터 생성 및 낙관적 UI 적용
       const video_temp_id = `temp-${Date.now()}`;

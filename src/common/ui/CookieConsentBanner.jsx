@@ -7,25 +7,26 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cookie } from 'lucide-react';
 import { Button } from '@/common/ui/button';
+import { useConsentStore } from '@/common/stores/consent-store';
 
 /**
  * CookieConsentBanner 컴포넌트
  * @returns {JSX.Element|null} 쿠키 동의 배너 컴포넌트
  */
 const CookieConsentBanner = () => {
+  const { cookieConsent, setCookieConsent } = useConsentStore();
   const [isVisible, setIsVisible] = useState(false);
 
   // 쿠키 동의 상태 확인
   useEffect(() => {
-    const consent = localStorage.getItem('cookie_consent');
-    if (!consent) {
+    if (!cookieConsent) {
       setIsVisible(true);
     }
-  }, []);
+  }, [cookieConsent]);
 
   // 동의 처리 함수
   const handleAccept = () => {
-    localStorage.setItem('cookie_consent', 'true');
+    setCookieConsent(true);
     setIsVisible(false);
   };
 
