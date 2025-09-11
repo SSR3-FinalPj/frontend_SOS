@@ -6,6 +6,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/api';
+import { generateTempVideoId } from '@/common/utils/unique-id';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 
 /**
@@ -112,6 +113,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
           })
           .catch(error => {
             console.warn('이미지 자동 로드 실패:', error);
+            // 이미지 자동 로드 실패
           });
       }
       
@@ -164,7 +166,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
       // 🚀 영상 데이터 생성 및 낙관적 UI 적용
-      const video_temp_id = `temp-${Date.now()}`;
+      const video_temp_id = generateTempVideoId();
       const video_data = {
         temp_id: video_temp_id,
         title: `${selected_location.name} AI ${selectedPlatform === 'youtube' ? '영상' : '이미지'}`,

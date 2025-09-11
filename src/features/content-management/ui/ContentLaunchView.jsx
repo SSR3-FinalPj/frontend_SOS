@@ -6,6 +6,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Plus, RefreshCw, TestTube, Code } from 'lucide-react';
 import ContentFolderCard from '@/features/content-management/ui/ContentFolderCard';
+import { generateTempVideoId } from '@/common/utils/unique-id';
 import GeneratedVideoPreviewModal from '@/features/content-modals/ui/GeneratedVideoPreviewModal';
 import ContentPublishModal from '@/features/content-modals/ui/ContentPublishModal';
 import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestModal';
@@ -90,17 +91,8 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   
   // 성공 모달 닫기 핸들러 - 실제 비디오 카드 추가
   const handleSuccessModalClose = () => {
-    if (pending_video_data) {
-      const { video_data, creation_date, isPriority } = pending_video_data;
-      
-      if (isPriority) {
-        replace_processing_video(video_data, creation_date);
-      } else {
-        add_pending_video(video_data, creation_date);
-      }
-      
-      set_pending_video_data(null);
-    }
+    // 영상 추가 로직은 use-media-request-form.js에서 이미 처리되었으므로 여기서는 모달만 닫습니다.
+    set_pending_video_data(null);
     set_is_success_modal_open(false);
   };
 
@@ -115,7 +107,7 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
       description: `Result ID: ${resultId}에 대한 업로드 테스트입니다.`,
       platform: 'youtube',
       video_id: `test-video-${Date.now()}`,
-      temp_id: `temp-${Date.now()}`,
+      temp_id: generateTempVideoId(),
       status: 'COMPLETED',
       created_at: new Date().toISOString(),
       thumbnail: '/placeholder-thumbnail.jpg' // 플레이스홀더 썸네일

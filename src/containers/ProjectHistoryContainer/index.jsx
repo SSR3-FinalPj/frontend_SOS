@@ -17,7 +17,8 @@ import {
   Image,
   FileText,
   Plus,
-  RefreshCw
+  RefreshCw,
+  MapPin
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ContentTreeView from '@/features/content-tree/ui/ContentTreeView';
@@ -30,6 +31,53 @@ import SuccessModal from '@/common/ui/success-modal';
 import TestControlPanel from '@/common/ui/TestControlPanel';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
+import { LOCATION_DATA } from '@/common/constants/location-data';
+import VersionNavigationSystem from '@/features/version-navigation/ui/VersionNavigationSystem';
+
+/**
+ * POI ID로 장소명을 찾는 함수
+ * @param {string} poiId - POI ID (예: POI008)
+ * @returns {string} 장소명 또는 기본값
+ */
+function getLocationName(poiId) {
+  if (!poiId) return '기타 장소';
+  
+  for (const district in LOCATION_DATA) {
+    const locations = LOCATION_DATA[district];
+    if (locations[poiId]) {
+      return locations[poiId];
+    }
+  }
+  return '기타 장소';
+}
+
+/**
+ * 영상 데이터를 장소별로 그룹화하는 함수
+ * @param {Array} videos - 영상 데이터 배열
+ * @returns {Object} 장소별로 그룹화된 데이터
+ */
+function groupVideosByLocation(videos) {
+  const groups = {};
+  
+  videos.forEach(video => {
+    const locationId = video.location_id || video.poi_id;
+    const locationName = getLocationName(locationId);
+    
+    if (!groups[locationName]) {
+      groups[locationName] = {
+        id: locationName.replace(/[·\s]/g, '_'), // 안전한 ID 생성
+        name: locationName,
+        location_id: locationId,
+        items: [],
+        display_date: null // 장소별 그룹화에서는 날짜 표시 제거
+      };
+    }
+    
+    groups[locationName].items.push(video);
+  });
+  
+  return Object.values(groups);
+}
 
 /**
  * 소스 타입에 따른 아이콘을 반환
@@ -64,6 +112,8 @@ function get_category_color(category) {
       return 'bg-purple-500/10 text-purple-700 dark:text-purple-300';
     case 'event': 
       return 'bg-orange-500/10 text-orange-700 dark:text-orange-300';
+    case 'location': 
+      return 'bg-rose-500/10 text-rose-700 dark:text-rose-300';
     default: 
       return 'bg-gray-500/10 text-gray-700 dark:text-gray-300';
   }
@@ -80,6 +130,7 @@ function get_category_label(category) {
     case 'marketing': return '마케팅';
     case 'brand': return '브랜딩';
     case 'event': return '이벤트';
+    case 'location': return '장소별';
     default: return '기타';
   }
 }
@@ -155,11 +206,19 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       setTimeout(() => {
         window.debugProjectHistory = {
           checkSyncStatus: () => {
+            const all_videos_from_folders = [];
+            folders.forEach(folder => {
+              if (folder.items) all_videos_from_folders.push(...folder.items);
+            });
+            
             console.log('[디버그] 현재 동기화 상태:', {
               folders_count: folders.length,
               pending_videos_count: pending_videos.length,
+              videos_from_folders: all_videos_from_folders.length,
+              projects_count: convert_to_projects().length,
               folders: folders,
-              pending_videos: pending_videos
+              pending_videos: pending_videos,
+              all_videos_from_folders: all_videos_from_folders
             });
           },
           forceFolderUpdate: () => {
@@ -169,6 +228,14 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           clearData: () => {
             localStorage.removeItem('content-launch-storage');
             window.location.reload();
+          },
+          showVideoDetails: () => {
+            const projects = convert_to_projects();
+            const contents = convert_to_contents();
+            console.log('[디버그] 생성된 프로젝트 및 콘텐츠:', {
+              projects: projects,
+              contents: contents
+            });
           }
         };
       }, 100);
@@ -354,43 +421,88 @@ function ProjectHistoryContainer({ dark_mode = false }) {
   const [is_tree_test_mode, set_is_tree_test_mode] = useState(false);
 
   /**
-   * 기존 folders 데이터를 projects 구조로 변환
+   * folders와 pending_videos 데이터를 통합하여 projects 구조로 변환
    */
   const convert_to_projects = useCallback(() => {
-    return folders.map(folder => {
-      // 🔥 핵심 수정: folder.videos → folder.items로 변경, folder.id 안전성 보장
-      const items = folder.items || [];
-      const folder_id = folder.id || folder.date; // date를 fallback ID로 사용
+    // 🔥 핵심 수정: folders와 pending_videos를 통합하여 모든 영상 데이터 수집
+    const all_videos = [];
+    
+    // 1. folders에서 영상 데이터 수집
+    folders.forEach(folder => {
+      if (folder.items && folder.items.length > 0) {
+        all_videos.push(...folder.items);
+      }
+    });
+    
+    // 2. pending_videos에서 추가 영상 데이터 수집 (중복 제거)
+    pending_videos.forEach(video => {
+      const isDuplicate = all_videos.some(existingVideo => {
+        return (existingVideo.id === video.id) ||
+               (existingVideo.temp_id === video.temp_id) ||
+               (existingVideo.resultId === video.resultId);
+      });
       
+      if (!isDuplicate) {
+        all_videos.push(video);
+      }
+    });
+    
+    // 3. 장소별로 재그룹화
+    const location_groups = groupVideosByLocation(all_videos);
+    
+    return location_groups.map(group => {
       return {
-        id: folder_id,
-        title: folder.name || folder.display_date || folder.date,
-        description: `${items.length}개의 영상이 포함된 프로젝트`,
-        category: 'social',
+        id: group.id,
+        title: group.name, // 장소명으로 표시 (예: 경복궁, 광화문·덕수궁)
+        description: `${group.items.length}개의 영상이 포함된 프로젝트`,
+        category: 'location', // 카테고리를 location으로 변경
         source_type: 'prompt',
-        content_count: items.length,
-        live_count: items.filter(v => v.status === 'completed' || v.status === 'uploaded').length,
-        last_activity: '최근 활동'
+        content_count: group.items.length,
+        live_count: group.items.filter(v => v.status === 'completed' || v.status === 'uploaded').length,
+        last_activity: '최근 활동',
+        location_id: group.location_id // 추가: location ID 정보 보존
       };
     });
-  }, [folders]);
+  }, [folders, pending_videos]);
 
   /**
-   * 기존 videos 데이터를 contents 구조로 변환
+   * folders와 pending_videos 데이터를 통합하여 contents 구조로 변환
    */
   const convert_to_contents = useCallback(() => {
     const all_contents = {};
     
+    // 🔥 핵심 수정: folders와 pending_videos를 통합하여 모든 영상 데이터 수집
+    const all_videos = [];
+    
+    // 1. folders에서 영상 데이터 수집
     folders.forEach(folder => {
-      // 🔥 핵심 수정: folder.videos → folder.items로 변경
-      const items = folder.items || [];
-      console.log(`[convert_to_contents] 폴더 "${folder.date}" 아이템 개수: ${items.length}`, items);
+      if (folder.items && folder.items.length > 0) {
+        all_videos.push(...folder.items);
+      }
+    });
+    
+    // 2. pending_videos에서 추가 영상 데이터 수집 (중복 제거)
+    pending_videos.forEach(video => {
+      const isDuplicate = all_videos.some(existingVideo => {
+        return (existingVideo.id === video.id) ||
+               (existingVideo.temp_id === video.temp_id) ||
+               (existingVideo.resultId === video.resultId);
+      });
       
-      all_contents[folder.id || folder.date] = items.map(video => ({
+      if (!isDuplicate) {
+        all_videos.push(video);
+      }
+    });
+    
+    // 3. 장소별로 재그룹화
+    const location_groups = groupVideosByLocation(all_videos);
+    
+    location_groups.forEach(group => {
+      all_contents[group.id] = group.items.map(video => ({
         id: video.id || video.temp_id || video.resultId,
         title: video.title || '제목 없음',
         type: 'video',
-        version: '1.0',
+        version: video.version || '1.0', // 버전 정보 활용
         parentId: null,
         isLive: video.status === 'completed',
         thumbnail: video.thumbnail || video.image_url || '',
@@ -398,13 +510,14 @@ function ProjectHistoryContainer({ dark_mode = false }) {
         prompt: video.prompt || video.user_request || '',
         feedback: video.feedback || '',
         resultId: video.resultId,
-        status: video.status
+        status: video.status,
+        location_id: video.location_id || video.poi_id, // 장소 정보 보존
+        location_name: group.name // 장소명 추가
       }));
     });
 
-    console.log(`[convert_to_contents] 변환된 all_contents:`, all_contents);
     return all_contents;
-  }, [folders]);
+  }, [folders, pending_videos]);
 
   const projects = convert_to_projects();
   const all_contents = convert_to_contents();
@@ -440,20 +553,40 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     open_publish_modal(item);
   };
 
+  /**
+   * 비디오 수정 핸들러
+   */
+  const handle_video_edit = (item) => {
+    select_video(item.id || item.result_id);
+    set_is_edit_modal_open(true);
+  };
+
   // 빈 상태 메시지만 표시 (버튼은 상단에 일관되게 배치)
-  const render_empty_state = () => (
-    <div className="text-center py-12">
-      <Folder className={`w-12 h-12 mx-auto mb-4 ${
-        dark_mode ? 'text-gray-600' : 'text-gray-400'
-      }`} />
-      <h3 className={`mb-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
-        아직 생성된 프로젝트가 없습니다
-      </h3>
-      <p className={`text-sm ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
-        AI와 함께 첫 번째 콘텐츠를 만들어보세요
-      </p>
-    </div>
-  );
+  const render_empty_state = () => {
+    const has_raw_data = folders.length > 0 || pending_videos.length > 0;
+    
+    return (
+      <div className="text-center py-12">
+        <Folder className={`w-12 h-12 mx-auto mb-4 ${
+          dark_mode ? 'text-gray-600' : 'text-gray-400'
+        }`} />
+        <h3 className={`mb-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {has_raw_data ? '프로젝트를 불러오는 중입니다' : '아직 생성된 프로젝트가 없습니다'}
+        </h3>
+        <p className={`text-sm ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
+          {has_raw_data 
+            ? '잠시만 기다려주세요...' 
+            : 'AI와 함께 첫 번째 콘텐츠를 만들어보세요'
+          }
+        </p>
+        {process.env.NODE_ENV === 'development' && has_raw_data && (
+          <div className={`text-xs mt-2 ${dark_mode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+            개발 도구: window.debugProjectHistory.checkSyncStatus()
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // 모든 모달들을 렌더링하는 함수
   const render_modals = () => (
@@ -674,8 +807,6 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       {projects.map((project) => {
         const is_expanded = expanded_projects.has(project.id);
         const project_contents = all_contents[project.id] || [];
-        
-        console.log(`[렌더링] 프로젝트 "${project.title}" (ID: ${project.id}) 콘텐츠 개수: ${project_contents.length}`, project_contents);
 
         return (
           <Card key={project.id} className={`overflow-hidden backdrop-blur-md border ${
@@ -690,12 +821,41 @@ function ProjectHistoryContainer({ dark_mode = false }) {
               onClick={() => handle_toggle_project(project.id)}
             >
               <div className="flex items-center gap-4 flex-1">
-                {/* 폴더 아이콘 */}
-                {is_expanded ? (
-                  <FolderOpen className="w-5 h-5 text-blue-500" />
-                ) : (
-                  <Folder className={`w-5 h-5 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`} />
-                )}
+                {/* 정사각형 폴더 아이콘 with 대각선 애니메이션 */}
+                <motion.div
+                  animate={{
+                    rotateZ: is_expanded ? 25 : 0,
+                    rotateX: is_expanded ? 15 : 0,
+                    scale: is_expanded ? 1.1 : 1
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.25, 0.46, 0.45, 0.94] // cubic-bezier for smooth diagonal opening
+                  }}
+                  style={{ transformOrigin: 'center center' }}
+                  className="relative"
+                >
+                  <div className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center ${
+                    is_expanded
+                      ? 'bg-blue-500/20 border-blue-500 text-blue-500'
+                      : `${dark_mode ? 'bg-gray-700/50 border-gray-600 text-gray-400' : 'bg-gray-100 border-gray-300 text-gray-600'}`
+                  }`}>
+                    {is_expanded ? (
+                      <FolderOpen className="w-4 h-4" />
+                    ) : (
+                      <Folder className="w-4 h-4" />
+                    )}
+                  </div>
+                  
+                  {/* 대각선 열림 효과를 위한 그림자 */}
+                  {is_expanded && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm transform translate-x-1 translate-y-1 -z-10"
+                    />
+                  )}
+                </motion.div>
 
                 {/* 프로젝트 정보 */}
                 <div className="text-left flex-1">
@@ -714,6 +874,8 @@ function ProjectHistoryContainer({ dark_mode = false }) {
                       </Badge>
                     )}
                   </div>
+
+                  {/* 버전 네비게이션 시스템이 확장되면 여기에 표시됨 */}
 
                   <div className={`text-sm mb-2 ${
                     dark_mode ? 'text-gray-400' : 'text-gray-600'
@@ -739,10 +901,23 @@ function ProjectHistoryContainer({ dark_mode = false }) {
               {/* 펼치기/접기 아이콘 */}
               <div className="flex items-center gap-2">
                 <motion.div
-                  animate={{ rotate: is_expanded ? 90 : 0 }}
-                  transition={{ duration: 0.2 }}
+                  animate={{ 
+                    rotate: is_expanded ? 90 : 0,
+                    scale: is_expanded ? 1.1 : 1
+                  }}
+                  transition={{ 
+                    duration: 0.4,
+                    ease: [0.25, 0.46, 0.45, 0.94]
+                  }}
+                  className={`p-1 rounded-full transition-colors duration-300 ${
+                    is_expanded 
+                      ? 'bg-blue-500/10' 
+                      : 'hover:bg-gray-500/10'
+                  }`}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className={`w-4 h-4 ${
+                    is_expanded ? 'text-blue-500' : ''
+                  }`} />
                 </motion.div>
               </div>
             </Button>
@@ -750,22 +925,42 @@ function ProjectHistoryContainer({ dark_mode = false }) {
             {/* 확장된 콘텐츠 영역 */}
             {is_expanded && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
+                initial={{ 
+                  opacity: 0, 
+                  height: 0, 
+                  scale: 0.95,
+                  rotateX: -10 
+                }}
+                animate={{ 
+                  opacity: 1, 
+                  height: 'auto', 
+                  scale: 1,
+                  rotateX: 0 
+                }}
+                exit={{ 
+                  opacity: 0, 
+                  height: 0, 
+                  scale: 0.95,
+                  rotateX: -10 
+                }}
+                transition={{ 
+                  duration: 0.4,
+                  ease: [0.25, 0.46, 0.45, 0.94] // 폴더와 동일한 easing
+                }}
+                style={{ transformOrigin: 'top center' }}
                 className={`border-t ${dark_mode ? 'border-gray-700/50' : 'border-gray-300/50'} ${
                   dark_mode ? 'bg-gray-800/30' : 'bg-gray-50/30'
                 }`}
               >
-                {/* ContentTreeView 재활용 - 트리 테스트 모드 지원 */}
-                <ContentTreeView
-                  tree_data={is_tree_test_mode ? tree_test_data : null}
+                {/* 새로운 버전 네비게이션 시스템 */}
+                <VersionNavigationSystem
+                  treeData={is_tree_test_mode ? tree_test_data : null}
                   contents={!is_tree_test_mode ? project_contents : undefined}
-                  dark_mode={dark_mode}
-                  uploading_items={uploading_items}
-                  on_preview={handle_preview}
-                  on_publish={handle_publish}
+                  darkMode={dark_mode}
+                  uploadingItems={uploading_items}
+                  onPreview={handle_preview}
+                  onPublish={handle_publish}
+                  onEdit={handle_video_edit}
                 />
               </motion.div>
             )}

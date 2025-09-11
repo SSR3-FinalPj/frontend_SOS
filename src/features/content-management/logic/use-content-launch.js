@@ -5,6 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { generateTempVideoId, generateCompletedVideoId, generateDummyId } from '@/common/utils/unique-id';
 import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId, uploadToYouTube, uploadToReddit } from '@/common/api/api';
 
 /**
@@ -224,7 +225,7 @@ export const use_content_launch = create(
        */
       add_pending_video: (video_data, creation_date) => {
         const new_pending_video = {
-          temp_id: `temp-${Date.now()}`,
+          temp_id: generateTempVideoId(),
           title: video_data.title || '새로운 AI 영상',
           status: 'PROCESSING',
           
@@ -302,7 +303,7 @@ export const use_content_launch = create(
       replace_processing_video: (newVideoData, creationDate) => {
         // 1. 새로운 영상 데이터 생성 (add_pending_video와 동일한 구조)
         const new_pending_video = {
-          temp_id: `temp-${Date.now()}`,
+          temp_id: generateTempVideoId(),
           title: newVideoData.title || '새로운 AI 영상',
           status: 'PROCESSING',
           start_time: new Date().toISOString(),
@@ -652,7 +653,7 @@ export const use_content_launch = create(
               const creationDate = extractSafeCreationDate(parsedCreatedAt);
               
               const orphanedVideo = {
-                temp_id: `completed-${completedVideoData.resultId}-${Date.now()}`,
+                temp_id: generateCompletedVideoId(completedVideoData.resultId),
                 id: completedVideoData.resultId,
                 video_id: completedVideoData.resultId,
                 resultId: completedVideoData.resultId,
@@ -1148,7 +1149,7 @@ export const use_content_launch = create(
       create_dummy_item: () => {
         const today = new Date().toISOString().split('T')[0];
         return {
-          temp_id: `dummy-${Date.now()}`,
+          temp_id: generateDummyId(),
           title: '새로운 AI 영상',
           status: 'DUMMY',
           created_at: new Date().toISOString(),
