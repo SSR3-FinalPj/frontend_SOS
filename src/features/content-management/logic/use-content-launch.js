@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateTempVideoId, generateCompletedVideoId, generateDummyId } from '@/common/utils/unique-id';
 import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId, uploadToYouTube, uploadToReddit } from '@/common/api/api';
+import { normalizeResultsTree } from '@/domain/tree/logic/normalize-results-tree';
 
 /**
  * 백엔드에서 오는 날짜 형식을 안전하게 파싱하는 함수
@@ -65,6 +66,9 @@ export const use_content_launch = create(
       
       // 폴더 데이터 (API + localStorage 병합 결과)
       folders: [],
+
+      // 결과 트리(백엔드 result_id 기반 계층)
+      results_tree: [],
 
       // 영상 선택 상태
       selected_video_id: null,
@@ -216,6 +220,68 @@ export const use_content_launch = create(
         } catch (error) {
           // console.error('폴더 목록 가져오기 실패:', error);
         }
+      },
+
+      /**
+       * 백엔드 트리 응답을 수신하여 UI 결과 트리로 설정
+       * @param {Array} apiTree - [{ result_id, children: [...] }]
+       * @param {Object} labelMap - 선택, id->표시명 맵
+       */
+      set_results_tree_from_api: (apiTree, labelMap = {}) => {
+        try {
+          const normalized = normalizeResultsTree(apiTree, { labelMap });
+          set({ results_tree: normalized });
+          console.log(`[트리 동기화] 결과 트리 노드 수:`, normalized.length);
+        } catch (e) {
+          console.error('[트리 동기화 실패]', e);
+        }
+      },
+
+      /**
+       * 부모 result_id 아래에 자식 버전을 낙관적으로 삽입 (테스트/실시간 반영)
+       * @param {string|number} parentId
+       * @param {string|number} childId
+       * @param {string} label - 표시명(없으면 `영상 ${childId}`)
+       */
+      add_child_version: (parentId, childId, label) => {
+        const pid = String(parentId);
+        const cid = String(childId);
+        const state = get();
+
+        const clone = (nodes) => nodes.map(n => ({ id: n.id, title: n.title, children: n.children ? clone(n.children) : [] }));
+        const tree = clone(state.results_tree);
+
+        let inserted = false;
+        const walk = (nodes) => {
+          for (const n of nodes) {
+            if (n.id === pid) {
+              if (!n.children) n.children = [];
+              const exists = n.children.some(c => String(c.id) === cid);
+              if (!exists) {
+                n.children.push({ id: cid, title: label || `영상 ${cid}`, children: [] });
+              }
+              inserted = true;
+              return;
+            }
+            if (n.children && n.children.length) walk(n.children);
+            if (inserted) return;
+          }
+        };
+        walk(tree);
+
+        if (inserted) {
+          set({ results_tree: tree });
+          console.log(`[트리 업데이트] 부모 ${pid} 아래에 자식 ${cid} 삽입 완료`);
+        } else {
+          console.warn(`[트리 업데이트] 부모 ${pid}를 트리에서 찾지 못했습니다.`);
+        }
+      },
+
+      /** 디버그: 결과 트리 상태 출력 */
+      debug_tree_state: () => {
+        const { results_tree } = get();
+        console.log('[트리 상태]', results_tree);
+        return results_tree;
       },
       
       /**

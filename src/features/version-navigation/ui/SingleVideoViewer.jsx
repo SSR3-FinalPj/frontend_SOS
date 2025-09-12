@@ -10,8 +10,6 @@ import { ChevronDown, GitBranch, Play, Edit, Share2, Eye } from 'lucide-react';
 import { Button } from '@/common/ui/Button';
 import ContentItemCard from '@/features/content-management/ui/ContentItemCard';
 
-// 하위 버전 패널 컴포넌트 제거됨 - 브레드크럼 네비게이션으로 대체
-
 /**
  * SingleVideoViewer 컴포넌트
  * @param {Object} props - 컴포넌트 props
@@ -35,7 +33,8 @@ const SingleVideoViewer = ({
   darkMode = false,
   uploadingItems = []
 }) => {
-  // 하위 패널 상태 제거됨
+  // 자식 노드가 있는지 확인 (정보 표시용)
+  const hasChildren = availableChildren.length > 0;
 
   // 현재 노드가 없으면 빈 상태 표시
   if (!currentNode) {
@@ -57,7 +56,11 @@ const SingleVideoViewer = ({
   const cardItem = {
     ...currentNode,
     id: currentNode.result_id || currentNode.id,
-    type: 'video'
+    type: 'video',
+    // 자식 노드 정보 추가
+    childrenCount: availableChildren.length,
+    hasChildren: hasChildren,
+    latestChildDate: hasChildren ? new Date().toISOString() : null
   };
   
   // 🧪 TEST: SingleVideoViewer에서 받은 currentNode 데이터 로깅
@@ -87,6 +90,7 @@ const SingleVideoViewer = ({
           uploading_items={uploadingItems}
           on_preview={onPreview}
           on_publish={onPublish}
+          on_edit={onEdit}
           isCompact={true}
         />
       </div>
@@ -138,6 +142,44 @@ const SingleVideoViewer = ({
             게시
           </Button>
         )}
+
+        {/* 자식 노드 네비게이션 */}
+        {hasChildren && (
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div className={`text-xs font-medium mb-2 ${
+              darkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              자식 버전 ({availableChildren.length}개)
+            </div>
+            <div className="flex flex-col gap-1">
+              {availableChildren.map((child, index) => (
+                <Button
+                  key={child.result_id || index}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigateToChild && onNavigateToChild(child.result_id)}
+                  className={`text-xs justify-start p-2 h-auto ${
+                    darkMode 
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                  title={`${child.title}로 이동`}
+                >
+                  <GitBranch className="w-3 h-3 mr-2" />
+                  <div className="flex flex-col items-start">
+                    <div className="font-mono text-xs">
+                      v{child.version || `1.${index + 1}`}
+                    </div>
+                    <div className="text-xs truncate max-w-20">
+                      {child.title?.replace(/.*- /, '') || `버전 ${index + 1}`}
+                    </div>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* 노드 정보 (개발 환경에서만) */}

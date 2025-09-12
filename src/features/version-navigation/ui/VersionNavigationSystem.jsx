@@ -3,7 +3,7 @@
  * BreadcrumbNavigation과 SingleVideoViewer를 통합한 완전한 네비게이션 시스템
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVersionNavigation } from '../logic/use-version-navigation';
 import BreadcrumbNavigation from './BreadcrumbNavigation';
@@ -35,6 +35,10 @@ const VersionNavigationSystem = ({
   // 모든 hooks를 컴포넌트 최상단에서 호출
   const [navigationHistory, setNavigationHistory] = useState([]);
   
+  // 수동 네비게이션 추적용 ref (자동 네비게이션 간섭 방지)
+  const manualNavigationRef = useRef(false);
+  const manualNavigationTimeoutRef = useRef(null);
+  
   // 트리 데이터 처리 (treeData가 있으면 사용, 없으면 contents를 변환)
   const processedTreeData = React.useMemo(() => {
     // 🧪 TEST: VersionNavigationSystem에 전달된 데이터 로깅
@@ -46,12 +50,23 @@ const VersionNavigationSystem = ({
     }
     
     if (treeData && Array.isArray(treeData) && treeData.length > 0) {
+      // 📊 DEBUG: 트리 데이터 사용
+      console.log(`[VERSION NAV] treeData 사용:`, {
+        treeDataLength: treeData.length,
+        hasContents: !!(contents && contents.length > 0)
+      });
       return treeData;
     }
     
     // contents를 트리 구조로 변환 (기존 로직 유지)
     if (contents && contents.length > 0) {
       const converted = convertToTreeData(contents);
+      
+      // 📊 DEBUG: contents 변환 상태 로깅
+      console.log(`[VERSION NAV] contents 변환:`, {
+        originalLength: contents.length,
+        convertedLength: converted.length
+      });
       
       // 🧪 TEST: 변환된 트리 데이터 로깅
       const hasTestData = converted.some(c => c.title?.includes('AI 영상') || c.result_id?.includes('temp-'));
@@ -65,10 +80,12 @@ const VersionNavigationSystem = ({
     return [];
   }, [treeData, contents]);
 
-  // 초기 result_id 결정
+  // 초기 result_id 결정 (루트 노드에서 시작)
   const initialResultId = React.useMemo(() => {
     if (processedTreeData.length === 0) return null;
-    return processedTreeData[0].result_id || processedTreeData[0].id;
+    // 항상 루트 노드에서 시작하도록 보장
+    const rootNode = processedTreeData[0];
+    return rootNode.result_id || rootNode.id;
   }, [processedTreeData]);
 
   // 버전 네비게이션 훅 사용
@@ -89,8 +106,34 @@ const VersionNavigationSystem = ({
     debugInfo
   } = useVersionNavigation(processedTreeData, initialResultId);
 
+  // 수동 네비게이션 추적 헬퍼 함수들
+  const markManualNavigation = React.useCallback(() => {
+    manualNavigationRef.current = true;
+    // 1.5초 후 자동 네비게이션 재개
+    if (manualNavigationTimeoutRef.current) {
+      clearTimeout(manualNavigationTimeoutRef.current);
+    }
+    manualNavigationTimeoutRef.current = setTimeout(() => {
+      manualNavigationRef.current = false;
+    }, 1500);
+  }, []);
+
+  // 수동 네비게이션용 래퍼 함수들
+  const handleManualNavigateToIndex = React.useCallback((index) => {
+    markManualNavigation();
+    console.log(`[BREADCRUMB] 수동 네비게이션 시작: v${index}`);
+    return navigateToPathIndex(index);
+  }, [navigateToPathIndex, markManualNavigation]);
+
+  const handleManualGoToRoot = React.useCallback(() => {
+    markManualNavigation();
+    console.log(`[BREADCRUMB] 수동 루트 이동`);
+    return navigateToRoot();
+  }, [navigateToRoot, markManualNavigation]);
+
   // handleGoBack 함수 정의
   const handleGoBack = React.useCallback(() => {
+    markManualNavigation();
     if (navigationHistory.length > 1) {
       const previous = navigationHistory[navigationHistory.length - 2];
       navigateToPathIndex(previous.pathIndex);
@@ -98,7 +141,7 @@ const VersionNavigationSystem = ({
       return true;
     }
     return goBack();
-  }, [navigationHistory, navigateToPathIndex, goBack]);
+  }, [navigationHistory, navigateToPathIndex, goBack, markManualNavigation]);
 
   // 경로 변경시 히스토리 업데이트 - hooks를 최상단으로 이동
   useEffect(() => {
@@ -115,6 +158,49 @@ const VersionNavigationSystem = ({
       });
     }
   }, [currentPath, isValidTree, processedTreeData.length]);
+
+  // 새로운 자식 노드 생성 시 자동 네비게이션
+  useEffect(() => {
+    if (!isValidTree || processedTreeData.length === 0) return;
+    
+    // 현재 노드에 새로운 자식이 추가되었는지 확인
+    if (currentNode && currentNode.children && currentNode.children.length > 0) {
+      const latestChild = currentNode.children[currentNode.children.length - 1];
+      
+      // 🧪 TEST: 새로운 자식 노드 감지 로깅
+      if (latestChild.title?.includes('AI 영상') || latestChild.result_id?.includes('temp-')) {
+        const currentChildrenCount = availableChildren.length;
+        const nodeChildrenCount = currentNode.children.length;
+        
+        console.log(`[VERSION NAV] 자식 노드 변화 감지:`, {
+          currentNode: currentNode.title,
+          availableChildren: currentChildrenCount,
+          nodeChildren: nodeChildrenCount,
+          latestChild: latestChild.title,
+          latestChildId: latestChild.result_id
+        });
+        
+        // 새로운 자식으로 자동 이동 (조건: 방금 생성되었거나 ready 상태, 단 수동 네비게이션 중이 아닐 때만)
+        if (latestChild.status === 'ready' || latestChild.status === 'completed') {
+          if (manualNavigationRef.current) {
+            console.log(`[VERSION NAV] 자동 이동 차단됨 - 수동 네비게이션 중:`, latestChild.result_id);
+          } else {
+            console.log(`[VERSION NAV] 새 자식 노드로 자동 이동:`, latestChild.result_id);
+            navigateToChild(latestChild.result_id);
+          }
+        }
+      }
+    }
+  }, [currentNode, processedTreeData, isValidTree, navigateToChild, availableChildren.length]);
+
+  // 컴포넌트 언마운트 시 timeout 정리
+  useEffect(() => {
+    return () => {
+      if (manualNavigationTimeoutRef.current) {
+        clearTimeout(manualNavigationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 데이터가 없거나 트리가 유효하지 않으면 빈 상태 표시
   if (!isValidTree || processedTreeData.length === 0) {
@@ -156,9 +242,9 @@ const VersionNavigationSystem = ({
       <BreadcrumbNavigation
         versionPath={versionPath}
         currentPath={currentPath}
-        onNavigateToIndex={navigateToPathIndex}
+        onNavigateToIndex={handleManualNavigateToIndex}
         onGoBack={handleGoBack}
-        onGoToRoot={navigateToRoot}
+        onGoToRoot={handleManualGoToRoot}
         canGoUp={canGoUp}
         canGoBack={navigationHistory.length > 1}
         darkMode={darkMode}

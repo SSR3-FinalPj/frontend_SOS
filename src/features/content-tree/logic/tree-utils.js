@@ -9,43 +9,43 @@
  * @returns {Array} 트리 구조
  */
 export const convertToTreeData = (flat_contents) => {
-  if (!flat_contents || flat_contents.length === 0) {
-    return [];
-  }
-  
-  // parentId가 null인 루트 노드들을 찾아서 트리 구조 생성
-  const buildTree = (items, parent_id = null) => {
-    return items
-      .filter(item => (item.parentId || null) === parent_id)
-      .map(item => ({
-        ...item,
-        result_id: item.id || item.result_id || item.resultId, // result_id 필드 보장
-        children: buildTree(items, item.id)
-      }));
-  };
-  
-  const tree = buildTree(flat_contents);
-  
-  // 항상 유효한 트리를 반환하도록 개선
-  if (tree.length === 0 && flat_contents.length > 0) {
-    // 모든 아이템을 루트로 처리 (단일 영상 지원)
-    return flat_contents.map(item => ({
-      ...item,
-      result_id: item.id || item.result_id || item.resultId || Date.now(), // 안전한 ID 보장
-      children: [] // 단일 노드는 자식이 없음
-    }));
-  }
-  
-  // 빈 배열이 아닌 경우에도 result_id가 없는 노드들을 보정
-  const ensureResultIds = (nodes) => {
-    return nodes.map(node => ({
-      ...node,
-      result_id: node.result_id || node.id || node.resultId || Date.now(),
-      children: node.children ? ensureResultIds(node.children) : []
-    }));
-  };
-  
-  return ensureResultIds(tree);
+  if (!flat_contents || flat_contents.length === 0) return [];
+
+  // 캐노니컬 ID 유틸
+  const cid = (item) => item?.result_id || item?.id || item?.resultId || item?.temp_id || null;
+  const pid = (item) => item?.parent_video_id || item?.parentId || item?.parent_id || item?.parentResultId || item?.parent_temp_id || null;
+
+  // 1패스: 노드 맵 구성 (ID 보정 + children 초기화)
+  const nodeMap = new Map();
+  flat_contents.forEach((raw) => {
+    const id = cid(raw);
+    const base = {
+      ...raw,
+      result_id: raw?.result_id || id, // result_id 보정
+      children: []
+    };
+    if (id != null) {
+      nodeMap.set(String(id), base);
+    } else {
+      // ID가 전혀 없는 경우에도 고립 루트로 취급하도록 임시 ID 부여
+      const fallback = String(Date.now() + Math.random());
+      nodeMap.set(fallback, { ...base, result_id: fallback });
+    }
+  });
+
+  // 2패스: 부모-자식 링크
+  const roots = [];
+  nodeMap.forEach((node, key) => {
+    const parentKey = pid(node);
+    if (parentKey != null && nodeMap.has(String(parentKey))) {
+      const parent = nodeMap.get(String(parentKey));
+      parent.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
 };
 
 /**

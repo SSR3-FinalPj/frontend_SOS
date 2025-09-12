@@ -155,7 +155,8 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     add_pending_video,
     replace_processing_video,
     select_video,
-    handle_multi_platform_publish
+    handle_multi_platform_publish,
+    results_tree
   } = use_content_launch();
 
   // 모달 상태 관리
@@ -387,30 +388,25 @@ function ProjectHistoryContainer({ dark_mode = false }) {
    * folders와 pending_videos 데이터를 통합하여 projects 구조로 변환
    */
   const convert_to_projects = useCallback(() => {
-    // 🔥 핵심 수정: folders와 pending_videos를 통합하여 모든 영상 데이터 수집
+    // 🔥 folders와 pending_videos를 통합하면서 캐노니컬 ID로 중복 제거
+    const canonical = (v) => v?.result_id || v?.id || v?.resultId || v?.temp_id || null;
     const all_videos = [];
-    
-    // 1. folders에서 영상 데이터 수집
+
     folders.forEach(folder => {
       if (folder.items && folder.items.length > 0) {
-        all_videos.push(...folder.items);
+        folder.items.forEach(item => {
+          all_videos.push(item);
+        });
       }
     });
-    
-    // 2. pending_videos에서 추가 영상 데이터 수집 (중복 제거)
+
     pending_videos.forEach(video => {
-      const isDuplicate = all_videos.some(existingVideo => {
-        return (existingVideo.id === video.id) ||
-               (existingVideo.temp_id === video.temp_id) ||
-               (existingVideo.resultId === video.resultId);
-      });
-      
-      if (!isDuplicate) {
-        all_videos.push(video);
-      }
+      const vid = canonical(video);
+      const exists = all_videos.some(ev => canonical(ev) && canonical(ev) === vid);
+      if (!exists) all_videos.push(video);
     });
-    
-    // 3. 장소별로 재그룹화
+
+    // 장소별로 재그룹화
     const location_groups = groupVideosByLocation(all_videos);
     
     return location_groups.map(group => {
@@ -433,28 +429,19 @@ function ProjectHistoryContainer({ dark_mode = false }) {
    */
   const convert_to_contents = useCallback(() => {
     const all_contents = {};
-    
-    // 🔥 핵심 수정: folders와 pending_videos를 통합하여 모든 영상 데이터 수집
+    const canonical = (v) => v?.result_id || v?.id || v?.resultId || v?.temp_id || null;
     const all_videos = [];
-    
-    // 1. folders에서 영상 데이터 수집
+
     folders.forEach(folder => {
       if (folder.items && folder.items.length > 0) {
-        all_videos.push(...folder.items);
+        folder.items.forEach(item => all_videos.push(item));
       }
     });
-    
-    // 2. pending_videos에서 추가 영상 데이터 수집 (중복 제거)
+
     pending_videos.forEach(video => {
-      const isDuplicate = all_videos.some(existingVideo => {
-        return (existingVideo.id === video.id) ||
-               (existingVideo.temp_id === video.temp_id) ||
-               (existingVideo.resultId === video.resultId);
-      });
-      
-      if (!isDuplicate) {
-        all_videos.push(video);
-      }
+      const vid = canonical(video);
+      const exists = all_videos.some(ev => canonical(ev) && canonical(ev) === vid);
+      if (!exists) all_videos.push(video);
     });
     
     // 3. 장소별로 재그룹화
@@ -473,25 +460,32 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           console.log(`[DEBUG] 영상 데이터 매핑:`, {
             original_video: video,
             mapped_title: video.title || '제목 없음',
-            video_id: video.id || video.temp_id || video.resultId,
+            video_id: video.result_id || video.id || video.resultId || video.temp_id,
+            parent_video_id: video.parent_video_id,
             status: video.status,
             location_id: video.location_id,
             poi_id: video.poi_id
           });
         }
         
+        const canonicalId = video.result_id || video.id || video.resultId || video.temp_id;
+        const parentCanonicalId = video.parent_video_id || video.parentId || video.parent_id || video.parentResultId || video.parent_temp_id || null;
+
         return {
-          id: video.id || video.temp_id || video.resultId,
+          id: canonicalId,
+          result_id: canonicalId,
           title: video.title || '제목 없음',
           type: 'video',
           version: video.version || '1.0', // 버전 정보 활용
-          parentId: null,
+          parentId: parentCanonicalId,
+          parent_id: parentCanonicalId, // tree-utils.js 호환성
+          parent_video_id: parentCanonicalId, // 명시적 부모 ID
           isLive: video.status === 'completed',
           thumbnail: video.thumbnail || video.image_url || '',
           createdAt: video.creation_date || video.createdAt || new Date().toISOString(),
           prompt: video.prompt || video.user_request || '',
           feedback: video.feedback || '',
-          resultId: video.resultId,
+          resultId: video.resultId || canonicalId,
           status: video.status,
           location_id: video.location_id || video.poi_id, // 장소 정보 보존
           location_name: group.name // 장소명 추가
@@ -937,8 +931,8 @@ function ProjectHistoryContainer({ dark_mode = false }) {
               >
                 {/* 새로운 버전 네비게이션 시스템 */}
                 <VersionNavigationSystem
-                  treeData={is_tree_test_mode ? tree_test_data : null}
-                  contents={!is_tree_test_mode ? project_contents : undefined}
+                  treeData={is_tree_test_mode ? tree_test_data : (results_tree && results_tree.length ? results_tree : null)}
+                  contents={!is_tree_test_mode && (!results_tree || results_tree.length === 0) ? project_contents : undefined}
                   darkMode={dark_mode}
                   uploadingItems={uploading_items}
                   onPreview={handle_preview}

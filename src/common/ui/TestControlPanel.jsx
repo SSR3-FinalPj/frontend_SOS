@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
-import { generateReactKey } from '@/common/utils/unique-id';
+import { generateReactKey, generateTempVideoId } from '@/common/utils/unique-id';
 
 const TestControlPanel = ({ dark_mode = false }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -144,8 +144,12 @@ const TestControlPanel = ({ dark_mode = false }) => {
 
     // 자식 영상 데이터 생성 (poi_id 우선, 백엔드 API 호환성 강화)
     const basePoi = selectedVideo.poi_id || selectedVideo.location_id || "POI001";
+    const childTempId = generateTempVideoId();
+    const parentCanonicalId = selectedVideo.result_id || selectedVideo.id || selectedVideo.temp_id;
     const childVideoData = {
-      temp_id: generateReactKey(Date.now(), 'child_video'),
+      temp_id: childTempId,
+      id: childTempId,
+      result_id: childTempId,
       title: `${selectedVideo.title || '테스트 영상'} - 수정본 v${Math.floor(Math.random() * 10) + 2}`,
       poi_id: basePoi, // 백엔드 API 주 필드 (uploadImageToS3Complete 호환)
       location_id: basePoi, // 하위 호환성을 위한 중복 필드
@@ -156,7 +160,9 @@ const TestControlPanel = ({ dark_mode = false }) => {
       prompt: `${selectedVideo.title}의 개선된 버전`, // prompt 필드 추가
       platform: selectedVideo.platform || selectedPlatform,
       status: 'ready',
-      parent_id: selectedVideo.result_id || selectedVideo.id || selectedVideo.temp_id,
+      parentId: parentCanonicalId,
+      parent_id: parentCanonicalId,
+      parent_video_id: parentCanonicalId, // 트리 네비게이션을 위한 필수 필드
       version: `1.${Math.floor(Math.random() * 10) + 1}`,
       created_at: new Date().toISOString(),
       createdAt: new Date().toISOString(), // 중복 필드로 호환성 보장
@@ -167,15 +173,10 @@ const TestControlPanel = ({ dark_mode = false }) => {
     const creation_date = new Date().toISOString().split('T')[0];
     add_pending_video(childVideoData, creation_date);
     
-    // 추가 동기화: fetch_folders 호출하여 ProjectHistoryContainer 즉시 갱신
-    setTimeout(() => {
-      const { fetch_folders } = use_content_launch.getState();
-      fetch_folders();
-      console.log('[테스트 패널] 자식 노드 생성 후 폴더 목록 갱신 실행');
-    }, 100);
+    // 파생 상태는 스토어가 처리하므로 추가적인 강제 갱신은 생략
 
     // 트리 구조를 위한 이벤트도 발생 (버전 네비게이션용)
-    const parentId = selectedVideo.result_id || selectedVideo.id || selectedVideo.temp_id;
+    const parentId = parentCanonicalId;
     const treeData = [
       {
         result_id: parentId,
@@ -186,7 +187,7 @@ const TestControlPanel = ({ dark_mode = false }) => {
         created_at: selectedVideo.created_at || new Date().toISOString(),
         children: [
           {
-            result_id: childVideoData.temp_id,
+            result_id: childVideoData.result_id,
             title: childVideoData.title,
             platform: childVideoData.platform,
             status: childVideoData.status,

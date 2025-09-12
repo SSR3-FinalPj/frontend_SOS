@@ -3,9 +3,9 @@
  * 윈도우 탐색기 스타일의 클릭 가능한 경로 네비게이션
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import { ChevronRight, Home, ArrowLeft, MoreHorizontal } from 'lucide-react';
 
 /**
  * BreadcrumbNavigation 컴포넌트
@@ -30,12 +30,44 @@ const BreadcrumbNavigation = ({
   canGoBack = false,
   darkMode = false
 }) => {
+  // 경로 축약 상태 관리
+  const [isExpanded, setIsExpanded] = useState(false);
+  const MAX_VISIBLE_SEGMENTS = 4;
   
-  // 브레드크럼 세그먼트 클릭 핸들러
-  const handleSegmentClick = (index) => {
-    if (onNavigateToIndex && index < versionPath.length - 1) {
-      onNavigateToIndex(index);
+  // 경로 축약 로직
+  const shouldCollapse = versionPath.length > MAX_VISIBLE_SEGMENTS && !isExpanded;
+  const displayPath = shouldCollapse 
+    ? [
+        versionPath[0],
+        '...',
+        ...versionPath.slice(-2)
+      ]
+    : versionPath;
+  
+  // 브레드크럼 세그먼트 클릭 핸들러 - 모든 세그먼트 클릭 가능
+  const handleSegmentClick = (displayIndex, originalIndex) => {
+    const actualIndex = originalIndex !== undefined ? originalIndex : displayIndex;
+    
+    console.log(`[BREADCRUMB] 세그먼트 클릭:`, {
+      displayIndex,
+      originalIndex: actualIndex,
+      version: versionPath[actualIndex],
+      versionPathLength: versionPath.length,
+      isLastSegment: actualIndex === versionPath.length - 1,
+      hasNavigateHandler: !!onNavigateToIndex
+    });
+    
+    if (onNavigateToIndex) {
+      console.log(`[BREADCRUMB] onNavigateToIndex 호출: index=${actualIndex}`);
+      onNavigateToIndex(actualIndex);
+    } else {
+      console.log(`[BREADCRUMB] 클릭 무시됨: 핸들러 없음`);
     }
+  };
+
+  // 확장/축소 토글 핸들러
+  const handleToggleExpansion = () => {
+    setIsExpanded(!isExpanded);
   };
 
   // 뒤로가기 버튼 클릭 핸들러
@@ -106,39 +138,72 @@ const BreadcrumbNavigation = ({
         경로:
       </span>
 
-      {/* 브레드크럼 경로 */}
-      <div className="flex items-center gap-1">
-        {versionPath.map((version, index) => {
-          const isLast = index === versionPath.length - 1;
-          const isClickable = !isLast && onNavigateToIndex;
+      {/* 브레드크럼 경로 - 축약 가능한 전체 경로 표시 */}
+      <div className="flex items-center gap-1 flex-wrap">
+        {displayPath.map((version, displayIndex) => {
+          // 축약된 경우 실제 인덱스 계산
+          let originalIndex;
+          if (shouldCollapse) {
+            if (displayIndex === 0) {
+              originalIndex = 0; // 첫 번째
+            } else if (version === '...') {
+              originalIndex = null; // 확장 버튼
+            } else if (displayIndex === displayPath.length - 2) {
+              originalIndex = versionPath.length - 2; // 마지막에서 두 번째
+            } else if (displayIndex === displayPath.length - 1) {
+              originalIndex = versionPath.length - 1; // 마지막
+            }
+          } else {
+            originalIndex = displayIndex;
+          }
+
+          const isLast = originalIndex === versionPath.length - 1;
+          const isExpansionButton = version === '...';
+          const isClickable = onNavigateToIndex && !isExpansionButton;
           
           return (
-            <React.Fragment key={index}>
-              {/* 버전 세그먼트 */}
-              <motion.div
-                whileHover={isClickable ? { scale: 1.02 } : {}}
-                whileTap={isClickable ? { scale: 0.98 } : {}}
-                className={`px-2 py-1 rounded-md text-sm font-mono transition-colors ${
-                  isLast
-                    ? darkMode
-                      ? 'bg-blue-500/20 text-blue-300 font-medium'
-                      : 'bg-blue-500/10 text-blue-600 font-medium'
-                    : isClickable
+            <React.Fragment key={isExpansionButton ? 'expansion' : displayIndex}>
+              {/* 버전 세그먼트 또는 확장 버튼 */}
+              {isExpansionButton ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleToggleExpansion}
+                  className={`px-2 py-1 rounded-md text-sm transition-colors cursor-pointer ${
+                    darkMode
+                      ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300'
+                      : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                  }`}
+                  title="전체 경로 표시"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </motion.button>
+              ) : (
+                <motion.div
+                  whileHover={isClickable ? { scale: 1.02 } : {}}
+                  whileTap={isClickable ? { scale: 0.98 } : {}}
+                  className={`px-2 py-1 rounded-md text-sm font-mono transition-colors ${
+                    isLast
                       ? darkMode
-                        ? 'hover:bg-gray-700 text-gray-300 cursor-pointer'
-                        : 'hover:bg-gray-200 text-gray-600 cursor-pointer'
-                      : darkMode
-                        ? 'text-gray-400'
-                        : 'text-gray-500'
-                }`}
-                onClick={() => isClickable && handleSegmentClick(index)}
-                title={isClickable ? `${version}로 이동` : version}
-              >
-                {version}
-              </motion.div>
+                        ? 'bg-blue-500/20 text-blue-300 font-medium border border-blue-400/30'
+                        : 'bg-blue-500/10 text-blue-600 font-medium border border-blue-300/30'
+                      : isClickable
+                        ? darkMode
+                          ? 'hover:bg-gray-700 text-gray-300 cursor-pointer border border-transparent hover:border-gray-600'
+                          : 'hover:bg-gray-200 text-gray-600 cursor-pointer border border-transparent hover:border-gray-300'
+                        : darkMode
+                          ? 'text-gray-400 border border-transparent'
+                          : 'text-gray-500 border border-transparent'
+                  }`}
+                  onClick={() => isClickable && handleSegmentClick(displayIndex, originalIndex)}
+                  title={isClickable ? `${version}로 이동` : version}
+                >
+                  {version}
+                </motion.div>
+              )}
 
               {/* 구분자 화살표 */}
-              {!isLast && (
+              {displayIndex < displayPath.length - 1 && (
                 <ChevronRight className={`w-3 h-3 ${
                   darkMode ? 'text-gray-500' : 'text-gray-400'
                 }`} />

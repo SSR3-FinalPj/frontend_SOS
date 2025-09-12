@@ -76,20 +76,58 @@ export const useVersionNavigation = (treeData = [], initialResultId = null) => {
   
   // 특정 자식 노드로 이동
   const navigateToChild = useCallback((childResultId) => {
-    if (!isValidTree) return false;
+    console.log(`[NAVIGATION] navigateToChild 호출:`, {
+      childResultId,
+      isValidTree,
+      availableChildrenCount: availableChildren.length,
+      currentPath
+    });
+    
+    if (!isValidTree) {
+      console.log(`[NAVIGATION] 자식 이동 실패: 트리가 유효하지 않음`);
+      return false;
+    }
     
     const childNode = availableChildren.find(child => child.result_id === childResultId);
-    if (!childNode) return false;
+    if (!childNode) {
+      console.log(`[NAVIGATION] 자식 이동 실패: 자식 노드를 찾을 수 없음`, { 
+        childResultId, 
+        availableChildren: availableChildren.map(c => c.result_id) 
+      });
+      return false;
+    }
     
-    setCurrentPath(prev => [...prev, childResultId]);
+    const newPath = [...currentPath, childResultId];
+    console.log(`[NAVIGATION] 자식으로 경로 업데이트:`, { from: currentPath, to: newPath });
+    
+    setCurrentPath(newPath);
     return true;
-  }, [availableChildren, isValidTree]);
+  }, [availableChildren, isValidTree, currentPath]);
   
   // 경로의 특정 인덱스로 이동 (브레드크럼 클릭용)
   const navigateToPathIndex = useCallback((index) => {
-    if (!isValidTree || index < 0 || index >= currentPath.length) return false;
+    console.log(`[NAVIGATION] navigateToPathIndex 호출:`, {
+      index,
+      isValidTree,
+      currentPath,
+      currentPathLength: currentPath.length,
+      targetPath: currentPath.slice(0, index + 1)
+    });
     
-    setCurrentPath(prev => prev.slice(0, index + 1));
+    if (!isValidTree) {
+      console.log(`[NAVIGATION] 실패: 트리가 유효하지 않음`);
+      return false;
+    }
+    
+    if (index < 0 || index >= currentPath.length) {
+      console.log(`[NAVIGATION] 실패: 인덱스 범위 오류`, { index, pathLength: currentPath.length });
+      return false;
+    }
+    
+    const newPath = currentPath.slice(0, index + 1);
+    console.log(`[NAVIGATION] 경로 업데이트:`, { from: currentPath, to: newPath });
+    
+    setCurrentPath(newPath);
     return true;
   }, [currentPath, isValidTree]);
   
