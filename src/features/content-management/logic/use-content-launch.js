@@ -470,6 +470,7 @@ export const use_content_launch = create(
       
       /**
        * 영상의 jobId 정보를 업데이트하는 함수
+       * 백엔드 API에서 받은 실제 jobId를 result_id로 사용하도록 업데이트
        * @param {string} temp_id - 업데이트할 영상의 temp_id
        * @param {Object} jobInfo - 업데이트할 job 정보 (jobId, job_id, s3Key 등)
        */
@@ -480,6 +481,10 @@ export const use_content_launch = create(
               ? { 
                   ...video, 
                   ...jobInfo, // jobId, job_id, s3Key 등 추가
+                  // 🚀 백엔드 API jobId를 실제 result_id로 사용
+                  result_id: jobInfo.jobId || jobInfo.job_id || video.result_id,
+                  id: jobInfo.jobId || jobInfo.job_id || video.id,
+                  resultId: jobInfo.jobId || jobInfo.job_id || video.resultId, // 호환성을 위한 추가 필드
                   updated_at: new Date().toISOString()
                 }
               : video

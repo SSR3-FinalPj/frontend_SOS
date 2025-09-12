@@ -55,7 +55,8 @@ const SingleVideoViewer = ({
   // 현재 노드를 ContentItemCard 형식으로 변환
   const cardItem = {
     ...currentNode,
-    id: currentNode.result_id || currentNode.id,
+    id: currentNode.result_id || currentNode.resultId || currentNode.id,
+    result_id: currentNode.result_id || currentNode.resultId || currentNode.id, // 백엔드 API 연동을 위한 확실한 result_id 설정
     type: 'video',
     // 자식 노드 정보 추가
     childrenCount: availableChildren.length,
@@ -63,13 +64,15 @@ const SingleVideoViewer = ({
     latestChildDate: hasChildren ? new Date().toISOString() : null
   };
   
-  // 🧪 TEST: SingleVideoViewer에서 받은 currentNode 데이터 로깅
-  if (currentNode.title?.includes('AI 영상') || currentNode.result_id?.includes('temp-')) {
-    console.log(`[SINGLE VIDEO] currentNode 데이터:`, {
+  // 🧪 TEST: SingleVideoViewer에서 받은 currentNode 데이터 로깅 (백엔드 연동 확인)
+  if (currentNode.title?.includes('AI 영상') || currentNode.result_id?.includes?.('temp-') || typeof currentNode.result_id === 'number') {
+    console.log(`[SINGLE VIDEO] 백엔드 연동 확인 - currentNode 데이터:`, {
       currentNode,
       cardItem,
       title: currentNode.title,
-      result_id: currentNode.result_id
+      result_id: currentNode.result_id,
+      resultId: currentNode.resultId,
+      hasRealBackendId: !!(currentNode.result_id && typeof currentNode.result_id === 'number')
     });
   }
 

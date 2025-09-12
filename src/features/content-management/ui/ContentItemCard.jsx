@@ -46,17 +46,21 @@ const ContentItemCard = ({
     (typeof item.temp_id === 'number' && item.temp_id > 1700000000000)
   );
   if (isTestItem) {
-    console.log(`[CONTENT CARD] 표시될 item 데이터:`, {
+    console.log(`[CONTENT CARD] 백엔드 연동 확인 - 표시될 item 데이터:`, {
       item,
       title: item.title,
       id: item.id,
       temp_id: item.temp_id,
-      video_id: item.video_id
+      video_id: item.video_id,
+      result_id: item.result_id,
+      resultId: item.resultId,
+      finalItemId: item_id,
+      hasRealBackendId: !!(item.result_id || item.resultId) && typeof (item.result_id || item.resultId) === 'number'
     });
   }
   
-  // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
-  const item_id = item.video_id || item.temp_id || item.id;
+  // 🚀 백엔드 API 연동: result_id 우선 사용 (실제 백엔드 ID)
+  const item_id = item.result_id || item.resultId || item.video_id || item.temp_id || item.id;
   const is_uploading = uploading_items.includes(item_id);
   const is_selected = selected_video_id === item_id;
   
