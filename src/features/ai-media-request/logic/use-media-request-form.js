@@ -68,7 +68,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
   // 선택된 영상 데이터로 폼 자동 초기화
   useEffect(() => {
     if (selectedVideoData) {
-      //console.log('선택된 영상 데이터로 폼 자동 초기화:', selectedVideoData);
+      
       
       // 위치 정보 자동 설정
       if (selectedVideoData.location_name || selectedVideoData.location_id) {
@@ -175,7 +175,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         await new Promise(resolve => setTimeout(resolve, 30));
         use_content_launch.getState().fetch_folders();
         
-        console.log(`[미디어 요청] UI 상태 갱신 완료 - ${video_data.title} (${isPriority ? '우선순위' : '일반'})`);
+        
       };
       
       await updateUI();
@@ -284,7 +284,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         throw new Error('영상 ID를 찾을 수 없습니다.');
       }
 
-      console.log('영상 재생성 요청:', {
+      
         videoId,
         prompt: prompt_text.trim(),
         selectedVideoData

@@ -15,7 +15,7 @@ export const getEmbeddableVideoUrl = (originalUrl) => {
     return null;
   }
 
-  console.log('Processing video URL:', originalUrl);
+  
 
   // AWS EFS mp4 파일이나 직접 접근 가능한 비디오 URL은 그대로 반환
   if (originalUrl.endsWith('.mp4') || 
@@ -24,24 +24,24 @@ export const getEmbeddableVideoUrl = (originalUrl) => {
       originalUrl.includes('w3schools.com') ||
       originalUrl.includes('sample-videos.com') ||
       originalUrl.includes('file-examples.com')) {
-    console.log('Direct video URL detected:', originalUrl);
+    
     return originalUrl;
   }
 
   // YouTube URL 처리 (필요한 경우)
   if (originalUrl.includes('youtube.com') || originalUrl.includes('youtu.be')) {
-    console.log('YouTube URL detected - returning as is for now');
+    
     return originalUrl; // 나중에 YouTube 임베드 로직 추가 가능
   }
 
   // Vimeo URL 처리 (필요한 경우)
   if (originalUrl.includes('vimeo.com')) {
-    console.log('Vimeo URL detected - returning as is for now');
+    
     return originalUrl; // 나중에 Vimeo 임베드 로직 추가 가능
   }
 
   // 알 수 없는 URL도 일단 원본 반환 (브라우저가 처리할 수 있을 수도 있음)
-  console.log('Unknown URL format - returning original:', originalUrl);
+  
   return originalUrl;
 };
 

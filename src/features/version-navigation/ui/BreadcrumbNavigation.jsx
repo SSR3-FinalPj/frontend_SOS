@@ -47,22 +47,7 @@ const BreadcrumbNavigation = ({
   // 브레드크럼 세그먼트 클릭 핸들러 - 모든 세그먼트 클릭 가능
   const handleSegmentClick = (displayIndex, originalIndex) => {
     const actualIndex = originalIndex !== undefined ? originalIndex : displayIndex;
-    
-    console.log(`[BREADCRUMB] 세그먼트 클릭:`, {
-      displayIndex,
-      originalIndex: actualIndex,
-      version: versionPath[actualIndex],
-      versionPathLength: versionPath.length,
-      isLastSegment: actualIndex === versionPath.length - 1,
-      hasNavigateHandler: !!onNavigateToIndex
-    });
-    
-    if (onNavigateToIndex) {
-      console.log(`[BREADCRUMB] onNavigateToIndex 호출: index=${actualIndex}`);
-      onNavigateToIndex(actualIndex);
-    } else {
-      console.log(`[BREADCRUMB] 클릭 무시됨: 핸들러 없음`);
-    }
+    if (onNavigateToIndex) onNavigateToIndex(actualIndex);
   };
 
   // 확장/축소 토글 핸들러

@@ -45,16 +45,11 @@ const VersionNavigationSystem = ({
     if (contents && contents.length > 0) {
       const hasTestData = contents.some(c => c.title?.includes('AI 영상') || c.id?.includes('temp-'));
       if (hasTestData) {
-        console.log(`[VERSION NAV] 받은 contents 데이터:`, contents);
+        // debug removed
       }
     }
     
     if (treeData && Array.isArray(treeData) && treeData.length > 0) {
-      // 📊 DEBUG: 트리 데이터 사용
-      console.log(`[VERSION NAV] treeData 사용:`, {
-        treeDataLength: treeData.length,
-        hasContents: !!(contents && contents.length > 0)
-      });
       return treeData;
     }
     
@@ -62,17 +57,7 @@ const VersionNavigationSystem = ({
     if (contents && contents.length > 0) {
       const converted = convertToTreeData(contents);
       
-      // 📊 DEBUG: contents 변환 상태 로깅
-      console.log(`[VERSION NAV] contents 변환:`, {
-        originalLength: contents.length,
-        convertedLength: converted.length
-      });
-      
-      // 🧪 TEST: 변환된 트리 데이터 로깅
-      const hasTestData = converted.some(c => c.title?.includes('AI 영상') || c.result_id?.includes('temp-'));
-      if (hasTestData) {
-        console.log(`[VERSION NAV] 변환된 트리 데이터:`, converted);
-      }
+      // debug removed
       
       return converted;
     }
@@ -121,13 +106,11 @@ const VersionNavigationSystem = ({
   // 수동 네비게이션용 래퍼 함수들
   const handleManualNavigateToIndex = React.useCallback((index) => {
     markManualNavigation();
-    console.log(`[BREADCRUMB] 수동 네비게이션 시작: v${index}`);
     return navigateToPathIndex(index);
   }, [navigateToPathIndex, markManualNavigation]);
 
   const handleManualGoToRoot = React.useCallback(() => {
     markManualNavigation();
-    console.log(`[BREADCRUMB] 수동 루트 이동`);
     return navigateToRoot();
   }, [navigateToRoot, markManualNavigation]);
 
@@ -172,20 +155,14 @@ const VersionNavigationSystem = ({
         const currentChildrenCount = availableChildren.length;
         const nodeChildrenCount = currentNode.children.length;
         
-        console.log(`[VERSION NAV] 자식 노드 변화 감지:`, {
-          currentNode: currentNode.title,
-          availableChildren: currentChildrenCount,
-          nodeChildren: nodeChildrenCount,
-          latestChild: latestChild.title,
-          latestChildId: latestChild.result_id
-        });
+        // debug removed
         
         // 새로운 자식으로 자동 이동 (조건: 방금 생성되었거나 ready 상태, 단 수동 네비게이션 중이 아닐 때만)
         if (latestChild.status === 'ready' || latestChild.status === 'completed') {
           if (manualNavigationRef.current) {
-            console.log(`[VERSION NAV] 자동 이동 차단됨 - 수동 네비게이션 중:`, latestChild.result_id);
+            
           } else {
-            console.log(`[VERSION NAV] 새 자식 노드로 자동 이동:`, latestChild.result_id);
+            
             navigateToChild(latestChild.result_id);
           }
         }

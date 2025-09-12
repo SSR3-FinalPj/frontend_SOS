@@ -72,7 +72,7 @@ export const updateVideoStatusForTest = (temp_id, status) => {
   // 해당 temp_id를 가진 영상 찾아서 상태 업데이트
   const updatedVideos = currentVideos.map(video => {
     if (video.temp_id === temp_id) {
-      console.log(`[TEST HELPER] 영상 ${temp_id} 상태: ${video.status || 'undefined'} → ${status}`);
+      
       return { ...video, status };
     }
     return video;
@@ -163,7 +163,7 @@ export const cleanupTestData = () => {
   // UI 갱신
   store.fetch_folders();
   
-  console.log(`[TEST HELPER] 테스트 데이터 정리 완료. ${store.pending_videos.length - cleanedVideos.length}개 항목 제거됨`);
+  
 };
 
 /**
@@ -171,10 +171,7 @@ export const cleanupTestData = () => {
  */
 export const printTestEnvironmentInfo = () => {
   console.group('🧪 TEST ENVIRONMENT INFO');
-  console.log('Test Mode Enabled:', isTestModeEnabled());
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('REACT_APP_TEST_MODE:', process.env.REACT_APP_TEST_MODE);
-  console.log('Current Videos Count:', use_content_launch.getState().pending_videos.length);
+  
   console.groupEnd();
 };
 
@@ -261,5 +258,5 @@ if (isTestModeEnabled() && typeof window !== 'undefined') {
     processTestRegeneration
   };
   
-  console.log('🧪 Test helpers available in window.testHelpers');
+  
 }

@@ -10,14 +10,14 @@ let currentRefreshPromise = null; // 현재 진행 중인 토큰 갱신 Promise
 export async function refreshAccessToken() {
   // 이미 진행 중인 갱신 요청이 있다면 해당 Promise를 반환
   if (currentRefreshPromise) {
-    //console.log(' Token refresh already in progress, returning existing promise.');
+    
     return currentRefreshPromise;
   }
 
   // 새로운 갱신 Promise 생성 및 저장
   currentRefreshPromise = (async () => {
     try {
-      //console.log(' Attempting to refresh token...');
+      
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
         credentials: "include",
@@ -32,7 +32,7 @@ export async function refreshAccessToken() {
 
       const { accessToken } = await res.json();
       setAccessToken(accessToken);
-      //console.log(' Token refreshed successfully.');
+      
       return accessToken;
     } catch (e) {
       //console.error(' Token refresh failed:', e.message);
@@ -62,14 +62,14 @@ export async function apiFetch(input, init = {}) {
 
   // 401 또는 403 발생 → 통합 토큰 갱신 함수 호출
   if (response.status === 401 || response.status === 403) {
-    //console.log('401 detected, attempting token refresh...');
+    
     try {
       const newAccessToken = await refreshAccessToken(); // 갱신된 토큰으로 재시도
       const retryHeaders = new Headers(init.headers || {});
       if (newAccessToken) {
         retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
       }
-      //console.log('Retrying API request with new token...');
+      
       // 재시도 시에는 원래 요청의 input과 init을 그대로 사용
       response = await fetch(input, { ...init, headers: retryHeaders, credentials: 'include' });
       return response;
@@ -515,7 +515,7 @@ export async function get_latest_completed_video() {
     const videoResults = await getVideoResultId(); // List<JobResultDto> 반환
     
     if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
-      console.log('[API] 완성된 영상 결과가 없음');
+    
       return null;
     }
 
@@ -526,7 +526,7 @@ export async function get_latest_completed_video() {
       return currentTime > latestTime ? current : latest;
     });
 
-    console.log('[API] 가장 최신 완성 영상:', latestVideo);
+    
     return latestVideo;
     
   } catch (error) {
@@ -554,7 +554,7 @@ export async function get_videos_completed_after(afterTimestamp) {
       return videoTime > afterTime;
     });
 
-    console.log(`[API] ${afterTimestamp} 이후 완성된 영상 ${newCompletedVideos.length}개 발견`);
+    
     return newCompletedVideos;
     
   } catch (error) {
@@ -832,7 +832,7 @@ export async function uploadToYouTube(resultId, videoDetails) {
       madeForKids: Boolean(videoDetails.madeForKids)
     };
 
-    console.log('YouTube upload request:', {
+    
       resultId,
       requestBody
     });
@@ -853,7 +853,7 @@ export async function uploadToYouTube(resultId, videoDetails) {
     }
 
     const result = await response.json();
-    console.log('YouTube upload success:', result);
+    
     
     return result;
   } catch (error) {
@@ -905,7 +905,7 @@ export async function uploadToReddit(resultId, redditData) {
       
       if (targetResult && targetResult.resultKey) {
         kind = determineMediaTypeFromResultKey(targetResult.resultKey);
-        console.log('Determined media type:', kind, 'from resultKey:', targetResult.resultKey);
+        
       } else {
         console.warn('Could not find JobResult for resultId:', resultId, 'using default kind:', kind);
       }
@@ -920,7 +920,7 @@ export async function uploadToReddit(resultId, redditData) {
       kind: kind
     };
 
-    console.log('Reddit upload request:', {
+    
       resultId,
       requestBody,
       determinedKind: kind
@@ -933,7 +933,7 @@ export async function uploadToReddit(resultId, redditData) {
       title: redditData.title || ''
     };
 
-    console.log('Reddit upload request:', {
+    
       resultId,
       requestBody
     });
@@ -954,7 +954,7 @@ export async function uploadToReddit(resultId, redditData) {
     }
 
     const result = await response.json();
-    console.log('Reddit upload success:', result);
+    
     
     return result;
   } catch (error) {
@@ -980,7 +980,7 @@ export async function regenerateVideo(videoId, prompt) {
       throw new Error('재생성할 프롬프트가 필요합니다.');
     }
 
-    console.log('Video regeneration request:', {
+    
       videoId,
       prompt: prompt.trim()
     });
@@ -1004,7 +1004,7 @@ export async function regenerateVideo(videoId, prompt) {
     }
 
     const result = await response.json();
-    console.log('Video regeneration success:', result);
+    
     
     return result;
   } catch (error) {

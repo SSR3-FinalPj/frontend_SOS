@@ -8,7 +8,6 @@ function DataExportCard() {
 
   const handleExport = (format) => {
     // Mock export functionality
-    console.log(`Exporting ${selectedPeriod} data as ${format}`);
   };
 
   return (

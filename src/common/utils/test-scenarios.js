@@ -10,7 +10,7 @@ import { generateTestVideoData, generateScenarioTestData } from './test-data-gen
  * PROCESSING → ready 상태 전환 시뮬레이션
  */
 export async function runVideoCreationScenario(contentLaunchStore) {
-  console.log('🎬 [테스트 시나리오] 영상 생성 플로우 시작');
+  
   
   // 1단계: 새 영상 생성 (PROCESSING 상태)
   const newVideo = generateTestVideoData('PROCESSING', 'youtube', {
@@ -21,13 +21,13 @@ export async function runVideoCreationScenario(contentLaunchStore) {
   const creationDate = new Date().toISOString().split('T')[0];
   contentLaunchStore.add_pending_video(newVideo, creationDate);
   
-  console.log('✅ 1단계: PROCESSING 상태 영상 생성 완료', newVideo.temp_id);
+  
   
   // 2단계: 3초 후 자동으로 ready 상태로 전환
   return new Promise((resolve) => {
     setTimeout(() => {
       contentLaunchStore.transition_to_ready(newVideo.temp_id);
-      console.log('✅ 2단계: READY 상태로 전환 완료');
+      
       resolve({
         success: true,
         videoId: newVideo.temp_id,
@@ -42,7 +42,7 @@ export async function runVideoCreationScenario(contentLaunchStore) {
  * ready 상태 영상의 미리보기 모달 테스트
  */
 export function runPreviewScenario(contentLaunchStore, previewModalStore) {
-  console.log('👁️ [테스트 시나리오] 미리보기 플로우 시작');
+  
   
   // 미리보기 테스트용 영상 생성
   const { video } = generateScenarioTestData('preview_test');
@@ -50,13 +50,13 @@ export function runPreviewScenario(contentLaunchStore, previewModalStore) {
   
   // 1단계: ready 상태 영상 추가
   contentLaunchStore.add_pending_video(video, creationDate);
-  console.log('✅ 1단계: 미리보기용 READY 영상 생성 완료');
+  
   
   // 2단계: 영상 선택 및 미리보기 모달 열기
   contentLaunchStore.select_video(video);
   previewModalStore.open_preview_modal(video);
   
-  console.log('✅ 2단계: 미리보기 모달 열기 완료');
+  
   
   return {
     success: true,
@@ -75,7 +75,7 @@ export function runPreviewScenario(contentLaunchStore, previewModalStore) {
  * ready → uploaded 상태 전환 시뮬레이션
  */
 export async function runUploadScenario(contentLaunchStore) {
-  console.log('📤 [테스트 시나리오] 업로드 플로우 시작');
+  
   
   // 업로드 테스트용 영상 생성
   const { video } = generateScenarioTestData('upload_test');
@@ -83,7 +83,7 @@ export async function runUploadScenario(contentLaunchStore) {
   
   // 1단계: ready 상태 영상 추가
   contentLaunchStore.add_pending_video(video, creationDate);
-  console.log('✅ 1단계: 업로드용 READY 영상 생성 완료');
+  
   
   // 2단계: 업로드 시뮬레이션 실행
   const videoId = video.temp_id || video.id;
@@ -92,7 +92,7 @@ export async function runUploadScenario(contentLaunchStore) {
     // 업로드 프로세스 시뮬레이션
     await contentLaunchStore.simulate_upload(videoId, 2000); // 2초 딜레이
     
-    console.log('✅ 2단계: 업로드 시뮬레이션 완료');
+    
     
     return {
       success: true,
@@ -115,7 +115,7 @@ export async function runUploadScenario(contentLaunchStore) {
  * uploaded 상태 영상의 수정 모달 테스트
  */
 export function runEditScenario(contentLaunchStore, requestModalStore) {
-  console.log('✏️ [테스트 시나리오] 수정 플로우 시작');
+  
   
   // 수정 테스트용 영상 생성
   const { video } = generateScenarioTestData('edit_test');
@@ -123,11 +123,11 @@ export function runEditScenario(contentLaunchStore, requestModalStore) {
   
   // 1단계: uploaded 상태 영상 추가
   contentLaunchStore.add_pending_video(video, creationDate);
-  console.log('✅ 1단계: 수정용 UPLOADED 영상 생성 완료');
+  
   
   // 2단계: 영상 선택 (수정 모드 활성화)
   contentLaunchStore.select_video(video);
-  console.log('✅ 2단계: 수정 대상 영상 선택 완료');
+  
   
   return {
     success: true,
@@ -150,7 +150,7 @@ export function runEditScenario(contentLaunchStore, requestModalStore) {
 export async function runFullWorkflowScenario(stores) {
   const { contentLaunchStore, previewModalStore } = stores;
   
-  console.log('🚀 [통합 테스트] 전체 워크플로우 시나리오 시작');
+  
   
   const results = {
     creation: null,
@@ -162,22 +162,22 @@ export async function runFullWorkflowScenario(stores) {
   
   try {
     // 1단계: 영상 생성
-    console.log('--- 1단계: 영상 생성 ---');
+    
     results.creation = await runVideoCreationScenario(contentLaunchStore);
     await delay(1000);
     
     // 2단계: 미리보기
-    console.log('--- 2단계: 미리보기 ---');
+    
     results.preview = runPreviewScenario(contentLaunchStore, previewModalStore);
     await delay(2000);
     
     // 3단계: 업로드
-    console.log('--- 3단계: 업로드 ---');
+    
     results.upload = await runUploadScenario(contentLaunchStore);
     await delay(1000);
     
     // 4단계: 수정
-    console.log('--- 4단계: 수정 ---');
+    
     results.edit = runEditScenario(contentLaunchStore);
     
     results.overall = {
@@ -191,7 +191,7 @@ export async function runFullWorkflowScenario(stores) {
       ]
     };
     
-    console.log('🎉 전체 워크플로우 시나리오 완료!');
+    
     
   } catch (error) {
     console.error('❌ 통합 시나리오 실행 중 오류:', error);
@@ -210,7 +210,7 @@ export async function runFullWorkflowScenario(stores) {
  * 다양한 실패 상황 시뮬레이션
  */
 export function runErrorScenarios(contentLaunchStore) {
-  console.log('⚠️ [테스트 시나리오] 에러 상황 시뮬레이션 시작');
+  
   
   const errorVideos = [];
   const creationDate = new Date().toISOString().split('T')[0];
@@ -231,7 +231,7 @@ export function runErrorScenarios(contentLaunchStore) {
   contentLaunchStore.add_pending_video(failedUpload, creationDate);
   errorVideos.push(failedUpload);
   
-  console.log('✅ 에러 시나리오 영상들 생성 완료');
+  
   
   return {
     success: true,
@@ -260,16 +260,16 @@ export function logScenarioResult(scenarioName, result) {
   const status = result.success ? '성공' : '실패';
   
   console.group(`${emoji} [${scenarioName}] 시나리오 ${status}`);
-  console.log('메시지:', result.message);
+  
   
   if (result.videoId) {
-    console.log('영상 ID:', result.videoId);
+    
   }
   
   if (result.instructions) {
-    console.log('다음 단계:');
+    
     result.instructions.forEach((instruction, index) => {
-      console.log(`  ${index + 1}. ${instruction}`);
+      
     });
   }
   

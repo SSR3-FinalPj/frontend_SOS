@@ -46,17 +46,7 @@ const ContentItemCard = ({
     (typeof item.temp_id === 'number' && item.temp_id > 1700000000000)
   );
   if (isTestItem) {
-    console.log(`[CONTENT CARD] 백엔드 연동 확인 - 표시될 item 데이터:`, {
-      item,
-      title: item.title,
-      id: item.id,
-      temp_id: item.temp_id,
-      video_id: item.video_id,
-      result_id: item.result_id,
-      resultId: item.resultId,
-      finalItemId: item_id,
-      hasRealBackendId: !!(item.result_id || item.resultId) && typeof (item.result_id || item.resultId) === 'number'
-    });
+    // debug removed
   }
   
   // 🚀 백엔드 API 연동: result_id 우선 사용 (실제 백엔드 ID)
@@ -72,15 +62,7 @@ const ContentItemCard = ({
   
   // formatCreationTime은 이제 date-utils에서 import하여 사용
   
-  // console.log('ContentItemCard render:', {
-  //   title: item.title,
-  //   video_id: item.video_id,
-  //   temp_id: item.temp_id,
-  //   id: item.id,
-  //   final_item_id: item_id,
-  //   is_uploading,
-  //   uploading_items
-  // });
+  
 
   // 선택 클릭 핸들러
   const handle_select = (e) => {

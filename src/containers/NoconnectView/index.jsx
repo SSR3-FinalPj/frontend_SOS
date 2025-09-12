@@ -7,7 +7,6 @@ const NoconnectView = () => {
 
   const handleConnect = () => {
     // TODO: Implement Google login functionality
-    console.log('Connecting to Google...');
   };
 
   return (

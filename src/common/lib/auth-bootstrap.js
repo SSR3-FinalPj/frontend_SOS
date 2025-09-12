@@ -10,13 +10,13 @@ import { refreshAccessToken } from '@/common/api/api'; // Import the new refresh
 //   if (!autoLoginEnabled && !getSessionLoggedIn()) return false; // 자동 로그인 비활성화 또는 세션 로그인 아님
 export async function tryRefreshOnBoot() {
   if (getAccessToken()) {
-    //console.log('Access token already in memory, skipping boot refresh.');
+    
     return true; // 이미 메모리에 있으면 skip
   }
   try {
-    //console.log('Attempting to refresh token on boot...');
+    
     await refreshAccessToken(); // api.js의 통합 갱신 함수 호출
-    //console.log('Token refreshed successfully on boot.');
+    
     return true;
   } catch (e) {
     //console.error('Failed to refresh token on boot:', e.message);

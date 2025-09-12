@@ -97,7 +97,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
       }
       
       // 즉시 테스트용 위치 선택 (타이밍 문제 해결)
-      console.log('[TEST MODE] 테스트 위치 자동 선택 시작');
+      
       const testLocation = {
         poi_id: "POI001", // 백엔드 API 호환성을 위한 poi_id 사용
         name: "강남역",
@@ -108,7 +108,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
       
       // 위치 즉시 설정 (지연 없이)
       handle_location_select(testLocation);
-      console.log('[TEST MODE] 위치 선택 완료:', testLocation);
+      
       
       // 나머지 데이터는 약간의 지연 후 설정
       setTimeout(() => {
@@ -130,18 +130,18 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
             type: 'image/png'
           });
           handle_file_change(testFile);
-          console.log('[TEST MODE] 테스트 이미지 생성 완료');
+          
         });
         
         // 테스트용 프롬프트 입력
         const testPrompt = `🧪 테스트 모드로 생성된 ${testModeData.platform === 'youtube' ? '영상' : '이미지'} 콘텐츠입니다.`;
         handle_prompt_change(testPrompt);
-        console.log('[TEST MODE] 프롬프트 설정 완료:', testPrompt);
+        
         
         // 자동 제출 모드라면 추가 지연 후 제출 (중복 방지)
         if (testModeData.autoSubmit && !autoSubmitExecutedRef.current) {
           setTimeout(() => {
-            console.log(`[TEST AUTO-SUBMIT] ${testModeData.platform} 콘텐츠 자동 제출 실행`);
+            
             autoSubmitExecutedRef.current = true; // 실행 플래그 설정
             handle_submit();
           }, 1000);

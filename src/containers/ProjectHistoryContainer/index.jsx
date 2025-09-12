@@ -191,7 +191,6 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     
     debounce_timer_ref.current = setTimeout(() => {
       fetch_folders();
-      console.log('[디바운스] 폴더 목록 갱신 실행');
     }, 200); // 200ms 디바운스로 증가하여 과도한 호출 방지
   }, [fetch_folders]);
 
@@ -206,31 +205,17 @@ function ProjectHistoryContainer({ dark_mode = false }) {
 
   // 폴더 데이터 변화 감지 및 프로젝트 목록 자동 갱신
   useEffect(() => {
-    // folders 데이터가 변경되면 convert_to_projects가 자동으로 호출되어 UI가 업데이트됨
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[상태 모니터링] folders 변경됨 - 개수: ${folders.length}`, folders);
-    }
+    // folders 데이터 변경 모니터링 (로그 제거)
   }, [folders]);
 
   // 🔍 상태 동기화 검증 useEffect
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[상태 검증] pending_videos: ${pending_videos.length}, folders: ${folders.length}`);
-      
-      // 불일치 감지 및 자동 복구
-      if (pending_videos.length > 0 && folders.length === 0) {
-        console.warn('⚠️ [상태 불일치] pending_videos가 있지만 folders가 비어있음 - 자동 복구 시도');
-        // 자동 복구: 1초 후 강제 폴더 갱신
-        setTimeout(() => {
-          console.log('🔄 [자동 복구] 폴더 목록 강제 갱신 실행');
-          fetch_folders();
-        }, 1000);
-      }
-      
-      if (pending_videos.length === 0 && folders.length > 0) {
-        console.warn('⚠️ [상태 불일치] folders가 있지만 pending_videos가 비어있음');
-        // 이 경우는 정상일 수 있음 (모든 영상이 완료되거나 삭제된 경우)
-      }
+    // 불일치 감지 및 자동 복구 (로그 제거)
+    if (pending_videos.length > 0 && folders.length === 0) {
+      console.warn('⚠️ [상태 불일치] pending_videos가 있지만 folders가 비어있음 - 자동 복구 시도');
+      setTimeout(() => {
+        fetch_folders();
+      }, 1000);
     }
   }, [pending_videos, folders, fetch_folders]);
 
@@ -250,7 +235,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           autoSubmit: autoSubmit === true // 명시적으로 true일 때만 자동 제출
         });
         
-        console.log(`[TEST] AI 미디어 요청 모달 열기 - 플랫폼: ${platform}, 자동채움: ${autoFill}, 자동제출: ${autoSubmit}`);
+        
       }
     };
 
@@ -258,7 +243,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       const { testMode, selectedVideo } = event.detail || {};
       if (testMode) {
         set_is_edit_modal_open(true);
-        console.log(`[TEST] 비디오 수정 모달 열기 - 비디오:`, selectedVideo);
+        
       }
     };
 
@@ -270,13 +255,13 @@ function ProjectHistoryContainer({ dark_mode = false }) {
         isPriority: false 
       });
       set_is_success_modal_open(true);
-      console.log(`[TEST] 성공 모달 열기 - 메시지: ${message}`);
+      
     };
 
     const handleTestOpenConfirmationModal = (event) => {
       const { title, message } = event.detail || {};
       set_is_priority_confirm_modal_open(true);
-      console.log(`[TEST] 확인 모달 열기 - 제목: ${title}, 메시지: ${message}`);
+      
     };
 
     // 이벤트 리스너 등록
@@ -290,14 +275,12 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       const { tree_data, type, message } = event.detail || {};
       
       if (tree_data) {
-        console.log(`[트리 테스트] ${type} 트리 구조 데이터 수신:`, tree_data);
+        
         set_tree_test_data(tree_data);
         set_is_tree_test_mode(true);
         
         // 테스트 모드 알림
-        if (message) {
-          console.log(`[트리 테스트] ${message}`);
-        }
+        
       }
     };
     
@@ -331,7 +314,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       setTimeout(() => {
         const projectId = `project_${videoLocationId}`;
         set_expanded_projects(prev => new Set([...prev, projectId]));
-        console.log(`[자동 확장] 프로젝트 ${projectId} 확장됨 (poi_id 우선)`);
+        
       }, 500);
     }
     
@@ -348,7 +331,6 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       // 세 번째 시도: 200ms 후 최종 확인 갱신
       setTimeout(() => {
         fetch_folders();
-        console.log(`[UI 동기화] 파일 생성 요청 후 UI 업데이트 완료 - ${video_data.title}`);
       }, 200);
     };
     
@@ -457,15 +439,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           video.title?.includes('AI 영상')
         );
         if (isTestData) {
-          console.log(`[DEBUG] 영상 데이터 매핑:`, {
-            original_video: video,
-            mapped_title: video.title || '제목 없음',
-            video_id: video.result_id || video.id || video.resultId || video.temp_id,
-            parent_video_id: video.parent_video_id,
-            status: video.status,
-            location_id: video.location_id,
-            poi_id: video.poi_id
-          });
+          // 디버그 로그 제거
         }
         
         const canonicalId = video.result_id || video.id || video.resultId || video.temp_id;
@@ -624,7 +598,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           dark_mode={dark_mode}
           on_close={() => set_is_edit_modal_open(false)}
           on_save={(edited_data) => {
-            console.log('Video edited:', edited_data);
+            
             set_is_edit_modal_open(false);
           }}
         />

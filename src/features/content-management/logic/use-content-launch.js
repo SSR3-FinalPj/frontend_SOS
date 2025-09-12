@@ -156,12 +156,7 @@ export const use_content_launch = create(
           
           const pending_videos = get().pending_videos;
           
-          // 🔍 디버그: 현재 pending_videos 상태 로깅
-          console.log(`[fetch_folders] 현재 pending_videos 개수: ${pending_videos.length}`, {
-            processing: pending_videos.filter(v => v.status === 'PROCESSING').length,
-            ready: pending_videos.filter(v => v.status === 'ready').length,
-            uploaded: pending_videos.filter(v => v.status === 'uploaded').length
-          });
+          // 디버그 로그 제거 (production safe)
           
           // pending_videos를 날짜별로 그룹화 (안전한 날짜 처리)
           const grouped_by_date = {};
@@ -208,13 +203,7 @@ export const use_content_launch = create(
           // API 폴더와 pending 폴더 병합
           const merged_folders = [...pending_folders, ...api_folders];
           
-          // 🔍 디버그: 최종 폴더 상태 로깅
-          console.log(`[fetch_folders] 생성된 폴더 개수: ${merged_folders.length}`, merged_folders.map(f => ({
-            date: f.date,
-            display_date: f.display_date,
-            item_count: f.item_count,
-            items: f.items?.map(item => ({ title: item.title, status: item.status }))
-          })));
+          // 디버그 로그 제거 (production safe)
           
           set({ folders: merged_folders });
         } catch (error) {
@@ -231,7 +220,7 @@ export const use_content_launch = create(
         try {
           const normalized = normalizeResultsTree(apiTree, { labelMap });
           set({ results_tree: normalized });
-          console.log(`[트리 동기화] 결과 트리 노드 수:`, normalized.length);
+          // 디버그 로그 제거 (production safe)
         } catch (e) {
           console.error('[트리 동기화 실패]', e);
         }
@@ -271,7 +260,7 @@ export const use_content_launch = create(
 
         if (inserted) {
           set({ results_tree: tree });
-          console.log(`[트리 업데이트] 부모 ${pid} 아래에 자식 ${cid} 삽입 완료`);
+          // 디버그 로그 제거 (production safe)
         } else {
           console.warn(`[트리 업데이트] 부모 ${pid}를 트리에서 찾지 못했습니다.`);
         }
@@ -280,7 +269,7 @@ export const use_content_launch = create(
       /** 디버그: 결과 트리 상태 출력 */
       debug_tree_state: () => {
         const { results_tree } = get();
-        console.log('[트리 상태]', results_tree);
+        // 디버그 로그 제거 (production safe)
         return results_tree;
       },
       
@@ -317,7 +306,7 @@ export const use_content_launch = create(
         // 파생 상태 folders는 항상 fetch_folders로 재구성
         const refreshFolders = () => {
           get().fetch_folders();
-          console.log(`[파생 상태 갱신] 새 영상 추가 후 폴더 재생성 - ${new_pending_video.title}`);
+          // 디버그 로그 제거 (production safe)
         };
         refreshFolders();
         setTimeout(refreshFolders, 50);
@@ -389,7 +378,7 @@ export const use_content_launch = create(
         // 5. 강화된 폴더 목록 재갱신
         const updateAfterReplace = () => {
           get().fetch_folders();
-          console.log(`[낙관적 UI] 우선순위 영상 교체 후 폴더 목록 갱신 - ${new_pending_video.title}`);
+          // 디버그 로그 제거 (production safe)
         };
         
         // 즉시 실행
@@ -540,7 +529,7 @@ export const use_content_launch = create(
           
         } catch (error) {
           // console.error('완료 알림 및 자동 생성 실패:', error);
-          // console.log('백엔드 미연동으로 인한 오류입니다. 모의 자동 생성 로직을 실행합니다.');
+          
           // 백엔드 연동 실패 시 모의 로직으로 대체
           await get().mock_auto_generate_next_video();
         }
@@ -769,26 +758,13 @@ export const use_content_launch = create(
        * 🧪 개발자 도구에서 수동 테스트용 함수
        */
       test_handle_video_completion: async () => {
-        console.log(`[🧪 테스트] 수동으로 handle_video_completion 호출`);
         await get().handle_video_completion();
       },
 
       /**
        * 🧪 현재 스토어 상태 출력 (디버깅용)
        */
-      debug_store_state: () => {
-        const state = get();
-        console.log(`[🧪 디버그] 현재 스토어 상태:`, {
-          pending_videos_count: state.pending_videos.length,
-          pending_videos: state.pending_videos,
-          folders_count: state.folders.length,
-          folders: state.folders,
-          sse_update_in_progress: state.sse_update_in_progress,
-          sse_update_error: state.sse_update_error,
-          last_sse_update_time: state.last_sse_update_time
-        });
-        return state;
-      },
+      debug_store_state: () => get(),
 
       /**
        * 🔄 Enhanced Polling: 지능형 exponential backoff 폴링 시스템 
@@ -933,10 +909,8 @@ export const use_content_launch = create(
        * 🧪 개발자 도구: Enhanced Diagnostic Functions
        */
       test_api_call: async () => {
-        console.log(`[🧪 API 테스트] get_latest_completed_video() 직접 호출`);
         try {
           const result = await get_latest_completed_video();
-          console.log(`[🧪 API 테스트] ✅ 결과:`, result);
           return result;
         } catch (error) {
           console.error(`[🧪 API 테스트] ❌ 실패:`, error);
@@ -947,28 +921,12 @@ export const use_content_launch = create(
       /**
        * 🔍 스마트 폴링 상태 디버깅
        */
-      debug_smart_polling: () => {
-        const state = get();
-        console.log(`[🔍 Smart Polling Debug] ===== 스마트 폴링 상태 =====`, {
-          smart_polling_active: state.smart_polling_active,
-          smart_polling_interval: state.smart_polling_interval,
-          smart_polling_attempts: state.smart_polling_attempts,
-          smart_polling_timeout_id: state.smart_polling_timeout_id,
-          processing_videos_count: state.pending_videos.filter(v => v.status === 'PROCESSING').length,
-          processing_videos: state.pending_videos.filter(v => v.status === 'PROCESSING').map(v => ({
-            temp_id: v.temp_id,
-            title: v.title,
-            created_at: v.created_at
-          }))
-        });
-        return state;
-      },
+      debug_smart_polling: () => get(),
 
       /**
        * 🎯 수동으로 스마트 폴링 강제 실행
        */
       force_smart_polling_check: async () => {
-        console.log(`[🎯 Force Check] 스마트 폴링 강제 실행`);
         await get().check_for_missed_completions();
       },
 
@@ -977,36 +935,13 @@ export const use_content_launch = create(
        */
       debug_matching_status: async () => {
         const state = get();
-        console.log(`[🔬 Matching Debug] ===== 매칭 상태 분석 =====`);
-        
         // 1. pending_videos 상태 분석
         const readyVideos = state.pending_videos.filter(v => v.status === 'ready');
         const processingVideos = state.pending_videos.filter(v => v.status === 'PROCESSING');
         
-        console.log(`📊 현재 상태:`, {
-          total_pending: state.pending_videos.length,
-          ready_count: readyVideos.length,
-          processing_count: processingVideos.length
-        });
-        
-        console.log(`✅ Ready 영상들:`, readyVideos.map(v => ({
-          temp_id: v.temp_id,
-          title: v.title,
-          video_id: v.video_id,
-          resultId: v.resultId,
-          created_at: v.created_at
-        })));
-        
-        console.log(`⏳ Processing 영상들:`, processingVideos.map(v => ({
-          temp_id: v.temp_id,
-          title: v.title,
-          created_at: v.created_at
-        })));
-        
         // 2. API에서 완성된 영상들 확인
         try {
           const completedVideos = await getVideoResultId();
-          console.log(`🎬 백엔드 완성 영상들:`, completedVideos);
           
           // 3. 매칭되지 않은 완성 영상들 찾기
           const knownResultIds = new Set(state.pending_videos.map(v => v.resultId).filter(Boolean));
@@ -1014,8 +949,6 @@ export const use_content_launch = create(
           
           if (unmatchedCompleted.length > 0) {
             console.warn(`⚠️ 매칭되지 않은 완성 영상들:`, unmatchedCompleted);
-          } else {
-            console.log(`✅ 모든 완성 영상이 매칭됨`);
           }
         } catch (error) {
           console.error(`❌ 백엔드 완성 영상 조회 실패:`, error);
@@ -1034,10 +967,8 @@ export const use_content_launch = create(
       toggle_smart_polling: () => {
         const { smart_polling_active } = get();
         if (smart_polling_active) {
-          console.log(`[🔄 Toggle] 스마트 폴링 중지`);
           get().stop_smart_polling();
         } else {
-          console.log(`[🔄 Toggle] 스마트 폴링 시작`);
           get().start_smart_polling();
         }
       },
@@ -1087,7 +1018,6 @@ export const use_content_launch = create(
           report.recommendations.push("✅ PROCESSING 영상이 없으므로 스마트 폴링이 자동으로 중지될 예정입니다.");
         }
 
-        console.log(`[📊 Diagnostic Report] ===== 종합 진단 보고서 =====`, report);
         return report;
       },
 
@@ -1095,10 +1025,8 @@ export const use_content_launch = create(
        * 🧪 가짜 VIDEO_READY 이벤트 시뮬레이션 (테스트용)
        */
       simulate_video_ready_event: () => {
-        console.log(`[🧪 Simulation] 가짜 VIDEO_READY 이벤트 시뮬레이션 시작`);
         try {
           get().handle_video_completion();
-          console.log(`[🧪 Simulation] ✅ 시뮬레이션 완료`);
         } catch (error) {
           console.error(`[🧪 Simulation] ❌ 시뮬레이션 실패:`, error);
         }
