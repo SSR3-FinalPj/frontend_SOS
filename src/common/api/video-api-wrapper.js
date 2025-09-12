@@ -130,18 +130,18 @@ export const requestVideoStream = USE_FULL_TEST_MODE
   : realApi.getVideoStreamUrl;
 
 /**
- * 영상 재생성 요청  
+ * 영상 수정 요청  
  */
-export const regenerateVideo = (() => {
+export const reviseVideo = (() => {
   if (USE_FULL_TEST_MODE) {
-    return testApi.regenerateVideo;
+    return testApi.regenerateVideo; // 테스트 API는 기존 함수명 유지
   } else if (USE_HYBRID_MODE) {
     // 하이브리드: 실제 API 호출하지만 빠른 완료 처리
-    return async (videoId, prompt) => {
-      console.log('🔄 [HYBRID] 영상 재생성 - 실제 API 호출');
+    return async (resultId, promptText) => {
+      console.log('🔄 [HYBRID] 영상 수정 - 실제 API 호출');
       
       try {
-        const result = await realApi.regenerateVideo(videoId, prompt);
+        const result = await realApi.reviseVideo(resultId, promptText);
         
         // 실제 API 결과에 jobId가 있다면 시뮬레이션 처리
         if (result.jobId) {
@@ -150,12 +150,12 @@ export const regenerateVideo = (() => {
         
         return result;
       } catch (error) {
-        console.warn('[HYBRID] 실제 재생성 실패, 시뮬레이션으로 처리:', error);
-        return testApi.regenerateVideo(videoId, prompt);
+        console.warn('[HYBRID] 실제 수정 실패, 시뮬레이션으로 처리:', error);
+        return testApi.regenerateVideo(resultId, promptText); // 테스트 API는 기존 함수명 유지
       }
     };
   } else {
-    return realApi.regenerateVideo;
+    return realApi.reviseVideo;
   }
 })();
 
@@ -279,7 +279,7 @@ export default {
   // Video Creation & Management
   uploadImageToS3Complete,
   requestVideoStream, 
-  regenerateVideo,
+  reviseVideo,
   uploadToYoutube,
   uploadToReddit,
   

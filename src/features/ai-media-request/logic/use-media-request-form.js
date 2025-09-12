@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
-import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/video-api-wrapper';
+import { uploadImageToS3Complete, reviseVideo } from '@/common/api/video-api-wrapper';
 import { generateTempVideoId } from '@/common/utils/unique-id';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 // 🧪 TEST-ONLY: 테스트 헬퍼 import (삭제 시 이 라인만 제거)
@@ -297,10 +297,10 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
 
       
 
-      // 영상 재생성 API 호출
+      // 영상 수정 API 호출
       const result = testMode 
         ? await processTestRegeneration(videoId, prompt_text.trim())
-        : await regenerateVideo(videoId, prompt_text.trim());
+        : await reviseVideo(videoId, prompt_text.trim());
 
       // 성공 시 폼 초기화 및 모달 닫기
       reset_form();

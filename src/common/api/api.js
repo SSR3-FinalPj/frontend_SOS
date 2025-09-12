@@ -962,48 +962,21 @@ export async function uploadToReddit(resultId, redditData) {
   }
 }
 
-/* ------------------ 영상 재생성 API ------------------ */
+/* ------------------ 영상 수정 API ------------------ */
 /**
- * 기존 영상을 새로운 프롬프트로 재생성 요청하는 함수
- * @param {string|number} videoId - 재생성할 영상의 ID
- * @param {string} prompt - 새로운 프롬프트 텍스트
- * @returns {Promise<Object>} 재생성 요청 결과
+ * 기존 작업을 새로운 프롬프트로 수정하여 재실행합니다.
+ * @param {number | string} resultId - 수정의 기반이 될 이전 JobResult의 ID
+ * @param {string} promptText - 새로 적용할 프롬프트
+ * @returns {Promise<object>} 새로 생성된 작업 정보
  */
-export async function regenerateVideo(videoId, prompt) {
-  try {
-    if (!videoId) {
-      throw new Error('영상 ID가 필요합니다.');
-    }
-    
-    if (!prompt || !prompt.trim()) {
-      throw new Error('재생성할 프롬프트가 필요합니다.');
-    }
-    
-
-    // 영상 재생성 API 호출 (resultId 우선 사용)
-    const response = await apiFetch('/api/videos/regenerate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        resultId: videoId,  // resultId로 변경하여 백엔드와 일치
-        prompt: prompt.trim()
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Video regeneration failed:', response.status, errorText);
-      throw new Error(`영상 재생성 실패: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    
-    
-    return result;
-  } catch (error) {
-    console.error('Video regeneration error:', error);
-    throw error;
+export async function reviseVideo(resultId, promptText) {
+  const res = await apiFetch('/api/images/revise', {
+    method: 'POST',
+    body: JSON.stringify({ resultId, promptText }),
+  });
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '알 수 없는 오류');
+    throw new Error(`영상 수정 요청 실패: ${res.status} - ${errorText}`);
   }
+  return await res.json();
 }

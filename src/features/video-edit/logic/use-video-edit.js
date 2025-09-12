@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { regenerateVideo } from '@/common/api/api';
+import { reviseVideo } from '@/common/api/api';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 
 /**
@@ -70,8 +70,8 @@ export const useVideoEdit = (selected_video, on_close) => {
 
       
 
-      // API 호출: resultId (또는 videoId) + prompt 전송
-      const result = await regenerateVideo(videoId, prompt_text.trim());
+      // API 호출: resultId (또는 videoId) + promptText 전송
+      const result = await reviseVideo(videoId, prompt_text.trim());
 
       
 
