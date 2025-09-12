@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Eye, Heart, MessageSquare, VideoOff, TrendingUp, Star, Clock, Filter, ChevronDown } from 'lucide-react';
 import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
-import { 
-  getYouTubeChannelId, 
+import {
+  getYouTubeChannelId,
   getYouTubeVideosByChannelId,
   getRedditChannelInfo,
   getRedditUploadsByRange
@@ -82,7 +82,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
   // 정렬 함수
   const sortItems = (itemsToSort, sortType) => {
     if (!itemsToSort || !Array.isArray(itemsToSort)) return [];
-    
+
     const sorted = [...itemsToSort].sort((a, b) => {
       switch (sortType) {
         case 'views': // 조회수순
@@ -128,14 +128,30 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
     setItems(sortItems(items, newSortBy));
   };
 
-  // 정렬 옵션 목록
-  const sortOptions = [
+  //youtube 
+  const youtubeSortOptions = [
     { value: 'latest', label: '최신순' },
     { value: 'oldest', label: '오래된순' },
-    { value: 'views', label: selectedPlatform === 'youtube' ? '조회수순' : '업보트순' },
-    { value: 'likes', label: selectedPlatform === 'youtube' ? '좋아요순' : '업보트순' },
+    { value: 'views', label: '조회수순' },
+    { value: 'likes', label: '좋아요순' },
     { value: 'comments', label: '댓글순' }
   ];
+
+
+  //Reddit
+  const redditSortOptions = [
+    { value: 'latest', label: '최신순' },
+    { value: 'oldest', label: '오래된순' },
+    { value: 'likes', label: '업보트순' },
+    { value: 'comments', label: '댓글순' }
+  ];
+
+  // 정렬 옵션 목록
+  const sortOptions = selectedPlatform === 'youtube' ? youtubeSortOptions : redditSortOptions;
+
+
+
+
 
   const renderContent = () => {
     if (loading) {
@@ -159,7 +175,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
     return (
       <div className="space-y-3 overflow-y-auto max-h-[280px] min-h-48 custom-scrollbar pr-2">
         {items.map((content, index) => (
-          <div 
+          <div
             key={content.videoId || content.post_id || index}
             className="flex items-center gap-4 p-3 bg-gray-100/80 dark:bg-white/5 border border-gray-300/40 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-200/60 dark:hover:bg-white/10 transition-colors duration-200"
             onClick={() => {
@@ -167,12 +183,14 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                 onVideoCardClick({
                   contentId: content.videoId,
                   title: content.title,
-                  platform: 'youtube'});
+                  platform: 'youtube'
+                });
               } else if (selectedPlatform === 'reddit') {
                 onVideoCardClick({
-                  contentId: content.post_id, 
-                  title: content.title, 
-                  platform: 'reddit'});
+                  contentId: content.post_id,
+                  title: content.title,
+                  platform: 'reddit'
+                });
               }
             }}
           >
@@ -181,18 +199,18 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                 {index + 1}
               </div>
             </div>
-            
+
             {/* 썸네일/프리뷰 */}
             <div className="w-24 h-14 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
               {selectedPlatform === 'youtube' ? (
-                <img 
+                <img
                   src={content.thumbnail}
                   alt={content.title}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 content.url && content.url.includes("preview.redd.it") ? (
-                  <img 
+                  <img
                     src={content.url}
                     alt={content.title}
                     className="w-full h-full object-cover"
@@ -205,13 +223,13 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                 )
               )}
             </div>
-            
+
             {/* 본문 */}
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-medium text-gray-800 dark:text-white truncate">
                 {content.title}
               </h4>
-              
+
               {selectedPlatform === 'youtube' ? (
                 <div className="flex items-center gap-4 mt-2 text-xs text-gray-600 dark:text-gray-400">
                   <div className="flex items-center gap-1">
@@ -254,11 +272,10 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${
-                    selectedPlatform === 'youtube'
+                  <div className={`w-2 h-2 rounded-full ${selectedPlatform === 'youtube'
                       ? (content.statistics?.viewCount > 1000 ? 'bg-green-500' : content.statistics?.viewCount > 100 ? 'bg-yellow-500' : 'bg-gray-400')
                       : (content.upvote > 50 ? 'bg-green-500' : content.upvote > 10 ? 'bg-yellow-500' : 'bg-gray-400')
-                  }`} />
+                    }`} />
                   <span className="text-[10px]">
                     {selectedPlatform === 'youtube'
                       ? (content.statistics?.viewCount > 1000 ? '높음' : content.statistics?.viewCount > 100 ? '보통' : '낮음')
@@ -280,7 +297,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
       transition={{ duration: 0.5, delay: 0.4 }}
     >
       <GlassCard className="p-6 min-h-[400px]" hover={false}>
-        <motion.div 
+        <motion.div
           className="flex items-center gap-4 mb-4"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -289,7 +306,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/30 to-green-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center shadow-lg">
             <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
-          
+
           <div className="flex-1">
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
               업로드된 콘텐츠
@@ -298,7 +315,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
               선택한 기간 내 업로드된 {selectedPlatform === 'youtube' ? '영상' : '포스트'} 목록
             </p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <div className="text-right">
               <p className="text-sm font-semibold text-gray-800 dark:text-white">{items.length}개</p>
@@ -313,16 +330,15 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                 <span>{sortOptions.find(opt => opt.value === sortBy)?.label || '정렬'}</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
-              
+
               {showSortDropdown && (
                 <div className="absolute right-0 top-full mt-1 w-28 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
                   {sortOptions.map(option => (
                     <button
                       key={option.value}
                       onClick={() => handleSortChange(option.value)}
-                      className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                        sortBy === option.value ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
-                      } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''}`}
+                      className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${sortBy === option.value ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
+                        } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''}`}
                     >
                       {option.label}
                     </button>
