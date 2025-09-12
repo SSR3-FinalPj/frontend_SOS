@@ -23,9 +23,10 @@ import {
  * @param {Function|null} on_request_success - 요청 성공 콜백 함수
  * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
  * @param {boolean} testMode - 테스트 모드 여부 (백엔드 API 목업 사용)
+ * @param {boolean} useMascot - 마스코트 사용 여부
  * @returns {Object} 폼 상태와 핸들러들
  */
-export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube', testMode = false) => {
+export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube', testMode = false, useMascot = false) => {
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -145,6 +146,11 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       };
       localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
       
+      // 마스코트 사용 시 프롬프트 텍스트 조합
+      const finalPromptText = useMascot && selected_location?.district 
+        ? `${prompt_text && prompt_text.trim() ? prompt_text.trim() : ''} (${selected_location.district} 공식 마스코트 포함)`.trim()
+        : prompt_text && prompt_text.trim() ? prompt_text.trim() : '';
+
       // 🚀 영상 데이터 생성 및 낙관적 UI 적용 (poi_id 우선 사용)
       const video_temp_id = generateTempVideoId();
       const video_data = {
@@ -154,7 +160,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         location_id: selected_location.poi_id, // 하위 호환성을 위한 중복 필드
         location_name: selected_location.name,
         image_url: image_url,
-        user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
+        user_request: finalPromptText || null,
         platform: selectedPlatform,
         status: testMode ? 'ready' : 'processing', // 🧪 TEST-ONLY: 테스트 모드에서는 즉시 ready 상태로 UI에 표시
         result_id: video_temp_id, // 트리 데이터 호환성을 위한 result_id 추가
@@ -210,7 +216,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
             uploadResult = await processTestMediaRequest(
               uploaded_file,
               selected_location,
-              prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
+              finalPromptText,
               selectedPlatform,
               video_temp_id
             );
@@ -219,8 +225,10 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
             uploadResult = await uploadImageToS3Complete(
               uploaded_file,
               selected_location.poi_id,
-              prompt_text && prompt_text.trim() ? prompt_text.trim() : "",
-              selectedPlatform
+              finalPromptText,
+              selectedPlatform,
+              useMascot,
+              true // useCityData는 항상 true로 하드코딩
             );
           }
           

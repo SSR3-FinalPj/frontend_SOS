@@ -6,7 +6,7 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, MapPin, Check } from 'lucide-react';
 import { Button } from '@/common/ui/button';
 import SuccessModal from '@/common/ui/success-modal';
 import PlatformSelector from '@/common/ui/PlatformSelector';
@@ -28,6 +28,16 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
   // 플랫폼 선택 상태
   const [selectedPlatform, setSelectedPlatform] = useState('youtube');
 
+  // 서울 자치구 마스코트 사용 상태
+  const [useMascot, setUseMascot] = useState(false);
+
+  // 마스코트가 있는 서울 자치구 목록 (과천시 제외)
+  const DISTRICTS_WITH_MASCOTS = [
+    '강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구',
+    '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구',
+    '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'
+  ];
+
   // YouTube 폼 상태 관리 커스텀 훅 사용 (테스트 모드 지원)
   const {
     selected_location,
@@ -47,13 +57,32 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     selectedVideoData, 
     on_request_success, 
     selectedPlatform, 
-    testModeData?.testMode || false // 테스트 모드 전달
+    testModeData?.testMode || false, // 테스트 모드 전달
+    useMascot // 마스코트 사용 여부 전달
   );
 
   // 플랫폼 변경 핸들러
   const handlePlatformChange = useCallback((platform) => {
     setSelectedPlatform(platform);
   }, []);
+
+  // 마스코트 사용 체크박스 핸들러
+  const handleMascotChange = useCallback((event) => {
+    setUseMascot(event.target.checked);
+  }, []);
+
+  // 선택된 구가 마스코트 사용 가능한지 확인
+  const isMascotAvailable = useCallback(() => {
+    if (!selected_location?.district) return false;
+    return DISTRICTS_WITH_MASCOTS.includes(selected_location.district);
+  }, [selected_location?.district, DISTRICTS_WITH_MASCOTS]);
+
+  // 위치 변경 시 마스코트 체크박스 초기화
+  useEffect(() => {
+    if (!isMascotAvailable()) {
+      setUseMascot(false);
+    }
+  }, [isMascotAvailable]);
 
   // 모달 닫기 핸들러
   const handle_close = useCallback(() => {
@@ -202,6 +231,72 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
                   selected_location={selected_location}
                   on_location_select={handle_location_select}
                 />
+
+                {/* 서울 자치구 마스코트 사용 옵션 */}
+                <AnimatePresence>
+                  {selected_location && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="space-y-3 overflow-hidden"
+                    >
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <h4 className="text-md font-medium text-gray-800 dark:text-white">
+                          특화 옵션
+                        </h4>
+                      </div>
+                      
+                      <div className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                        isMascotAvailable() 
+                          ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700' 
+                          : 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                      }`}>
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <div className="relative flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={useMascot}
+                              onChange={handleMascotChange}
+                              disabled={!isMascotAvailable()}
+                              className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
+                                isMascotAvailable()
+                                  ? 'border-purple-300 dark:border-purple-600 text-purple-600 focus:ring-purple-500'
+                                  : 'border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed'
+                              } focus:ring-2 focus:ring-offset-2`}
+                            />
+                            {useMascot && isMascotAvailable() && (
+                              <Check className="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <span className={`text-sm font-medium ${
+                              isMascotAvailable() 
+                                ? 'text-gray-800 dark:text-white' 
+                                : 'text-gray-400 dark:text-gray-500'
+                            }`}>
+                              서울 자치구 공식 마스코트 사용
+                            </span>
+                            <p className={`text-xs mt-1 ${
+                              isMascotAvailable() 
+                                ? 'text-gray-600 dark:text-gray-300' 
+                                : 'text-gray-400 dark:text-gray-500'
+                            }`}>
+                              {isMascotAvailable() 
+                                ? `${selected_location.district}의 공식 마스코트를 영상에 포함시킵니다.`
+                                : selected_location.district === '과천시'
+                                  ? '과천시는 서울시 자치구가 아니어서 마스코트 사용이 불가능합니다.'
+                                  : '선택된 지역에서는 마스코트 사용이 불가능합니다.'
+                              }
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <ImageUploader
                   uploaded_file={uploaded_file}
