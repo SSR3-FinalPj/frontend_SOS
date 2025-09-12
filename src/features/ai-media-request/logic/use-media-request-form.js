@@ -285,10 +285,6 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       }
 
       
-        videoId,
-        prompt: prompt_text.trim(),
-        selectedVideoData
-      });
 
       // 영상 재생성 API 호출
       const result = testMode 

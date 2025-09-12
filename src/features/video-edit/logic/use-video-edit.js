@@ -69,11 +69,6 @@ export const useVideoEdit = (selected_video, on_close) => {
       }
 
       
-        videoId,
-        resultId: selected_video.resultId,
-        prompt: prompt_text.trim(),
-        selected_video_title: selected_video.title
-      });
 
       // API 호출: resultId (또는 videoId) + prompt 전송
       const result = await regenerateVideo(videoId, prompt_text.trim());

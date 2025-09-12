@@ -196,10 +196,7 @@ export const useNotificationStore = create(
       // YouTube 관련 추가 로직이 필요한 경우 여기에 구현
       // 예: 업로드된 영상 정보를 content-launch 스토어에 업데이트
       if (sse_data.videoId || sse_data.videoUrl) {
-        
-          videoId: sse_data.videoId,
-          videoUrl: sse_data.videoUrl
-        });
+        // 추가 처리 필요 시 여기에 구현
       }
     } catch (error) {
       console.error('YouTube 완료 이벤트 처리 중 오류:', error);
@@ -214,9 +211,7 @@ export const useNotificationStore = create(
       // Reddit 관련 추가 로직이 필요한 경우 여기에 구현
       // 예: 게시된 포스트 정보를 content-launch 스토어에 업데이트
       if (sse_data.postUrl) {
-        
-          postUrl: sse_data.postUrl
-        });
+        // 추가 처리 필요 시 여기에 구현
       }
     } catch (error) {
       console.error('Reddit 완료 이벤트 처리 중 오류:', error);

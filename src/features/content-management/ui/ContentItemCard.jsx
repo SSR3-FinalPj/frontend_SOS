@@ -38,6 +38,10 @@ const ContentItemCard = ({
   selected_video_id,
   on_video_select
 }) => {
+  // 🚀 백엔드 API 연동: result_id 우선 사용 (실제 백엔드 ID)
+  // TDZ 방지를 위해 가장 먼저 선언하여 이후 모든 사용 지점에서 안전하게 접근
+  const item_id = item.result_id || item.resultId || item.video_id || item.temp_id || item.id;
+
   // 🧪 TEST-ONLY: ContentItemCard에서 받은 item 데이터 로깅 (타입 안전 검사)
   const isTestItem = (
     item.title?.includes('AI 영상') ||
@@ -49,8 +53,6 @@ const ContentItemCard = ({
     // debug removed
   }
   
-  // 🚀 백엔드 API 연동: result_id 우선 사용 (실제 백엔드 ID)
-  const item_id = item.result_id || item.resultId || item.video_id || item.temp_id || item.id;
   const is_uploading = uploading_items.includes(item_id);
   const is_selected = selected_video_id === item_id;
   

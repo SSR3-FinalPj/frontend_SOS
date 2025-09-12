@@ -833,9 +833,6 @@ export async function uploadToYouTube(resultId, videoDetails) {
     };
 
     
-      resultId,
-      requestBody
-    });
 
     // YouTube 업로드 API 호출
     const response = await apiFetch(`/api/youtube/upload/${resultId}`, {
@@ -934,9 +931,6 @@ export async function uploadToReddit(resultId, redditData) {
     };
 
     
-      resultId,
-      requestBody
-    });
 
     // Reddit 업로드 API 호출
     const response = await apiFetch(`/api/reddit/upload/${resultId}`, {
@@ -979,11 +973,7 @@ export async function regenerateVideo(videoId, prompt) {
     if (!prompt || !prompt.trim()) {
       throw new Error('재생성할 프롬프트가 필요합니다.');
     }
-
     
-      videoId,
-      prompt: prompt.trim()
-    });
 
     // 영상 재생성 API 호출 (resultId 우선 사용)
     const response = await apiFetch('/api/videos/regenerate', {

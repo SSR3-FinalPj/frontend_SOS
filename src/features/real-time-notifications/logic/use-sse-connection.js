@@ -37,11 +37,6 @@ export const useSSEConnection = ({
   })();
 
   const handlePayload = useCallback((raw, eventType = 'video-ready') => {
-    /* debug removed */
-      raw: raw,
-      eventType: eventType,
-      rawLength: raw?.length
-    });
 
     try {
       const data = JSON.parse(raw);
@@ -90,12 +85,6 @@ export const useSSEConnection = ({
         // VIDEO_READY 이벤트 시 실시간 UI 업데이트 처리
         if (data.message === 'VIDEO_READY' || eventType === 'video-ready') {
           
-            message: data.message,
-            timestamp: data.timestamp,
-            type: messageType,
-            fullData: data
-          });
-          
           // 백엔드에서 전송하는 실제 SSE 데이터 구조: SimpleMsg(message, type, timestamp)
           
           
@@ -114,19 +103,8 @@ export const useSSEConnection = ({
         set_last_event(eventType);
         set_last_data(raw);
       } else {
-        
-          hasMessage: !!data.message,
-          message: data.message,
-          hasTimestamp: !!ts,
-          timestamp: ts,
-          type: messageType
-        });
       }
     } catch (parseError) {
-      
-        error: parseError.message,
-        raw: raw
-      });
       // init/ping 같은 non-JSON은 무시
     }
   }, [add_sse_notification]);

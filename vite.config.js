@@ -13,14 +13,9 @@ export default defineConfig(({ mode }) => {
       },
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
     },
-    build: {
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      }
+    // Drop console/debugger in production without adding terser dependency
+    esbuild: {
+      drop: ['console', 'debugger']
     },
     server: {
       proxy: {
