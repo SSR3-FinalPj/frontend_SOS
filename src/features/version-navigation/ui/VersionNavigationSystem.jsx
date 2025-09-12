@@ -43,7 +43,7 @@ const VersionNavigationSystem = ({
   const processedTreeData = React.useMemo(() => {
     // 🧪 TEST: VersionNavigationSystem에 전달된 데이터 로깅
     if (contents && contents.length > 0) {
-      const hasTestData = contents.some(c => c.title?.includes('AI 영상') || c.id?.includes('temp-'));
+      const hasTestData = contents.some(c => c.title?.includes('AI 영상') || String(c.id)?.includes('temp-'));
       if (hasTestData) {
         // debug removed
       }

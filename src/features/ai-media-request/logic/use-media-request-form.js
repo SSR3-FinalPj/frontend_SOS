@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
-import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/api';
+import { uploadImageToS3Complete, regenerateVideo } from '@/common/api/video-api-wrapper';
 import { generateTempVideoId } from '@/common/utils/unique-id';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 // 🧪 TEST-ONLY: 테스트 헬퍼 import (삭제 시 이 라인만 제거)
@@ -156,7 +156,10 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         image_url: image_url,
         user_request: prompt_text && prompt_text.trim() ? prompt_text.trim() : null,
         platform: selectedPlatform,
-        status: testMode ? 'completed' : 'processing' // 🧪 TEST-ONLY: 테스트 모드에서는 즉시 완료 상태
+        status: testMode ? 'ready' : 'processing', // 🧪 TEST-ONLY: 테스트 모드에서는 즉시 ready 상태로 UI에 표시
+        result_id: video_temp_id, // 트리 데이터 호환성을 위한 result_id 추가
+        id: video_temp_id, // 추가 호환성 필드
+        type: 'video' // 타입 명시
       };
 
       // 🔥 핵심 수정: 항상 스토어에 즉시 반영하여 데이터 일관성 보장

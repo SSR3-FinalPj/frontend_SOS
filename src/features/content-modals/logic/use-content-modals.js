@@ -54,7 +54,7 @@ export const use_content_modals = () => {
    */
   const open_publish_modal = (item) => {
     set_publish_form({
-      platforms: ['youtube'], // YouTube를 기본 플랫폼으로 선택하여 즉시 사용 가능한 폼 제공
+      platforms: [], // 플랫폼 기본 선택 해제 - 사용자가 원하는 플랫폼만 선택
       title: item.title || '',
       description: item.description || '',
       tags: '',

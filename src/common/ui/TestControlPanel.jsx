@@ -23,6 +23,320 @@ import {
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
 import { generateReactKey, generateTempVideoId } from '@/common/utils/unique-id';
+import { uploadToYoutube, uploadToReddit, requestVideoStream } from '@/common/api/video-api-wrapper';
+
+// ResultId 직접 테스트 컴포넌트
+const ResultIdTestSection = ({ dark_mode }) => {
+  const [resultId, setResultId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastResult, setLastResult] = useState(null);
+
+  // 스트리밍 테스트
+  const handleStreamTest = async () => {
+    if (!resultId.trim()) {
+      alert('resultId를 입력해주세요');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await requestVideoStream(resultId);
+      setLastResult({ type: 'stream', result });
+      console.log('✅ 스트리밍 테스트 성공:', result);
+      alert(`스트리밍 성공! URL: ${result.videoUrl || '응답 확인 필요'}`);
+    } catch (error) {
+      console.error('❌ 스트리밍 테스트 실패:', error);
+      alert(`스트리밍 실패: ${error.message}`);
+      setLastResult({ type: 'stream', error: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // YouTube 업로드 테스트
+  const handleYoutubeUploadTest = async () => {
+    if (!resultId.trim()) {
+      alert('resultId를 입력해주세요');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await uploadToYoutube(resultId, {
+        title: `테스트 영상 - ${new Date().toLocaleString()}`,
+        description: '테스트 패널에서 업로드한 영상입니다.',
+        tags: ['test', 'demo'],
+        privacy: 'private'
+      });
+      setLastResult({ type: 'youtube', result });
+      console.log('✅ YouTube 업로드 성공:', result);
+      alert(`YouTube 업로드 성공! ${result.videoUrl || '업로드 완료'}`);
+    } catch (error) {
+      console.error('❌ YouTube 업로드 실패:', error);
+      alert(`YouTube 업로드 실패: ${error.message}`);
+      setLastResult({ type: 'youtube', error: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reddit 업로드 테스트
+  const handleRedditUploadTest = async () => {
+    if (!resultId.trim()) {
+      alert('resultId를 입력해주세요');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await uploadToReddit(resultId, {
+        subreddit: 'test',
+        title: `테스트 게시물 - ${new Date().toLocaleString()}`
+      });
+      setLastResult({ type: 'reddit', result });
+      console.log('✅ Reddit 업로드 성공:', result);
+      alert(`Reddit 업로드 성공! ${result.postUrl || '업로드 완료'}`);
+    } catch (error) {
+      console.error('❌ Reddit 업로드 실패:', error);
+      alert(`Reddit 업로드 실패: ${error.message}`);
+      setLastResult({ type: 'reddit', error: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2 mt-2">
+      {/* resultId 입력 */}
+      <div>
+        <input
+          type="number"
+          value={resultId}
+          onChange={(e) => setResultId(e.target.value)}
+          placeholder="resultId 입력 (예: 1, 2, 3...)"
+          className={`w-full px-2 py-1 text-xs rounded border ${
+            dark_mode 
+              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+          }`}
+        />
+      </div>
+
+      {/* 테스트 버튼들 */}
+      <div className="grid grid-cols-3 gap-1">
+        <Button
+          onClick={handleStreamTest}
+          disabled={isLoading || !resultId.trim()}
+          size="sm"
+          variant="outline"
+          className="text-xs py-1"
+        >
+          <Play className="w-3 h-3 mr-1" />
+          스트리밍
+        </Button>
+        
+        <Button
+          onClick={handleYoutubeUploadTest}
+          disabled={isLoading || !resultId.trim()}
+          size="sm"
+          variant="outline"
+          className="text-xs py-1"
+        >
+          <Upload className="w-3 h-3 mr-1" />
+          YouTube
+        </Button>
+        
+        <Button
+          onClick={handleRedditUploadTest}
+          disabled={isLoading || !resultId.trim()}
+          size="sm"
+          variant="outline"
+          className="text-xs py-1"
+        >
+          <Upload className="w-3 h-3 mr-1" />
+          Reddit
+        </Button>
+      </div>
+
+      {/* 로딩 상태 */}
+      {isLoading && (
+        <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'} text-center`}>
+          테스트 중...
+        </div>
+      )}
+
+      {/* 마지막 결과 */}
+      {lastResult && (
+        <div className={`text-xs p-2 rounded border ${
+          dark_mode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+        }`}>
+          <div className={`font-medium ${lastResult.error ? 'text-red-500' : 'text-green-500'}`}>
+            {lastResult.type.toUpperCase()} {lastResult.error ? '실패' : '성공'}
+          </div>
+          <div className={`${dark_mode ? 'text-gray-400' : 'text-gray-600'} break-all`}>
+            {lastResult.error || (lastResult.result?.videoUrl || lastResult.result?.postUrl || '완료')}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// S3 영상 직접 추가 컴포넌트
+const S3VideoAddSection = ({ dark_mode, selectedPlatform }) => {
+  const [jobId, setJobId] = useState('12345');
+  const [resultId, setResultId] = useState('12345');
+  const [s3Key, setS3Key] = useState('video/req_f005f49d0750497eb0f78778066d1858.mp4');
+  const [isAdding, setIsAdding] = useState(false);
+  const [lastResult, setLastResult] = useState(null);
+
+  const { add_pending_video } = use_content_launch();
+
+  // S3 영상 추가 핸들러
+  const handleAddS3Video = async () => {
+    if (!jobId.trim() || !resultId.trim() || !s3Key.trim()) {
+      alert('모든 필드를 입력해주세요');
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const s3VideoData = {
+        temp_id: `s3_${resultId}`,
+        result_id: Number(resultId),     // 12345
+        job_id: Number(jobId),           // 12345  
+        title: `S3 영상 (${resultId})`,
+        status: 'ready',                 // 즉시 미리보기/업로드 가능
+        platform: selectedPlatform,
+        s3Key: s3Key,                    // S3 파일 경로
+        resultKey: s3Key,                // 백엔드 API 호환 필드
+        type: 'video',
+        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        // 추가 메타데이터
+        poi_id: 'POI001', // 기본 위치
+        location_id: 'POI001',
+        location_name: '테스트 위치',
+        user_request: 'S3에서 직접 추가된 영상'
+      };
+      
+      const creation_date = new Date().toISOString().split('T')[0];
+      add_pending_video(s3VideoData, creation_date);
+      
+      setLastResult({ type: 'add', success: true, data: s3VideoData });
+      console.log('✅ S3 영상 추가 성공:', s3VideoData);
+      alert(`S3 영상이 성공적으로 추가되었습니다! ID: ${resultId}`);
+    } catch (error) {
+      console.error('❌ S3 영상 추가 실패:', error);
+      alert(`S3 영상 추가 실패: ${error.message}`);
+      setLastResult({ type: 'add', error: error.message });
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2 mt-2">
+      {/* 입력 필드들 */}
+      <div className="grid grid-cols-1 gap-2">
+        {/* Job ID */}
+        <div>
+          <label className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Job ID (숫자)
+          </label>
+          <input
+            type="number"
+            value={jobId}
+            onChange={(e) => setJobId(e.target.value)}
+            placeholder="12345"
+            className={`w-full px-2 py-1 text-xs rounded border ${
+              dark_mode 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
+          />
+        </div>
+
+        {/* Result ID */}
+        <div>
+          <label className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Result ID (숫자)
+          </label>
+          <input
+            type="number"
+            value={resultId}
+            onChange={(e) => setResultId(e.target.value)}
+            placeholder="12345"
+            className={`w-full px-2 py-1 text-xs rounded border ${
+              dark_mode 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
+          />
+        </div>
+
+        {/* S3 Key */}
+        <div>
+          <label className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+            S3 파일 경로
+          </label>
+          <input
+            type="text"
+            value={s3Key}
+            onChange={(e) => setS3Key(e.target.value)}
+            placeholder="videos/req_xxx.mp4"
+            className={`w-full px-2 py-1 text-xs rounded border ${
+              dark_mode 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
+          />
+        </div>
+      </div>
+
+      {/* 추가 버튼 */}
+      <Button
+        onClick={handleAddS3Video}
+        disabled={isAdding || !jobId.trim() || !resultId.trim() || !s3Key.trim()}
+        className="w-full bg-green-600 hover:bg-green-700 text-white"
+        size="sm"
+      >
+        {isAdding ? (
+          <>
+            <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            추가 중...
+          </>
+        ) : (
+          <>
+            <Plus className="w-3 h-3 mr-1" />
+            S3 영상 추가
+          </>
+        )}
+      </Button>
+
+      {/* 로딩 상태 */}
+      {isAdding && (
+        <div className={`text-xs ${dark_mode ? 'text-gray-400' : 'text-gray-600'} text-center`}>
+          영상을 시스템에 추가하는 중...
+        </div>
+      )}
+
+      {/* 마지막 결과 */}
+      {lastResult && (
+        <div className={`text-xs p-2 rounded border ${
+          dark_mode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+        }`}>
+          <div className={`font-medium ${lastResult.error ? 'text-red-500' : 'text-green-500'}`}>
+            S3 영상 추가 {lastResult.error ? '실패' : '성공'}
+          </div>
+          <div className={`${dark_mode ? 'text-gray-400' : 'text-gray-600'} break-all`}>
+            {lastResult.error || `ID: ${lastResult.data?.result_id}, 제목: ${lastResult.data?.title}`}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TestControlPanel = ({ dark_mode = false }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -390,6 +704,22 @@ const TestControlPanel = ({ dark_mode = false }) => {
               <GitBranch className="w-4 h-4 mr-2" />
               5. 자식 버전 생성
             </Button>
+          </div>
+
+          {/* resultId 기반 테스트 섹션 */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              🎯 resultId 직접 테스트
+            </label>
+            <ResultIdTestSection dark_mode={dark_mode} />
+          </div>
+
+          {/* S3 영상 직접 추가 섹션 */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              📁 S3 영상 직접 추가
+            </label>
+            <S3VideoAddSection dark_mode={dark_mode} selectedPlatform={selectedPlatform} />
           </div>
 
           {/* 선택된 영상 정보 */}

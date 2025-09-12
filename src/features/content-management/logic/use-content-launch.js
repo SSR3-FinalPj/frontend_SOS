@@ -6,7 +6,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateTempVideoId, generateCompletedVideoId, generateDummyId } from '@/common/utils/unique-id';
-import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId, uploadToYouTube, uploadToReddit } from '@/common/api/api';
+import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '@/common/api/api';
+import { uploadToYoutube, uploadToReddit } from '@/common/api/video-api-wrapper';
 import { normalizeResultsTree } from '@/domain/tree/logic/normalize-results-tree';
 
 /**
@@ -1227,7 +1228,7 @@ export const use_content_launch = create(
             if (platform === 'youtube') {
               uploadPromises.push({
                 platform: 'youtube',
-                promise: uploadToYouTube(resultId, publishForm)
+                promise: uploadToYoutube(resultId, publishForm)
               });
             } else if (platform === 'reddit') {
               if (!publishForm.subreddit?.trim()) {
