@@ -7,15 +7,18 @@
 
 export function normalizeResultsTree(items, { labelMap } = {}) {
   const toNode = (node) => {
-    const id = String(node?.result_id ?? "");
+    // Accept both result_id (snake) and resultId (camel) from backend
+    const rawId = node?.result_id ?? node?.resultId ?? "";
+    const numericId = typeof rawId === 'string' ? parseInt(rawId, 10) : rawId;
+    const safeId = Number.isFinite(numericId) ? numericId : 0;
+    const idKey = String(safeId);
     const children = Array.isArray(node?.children) ? node.children.map(toNode) : [];
     return {
-      id,
-      title: labelMap?.[id] ?? `영상 ${id}`,
+      result_id: safeId,
+      title: labelMap?.[idKey] ?? `영상 ${idKey}`,
       children,
     };
   };
 
   return Array.isArray(items) ? items.map(toNode) : [];
 }
-

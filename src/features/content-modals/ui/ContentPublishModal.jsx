@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 import { Button } from '@/common/ui/button';
 import { Input } from '@/common/ui/input';
 import { Textarea } from '@/common/ui/textarea';
-import { Upload, X as XIcon, Play, MessageSquare } from 'lucide-react';
+import { Upload, X as XIcon, Play, MessageSquare, Loader2 } from 'lucide-react';
 import { 
   get_type_icon, 
   get_platform_icon, 
@@ -42,15 +42,16 @@ const PRIVACY_OPTIONS = [
   { value: 'public', label: '공개', description: '모든 사람이 볼 수 있음' }
 ];
 
-const ContentPublishModal = ({ 
-  is_open, 
-  item, 
+const ContentPublishModal = ({
+  is_open,
+  item,
   publish_form,
-  dark_mode, 
-  on_close, 
-  on_publish, 
+  dark_mode,
+  on_close,
+  on_publish,
   on_toggle_platform,
-  on_update_form
+  on_update_form,
+  is_publishing = false
 }) => {
   if (!item) return null;
 
@@ -86,41 +87,54 @@ const ContentPublishModal = ({
 
   return (
     <Dialog open={is_open} onOpenChange={(open) => !open && on_close()}>
-      <DialogContent className={`
-        max-w-2xl 
-        max-h-[90vh] 
-        overflow-y-auto
-        top-[50%]
-        left-[50%]
-        translate-x-[-50%]
-        translate-y-[-50%]
-        ${dark_mode 
-          ? 'bg-gray-900/95 border-gray-700/60' 
-          : 'bg-white/95 border-white/60'
-        } 
-        backdrop-blur-2xl 
-        rounded-3xl
-        z-50
-      `}>
+      <DialogContent
+        className={`
+          max-w-2xl
+          h-[90vh]
+          overflow-hidden
+          !p-0 !gap-0 !shadow-none
+          ${dark_mode
+            ? '!bg-gray-900 !border-gray-700'
+            : '!bg-white !border-gray-200'
+          }
+          rounded-3xl
+          z-50
+          grid
+          grid-rows-[auto_1fr_auto]
+        `}
+        style={{
+          backgroundColor: dark_mode ? '#111827' : '#ffffff',
+          borderColor: dark_mode ? '#374151' : '#d1d5db',
+          padding: '0',
+          gap: '0'
+        }}
+      >
         
         {/* 닫기 버튼 */}
         <DialogClose asChild>
           <button
             type="button"
-            className="absolute top-4 right-4 z-20 rounded-md p-1.5 bg-white/50 dark:bg-black/50 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-black transition-all focus:outline-none focus:ring-2 focus:ring-ring"
+            className={`absolute top-4 right-4 z-20 rounded-md p-1.5 ${
+              dark_mode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
+            } text-gray-600 dark:text-gray-300 transition-all focus:outline-none focus:ring-2 focus:ring-ring`}
             aria-label="닫기"
           >
             <XIcon className="h-5 w-5" />
           </button>
         </DialogClose>
 
-        <DialogHeader className="pb-4">
-          <DialogTitle className={`text-xl font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
-            게시물 생성
-          </DialogTitle>
-        </DialogHeader>
+        {/* 헤더 영역 - Grid Row 1 */}
+        <div className={`p-6 pb-4 ${dark_mode ? 'bg-gray-900' : 'bg-white'} rounded-t-3xl`}>
+          <DialogHeader className="pb-4">
+            <DialogTitle className={`text-xl font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+              게시물 생성
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-6 pb-4">
+        {/* 스크롤 가능한 컨텐츠 영역 - Grid Row 2 */}
+        <div className={`overflow-y-auto overscroll-contain px-6 ${dark_mode ? 'bg-gray-900' : 'bg-white'}`}>
+          <div className="space-y-6 pb-6">
           {/* 플랫폼 선택 */}
           <div>
             <label className={`text-sm font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
@@ -560,29 +574,47 @@ const ContentPublishModal = ({
             </>
           )}
 
-          {/* 액션 버튼 */}
-          <div className={`flex items-center gap-3 pt-6 border-t ${
-            dark_mode ? 'border-gray-600/30' : 'border-gray-300/30'
-          } sticky bottom-0 bg-inherit`}>
-            <Button
-              variant="outline"
-              onClick={on_close}
-              className={`flex-1 ${
-                dark_mode ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-gray-100 border-gray-200 hover:bg-gray-200'
-              } rounded-xl`}
-            >
-              취소
-            </Button>
-            
-            <Button
-              onClick={on_publish}
-              disabled={!getFormValidation()}
-              className="flex-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl disabled:opacity-50"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              지금 게시하기
-            </Button>
           </div>
+        </div>
+
+        {/* 푸터 영역 - Grid Row 3 (완전 불투명 고정) */}
+        <div
+          className={`flex items-center gap-3 p-6 sticky bottom-0 ${
+            dark_mode ? 'bg-gray-900' : 'bg-white'
+          } rounded-b-3xl relative z-20`}
+          style={{
+            backgroundColor: dark_mode ? '#111827' : '#ffffff'
+          }}
+        >
+          <Button
+            variant="outline"
+            onClick={on_close}
+            className={`flex-1 ${
+              dark_mode ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-gray-100 border-gray-200 hover:bg-gray-200'
+            } rounded-xl`}
+          >
+            취소
+          </Button>
+
+          <Button
+            onClick={on_publish}
+            disabled={!getFormValidation() || is_publishing}
+            className={`flex-1 ${
+              dark_mode ? 'bg-blue-600 hover:bg-blue-700 border-blue-600' : 'bg-blue-600 hover:bg-blue-700 border-blue-600'
+            } text-white rounded-xl disabled:opacity-50`}
+          >
+            {is_publishing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                게시 중...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                지금 게시하기
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
