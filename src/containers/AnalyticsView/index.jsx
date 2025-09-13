@@ -231,6 +231,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
               {/* 콘텐츠 섹션 */}
               <div className="grid grid-cols-2 gap-6">
                 <UploadedContentList
+                  contentData={contentData} 
                   startDate={date_range?.from}
                   endDate={date_range?.to}
                   onVideoCardClick={onVideoCardClick}
