@@ -3,9 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, Clock, Image, MessageSquare, ThumbsUp, ArrowBigUp, Eye } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/common/ui/pagination';
 import GlassCard from '@/common/ui/glass-card';
-import { getYouTubeVideosByChannelId, getRedditChannelPosts } from '@/common/api/api';
-import { useYouTubeStore } from '@/domain/youtube/logic/store';
-import { useRedditStore } from '@/domain/reddit/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
@@ -16,23 +13,19 @@ function ContentListView({
   selectedPlatform,
   setSelectedPlatform,
   sortOrder,
-  setSortOrder
+  setSortOrder,
+  contents,
+  isLoading,
+  error
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-
-  const [contents, setContents] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const sortDropdownRef = useRef(null);
-  const { channelId: youtubeChannelId } = useYouTubeStore();
-  const { channelTitle: redditChannelTitle } = useRedditStore();
   const { platforms } = usePlatformStore();
   const { isDarkMode } = usePageStore();
   const { preview_modal, open_preview_modal, close_preview_modal } = use_content_modals();
-  const authLoading = platforms.google.loading;
   const ITEMS_PER_PAGE = 6;
 
   const platformOptions = [
@@ -55,102 +48,10 @@ function ContentListView({
   });
 
   useEffect(() => {
-    if (platforms.google.connected && !platforms.reddit.connected) {
-      setSelectedPlatform('youtube');
-    } else if (!platforms.google.connected && platforms.reddit.connected) {
-      setSelectedPlatform('reddit');
-    } else if (platforms.google.connected && platforms.reddit.connected) {
-      setSelectedPlatform('all');
-    }
-  }, [platforms.google.connected, platforms.reddit.connected, setSelectedPlatform]);
-
-  useEffect(() => {
-    const fetchContent = async () => {
-      setLoading(true);
-      setError(null);
-
-      if (authLoading) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        let allData = [];
-
-        if (selectedPlatform === 'youtube' || selectedPlatform === 'all') {
-          if (youtubeChannelId) {
-            const ytData = await getYouTubeVideosByChannelId(youtubeChannelId, {
-              sortBy: sortOrder,
-              // No pagination here, fetch all and paginate after merge
-            });
-            const formattedYtData = ytData.videos.map(v => ({ ...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, title: v.title, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount }));
-            allData.push(...formattedYtData);
-          } else if (selectedPlatform === 'youtube') {
-            setError('YouTube 채널이 연결되지 않았습니다.');
-          }
-        }
-
-        if (selectedPlatform === 'reddit' || selectedPlatform === 'all') {
-          if (redditChannelTitle) {
-            const redditData = await getRedditChannelPosts(redditChannelTitle);
-            const formattedRedditData = redditData.posts.map(p => ({
-              id: p.post_id,
-              title: p.title,
-              thumbnail: p.thumbnail,
-              platform: 'Reddit',
-              uploadDate: p.upload_date,
-              upvotes: p.score,
-              comments: p.comment_count,
-              url: p.url,
-              sub_reddit: p.sub_reddit,
-              rd_video_url: p.rd_video_url
-            }));
-            allData.push(...formattedRedditData);
-          } else if (selectedPlatform === 'reddit') {
-            setError('Reddit 채널이 연결되지 않았습니다.');
-          }
-        }
-
-        if (sortOrder === 'latest') {
-          allData.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-        } else if (sortOrder === 'oldest') {
-          allData.sort((a, b) => new Date(a.uploadDate) - new Date(b.uploadDate));
-        } else if (sortOrder === 'likes') {
-          allData.sort((a, b) => {
-            const aLikes = a.likes || a.upvotes || 0;
-            const bLikes = b.likes || b.upvotes || 0;
-            return bLikes - aLikes;
-          });
-        } else if (sortOrder === 'comments') {
-          allData.sort((a, b) => {
-            const aComments = a.comments || 0;
-            const bComments = b.comments || 0;
-            return bComments - aComments;
-          });
-        }
-
-        const totalItems = allData.length;
-        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-        const paginatedData = allData.slice(
-          (currentPage - 1) * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE
-        );
-
-        setContents(paginatedData);
-        setTotalPages(totalPages);
-
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-        setContents([]);
-        setTotalPages(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContent();
-  }, [selectedPlatform, sortOrder, currentPage, youtubeChannelId, redditChannelTitle, authLoading]);
+    const totalItems = contents.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    setTotalPages(totalPages);
+  }, [contents]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -326,11 +227,7 @@ function ContentListView({
       </div>
 
       {/* Content Grid */}
-      {authLoading ? (
-        <div className="flex justify-center items-center min-h-[500px]">
-          <p className="text-gray-500 dark:text-gray-400">인증 정보 로드 중...</p>
-        </div>
-      ) : loading ? (
+      {isLoading ? (
         <div className="flex justify-center items-center min-h-[500px]">
           <p className="text-gray-500 dark:text-gray-400">콘텐츠를 불러오는 중...</p>
         </div>

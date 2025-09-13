@@ -1,8 +1,6 @@
 import { create } from "zustand";
-import { persist } from 'zustand/middleware';
 
 export const useYouTubeStore = create(
-  persist(
     (set) => ({
       channelId: null,
       channelTitle: null,
@@ -18,9 +16,5 @@ export const useYouTubeStore = create(
           channelId: null,
           channelTitle: null,
         })),
-    }),
-    {
-      name: 'youtube-channel-storage', // name of the item in the storage (must be unique)
-    }
-  )
+    })
 );

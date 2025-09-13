@@ -2,82 +2,21 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Eye, Heart, MessageSquare, VideoOff, TrendingUp, Star, Clock, Filter, ChevronDown } from 'lucide-react';
 import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
-import {
-  getYouTubeChannelId,
-  getYouTubeVideosByChannelId,
-  getRedditChannelInfo,
-  getRedditUploadsByRange
-} from '@/common/api/api';
 import GlassCard from '@/common/ui/glass-card';
 
-const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPlatform }) => {
+const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCardClick, selectedPlatform }) => {
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState('latest');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
+  // ✅ 상위에서 내려준 contentData를 정렬해서 사용
   useEffect(() => {
-    const fetchAndFilter = async () => {
-      if (!startDate || !endDate) {
-        setItems([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (selectedPlatform === 'youtube') {
-          // ✅ YouTube 데이터
-          const channelInfo = await getYouTubeChannelId();
-          if (!channelInfo || !channelInfo.channelId) {
-            throw new Error('YouTube 채널 ID를 가져올 수 없습니다.');
-          }
-
-          const videoData = await getYouTubeVideosByChannelId(channelInfo.channelId, { sortBy: 'latest', limit: 100 });
-          const filteredVideos = videoData.videos.filter(video => {
-            const publishedAtDate = new Date(video.publishedAt);
-            return publishedAtDate >= start && publishedAtDate <= end;
-          });
-
-          setItems(sortItems(filteredVideos, sortBy));
-
-        } else if (selectedPlatform === 'reddit') {
-          // ✅ Reddit 데이터
-          const channelInfo = await getRedditChannelInfo();
-          if (!channelInfo || !channelInfo.channelId) {
-            throw new Error('Reddit 채널 정보를 가져올 수 없습니다.');
-          }
-
-          const postData = await getRedditUploadsByRange(
-            startDate.toISOString().slice(0, 10),
-            endDate.toISOString().slice(0, 10),
-            channelInfo.channelId
-          );
-
-          const filteredPosts = postData.posts.filter(post => {
-            const createdDate = new Date(post.upload_date + "T00:00:00");
-            return createdDate >= start && createdDate <= end;
-          });
-
-          setItems(sortItems(filteredPosts, sortBy));
-        }
-
-      } catch (err) {
-        setError(err.message);
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAndFilter();
-  }, [startDate, endDate, selectedPlatform, sortBy]);
+    if (!Array.isArray(contentData)) {
+      setItems([]);
+      return;
+    }
+    setItems(sortItems(contentData, sortBy));
+  }, [contentData, sortBy]);
 
   // 정렬 함수
   const sortItems = (itemsToSort, sortType) => {
@@ -128,7 +67,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
     setItems(sortItems(items, newSortBy));
   };
 
-  //youtube 
+  // youtube 
   const youtubeSortOptions = [
     { value: 'latest', label: '최신순' },
     { value: 'oldest', label: '오래된순' },
@@ -137,8 +76,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
     { value: 'comments', label: '댓글순' }
   ];
 
-
-  //Reddit
+  // Reddit
   const redditSortOptions = [
     { value: 'latest', label: '최신순' },
     { value: 'oldest', label: '오래된순' },
@@ -149,20 +87,8 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
   // 정렬 옵션 목록
   const sortOptions = selectedPlatform === 'youtube' ? youtubeSortOptions : redditSortOptions;
 
-
-
-
-
   const renderContent = () => {
-    if (loading) {
-      return <p className="text-center text-gray-600 dark:text-gray-400">불러오는 중...</p>;
-    }
-
-    if (error) {
-      return <p className="text-center text-red-500">{error}</p>;
-    }
-
-    if (items.length === 0) {
+    if (!items || items.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center text-center text-gray-600 dark:text-gray-400 p-8">
           <VideoOff className="w-12 h-12 mb-4 text-gray-400" />
@@ -262,6 +188,7 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                 </div>
               )}
 
+              {/* 날짜 + 퍼포먼스 인디케이터 */}
               <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mt-2">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
@@ -272,14 +199,33 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${selectedPlatform === 'youtube'
-                      ? (content.statistics?.viewCount > 1000 ? 'bg-green-500' : content.statistics?.viewCount > 100 ? 'bg-yellow-500' : 'bg-gray-400')
-                      : (content.upvote > 50 ? 'bg-green-500' : content.upvote > 10 ? 'bg-yellow-500' : 'bg-gray-400')
-                    }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      selectedPlatform === 'youtube'
+                        ? (content.statistics?.viewCount > 1000
+                            ? 'bg-green-500'
+                            : content.statistics?.viewCount > 100
+                            ? 'bg-yellow-500'
+                            : 'bg-gray-400')
+                        : (content.upvote > 50
+                            ? 'bg-green-500'
+                            : content.upvote > 10
+                            ? 'bg-yellow-500'
+                            : 'bg-gray-400')
+                    }`}
+                  />
                   <span className="text-[10px]">
                     {selectedPlatform === 'youtube'
-                      ? (content.statistics?.viewCount > 1000 ? '높음' : content.statistics?.viewCount > 100 ? '보통' : '낮음')
-                      : (content.upvote > 50 ? '높음' : content.upvote > 10 ? '보통' : '낮음')}
+                      ? (content.statistics?.viewCount > 1000
+                          ? '높음'
+                          : content.statistics?.viewCount > 100
+                          ? '보통'
+                          : '낮음')
+                      : (content.upvote > 50
+                          ? '높음'
+                          : content.upvote > 10
+                          ? '보통'
+                          : '낮음')}
                   </span>
                 </div>
               </div>
@@ -337,8 +283,13 @@ const UploadedContentList = ({ startDate, endDate, onVideoCardClick, selectedPla
                     <button
                       key={option.value}
                       onClick={() => handleSortChange(option.value)}
-                      className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${sortBy === option.value ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
-                        } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''}`}
+                      className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                        sortBy === option.value
+                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                          : 'text-gray-700 dark:text-gray-300'
+                      } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${
+                        option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''
+                      }`}
                     >
                       {option.label}
                     </button>
