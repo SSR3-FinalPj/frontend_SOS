@@ -24,9 +24,10 @@ import {
  * @param {string} selectedPlatform - 선택된 플랫폼 ('youtube' | 'reddit')
  * @param {boolean} testMode - 테스트 모드 여부 (백엔드 API 목업 사용)
  * @param {boolean} useMascot - 마스코트 사용 여부
+ * @param {boolean} useCityData - 도시데이터 사용 여부
  * @returns {Object} 폼 상태와 핸들러들
  */
-export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube', testMode = false, useMascot = false) => {
+export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoData = null, on_request_success = null, selectedPlatform = 'youtube', testMode = false, useMascot = false, useCityData = true) => {
   // 기본 폼 상태
   const [selected_location, set_selected_location] = useState(null);
   const [uploaded_file, set_uploaded_file] = useState(null);
@@ -228,7 +229,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
               finalPromptText,
               selectedPlatform,
               useMascot,
-              true // useCityData는 항상 true로 하드코딩
+              useCityData // 사용자가 선택한 도시데이터 사용 여부
             );
           }
           

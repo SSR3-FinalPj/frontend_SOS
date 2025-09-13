@@ -38,10 +38,10 @@ const NaturalPromptInput = ({
 
   // 예시 문장들
   const example_prompts = [
-    "해질녘 서울숲, 9:16 비율로",
+    "해질녘 서울숲 풍경",
     "영화적인 4K 고화질, 비오는 날의 강남역 거리",
-    "항공뷰로 본 남산타워, 16:9 비율로",
-    "따뜻한 색감의 북촌 한옥마을 풍경",
+    "항공뷰로 본 남산타워",
+    "따뜻한 색감의 북촌 한옥마을",
     "광화문 광장을 걷는 사람들, 타임랩스"
   ];
 
@@ -55,7 +55,7 @@ const NaturalPromptInput = ({
           </h3>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          원하는 영상이 최대한 구체적으로 그려질 수 있도록 프롬프트를 작성해 주세요. 입력하지 않으면 선택한 장소와 이미지를 기반으로 자동 생성됩니다.
+          원하는 영상이 최대한 구체적으로 그려질 수 있도록 자유롭게 작성해주세요. 입력하지 않으면 선택한 장소와 이미지를 기반으로 자동 생성됩니다.
         </p>
       </div>
 
@@ -65,7 +65,7 @@ const NaturalPromptInput = ({
           <textarea
             value={prompt_text}
             onChange={handle_prompt_change}
-            placeholder="원하는 영상의 구체적인 모습을 서술해주세요 (예: 해질녘 서울숲, 9:16 비율로)"
+            placeholder="원하는 영상의 구체적인 모습을 서술해주세요 (예: 해질녘 서울숲 풍경)"
             maxLength={500}
             className="w-full min-h-[120px] p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             rows={4}
@@ -84,9 +84,8 @@ const NaturalPromptInput = ({
               💡 입력 가이드
             </h4>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-disc pl-5">
-              <li><strong>필수:</strong> 영상의 <strong>주제, 배경, 행동</strong>을 명확하게 서술해주세요.</li>
-              <li><strong>추천:</strong> 영상의 <strong>스타일, 분위기, 카메라 구도</strong>를 추가하면 완성도가 높아집니다.</li>
-              <li><strong>형식:</strong> 프롬프트에 <strong>"9:16 비율로"</strong> 또는 <strong>"16:9 비율로"</strong> 와 같이 영상 비율을 꼭 포함해주세요.</li>
+              <li><strong>이렇게 작성하면 좋아요:</strong> 영상의 <strong>주제(피사체), 배경, 행동</strong>을 구체적으로 서술하면 AI가 더 정확하게 이해합니다.</li>
+              <li><strong>완성도 높이기:</strong> 영상의 <strong>스타일(예: 영화처럼), 분위기(예: 따뜻한 색감), 카메라 구도(예: 항공뷰)</strong>를 추가하면 더 멋진 결과물을 얻을 수 있습니다.</li>
             </ul>
           </div>
         </div>

@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Check } from 'lucide-react';
 import { Button } from '@/common/ui/button';
 import SuccessModal from '@/common/ui/success-modal';
-import PlatformSelector from '@/common/ui/PlatformSelector';
 import LocationSelector from '@/common/ui/location-selector';
 import ImageUploader from '@/common/ui/image-uploader';
 import NaturalPromptInput from '@/common/ui/natural-prompt-input';
@@ -25,17 +24,20 @@ import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
 const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null, testModeData = null }) => {
-  // 플랫폼 선택 상태
-  const [selectedPlatform, setSelectedPlatform] = useState('youtube');
+  // 9:16 비율로 고정 (세로형 영상 전용)
+  const selectedPlatform = 'youtube';
 
   // 서울 자치구 마스코트 사용 상태
   const [useMascot, setUseMascot] = useState(false);
 
-  // 마스코트가 있는 서울 자치구 목록 (과천시 제외)
+  // 서울시 실시간 도시데이터 사용 상태
+  const [useCityData, setUseCityData] = useState(true);
+
+  // 마스코트가 있는 서울 자치구 목록 (과천시 포함)
   const DISTRICTS_WITH_MASCOTS = [
     '강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구',
     '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구',
-    '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'
+    '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구', '과천시'
   ];
 
   // YouTube 폼 상태 관리 커스텀 훅 사용 (테스트 모드 지원)
@@ -58,17 +60,20 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     on_request_success, 
     selectedPlatform, 
     testModeData?.testMode || false, // 테스트 모드 전달
-    useMascot // 마스코트 사용 여부 전달
+    useMascot, // 마스코트 사용 여부 전달
+    useCityData // 도시데이터 사용 여부 전달
   );
 
-  // 플랫폼 변경 핸들러
-  const handlePlatformChange = useCallback((platform) => {
-    setSelectedPlatform(platform);
-  }, []);
+  // 플랫폼은 고정이므로 변경 핸들러 불필요
 
   // 마스코트 사용 체크박스 핸들러
   const handleMascotChange = useCallback((event) => {
     setUseMascot(event.target.checked);
+  }, []);
+
+  // 도시데이터 사용 체크박스 핸들러
+  const handleCityDataChange = useCallback((event) => {
+    setUseCityData(event.target.checked);
   }, []);
 
   // 선택된 구가 마스코트 사용 가능한지 확인
@@ -77,17 +82,25 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     return DISTRICTS_WITH_MASCOTS.includes(selected_location.district);
   }, [selected_location?.district, DISTRICTS_WITH_MASCOTS]);
 
-  // 위치 변경 시 마스코트 체크박스 초기화
+  // 선택된 구가 도시데이터 사용 가능한지 확인 (마스코트와 동일한 조건)
+  const isCityDataAvailable = useCallback(() => {
+    if (!selected_location?.district) return false;
+    return DISTRICTS_WITH_MASCOTS.includes(selected_location.district);
+  }, [selected_location?.district, DISTRICTS_WITH_MASCOTS]);
+
+  // 위치 변경 시 체크박스 초기화
   useEffect(() => {
     if (!isMascotAvailable()) {
       setUseMascot(false);
     }
-  }, [isMascotAvailable]);
+    if (!isCityDataAvailable()) {
+      setUseCityData(true); // 기본값으로 되돌리기
+    }
+  }, [isMascotAvailable, isCityDataAvailable]);
 
   // 모달 닫기 핸들러
   const handle_close = useCallback(() => {
     if (is_submitting) return;
-    setSelectedPlatform('youtube'); // 플랫폼 초기화
     autoSubmitExecutedRef.current = false; // 자동 제출 플래그 초기화
     on_close();
   }, [is_submitting, on_close]);
@@ -120,10 +133,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
         return;
       }
       
-      // 플랫폼 설정
-      if (testModeData.platform) {
-        setSelectedPlatform(testModeData.platform);
-      }
+      // 플랫폼은 youtube로 고정 (테스트 데이터 무시)
       
       // 즉시 테스트용 위치 선택 (타이밍 문제 해결)
       
@@ -204,7 +214,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
           {/* 헤더 */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
-              AI 미디어 제작 요청
+              AI 영상 생성 요청 (9:16)
             </h2>
             <button
               onClick={handle_close}
@@ -217,31 +227,32 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
 
           {/* 컨텐츠 */}
           <div className="p-6 space-y-5 max-h-[calc(95vh-140px)] overflow-y-auto">
-            {/* 플랫폼 선택 컴포넌트 */}
-            <PlatformSelector
-              selectedPlatform={selectedPlatform}
-              onPlatformChange={handlePlatformChange}
+            {/* 9:16 비율 세로형 영상 생성 폼 */}
+            <LocationSelector
+              selected_location={selected_location}
+              on_location_select={handle_location_select}
             />
 
-            {/* 플랫폼 선택 시 공통 폼 렌더링 */}
-            {selectedPlatform && (
-              <>
-                {/* 공통 폼 - 모든 플랫폼에서 사용 */}
-                <LocationSelector
-                  selected_location={selected_location}
-                  on_location_select={handle_location_select}
-                />
+            <ImageUploader
+              uploaded_file={uploaded_file}
+              on_file_change={handle_file_change}
+            />
 
-                {/* 서울 자치구 마스코트 사용 옵션 */}
-                <AnimatePresence>
-                  {selected_location && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="space-y-3 overflow-hidden"
-                    >
+            <NaturalPromptInput
+              prompt_text={prompt_text}
+              on_prompt_change={handle_prompt_change}
+            />
+
+            {/* 서울 자치구 마스코트 사용 옵션 */}
+            <AnimatePresence>
+              {selected_location && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="space-y-3 overflow-hidden"
+                >
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                         <h4 className="text-md font-medium text-gray-800 dark:text-white">
@@ -249,6 +260,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
                         </h4>
                       </div>
                       
+                      {/* 마스코트 사용 옵션 */}
                       <div className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                         isMascotAvailable() 
                           ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700' 
@@ -277,7 +289,10 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
                                 ? 'text-gray-800 dark:text-white' 
                                 : 'text-gray-400 dark:text-gray-500'
                             }`}>
-                              서울 자치구 공식 마스코트 사용
+                              {selected_location.district === '과천시' 
+                                ? '과천시 공식 마스코트 사용'
+                                : '서울 자치구 공식 마스코트 사용'
+                              }
                             </span>
                             <p className={`text-xs mt-1 ${
                               isMascotAvailable() 
@@ -285,10 +300,60 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
                                 : 'text-gray-400 dark:text-gray-500'
                             }`}>
                               {isMascotAvailable() 
-                                ? `${selected_location.district}의 공식 마스코트를 영상에 포함시킵니다.`
-                                : selected_location.district === '과천시'
-                                  ? '과천시는 서울시 자치구가 아니어서 마스코트 사용이 불가능합니다.'
-                                  : '선택된 지역에서는 마스코트 사용이 불가능합니다.'
+                                ? selected_location.district === '과천시'
+                                  ? '과천시의 공식 마스코트를 영상에 포함시킵니다.'
+                                  : `${selected_location.district}의 공식 마스코트를 영상에 포함시킵니다. (없을 시 서울시 마스코트 적용)`
+                                : '선택된 지역에서는 마스코트 사용이 불가능합니다.'
+                              }
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* 도시데이터 사용 옵션 */}
+                      <div className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                        isCityDataAvailable() 
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700' 
+                          : 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                      }`}>
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <div className="relative flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={useCityData}
+                              onChange={handleCityDataChange}
+                              disabled={!isCityDataAvailable()}
+                              className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
+                                isCityDataAvailable()
+                                  ? 'border-blue-300 dark:border-blue-600 text-blue-600 focus:ring-blue-500'
+                                  : 'border-gray-300 dark:border-gray-600 text-gray-400 cursor-not-allowed'
+                              } focus:ring-2 focus:ring-offset-2`}
+                            />
+                            {useCityData && isCityDataAvailable() && (
+                              <Check className="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <span className={`text-sm font-medium ${
+                              isCityDataAvailable() 
+                                ? 'text-gray-800 dark:text-white' 
+                                : 'text-gray-400 dark:text-gray-500'
+                            }`}>
+                              {selected_location.district === '과천시' 
+                                ? '과천시 실시간 도시데이터 사용'
+                                : '서울시 실시간 도시데이터 사용'
+                              }
+                            </span>
+                            <p className={`text-xs mt-1 ${
+                              isCityDataAvailable() 
+                                ? 'text-gray-600 dark:text-gray-300' 
+                                : 'text-gray-400 dark:text-gray-500'
+                            }`}>
+                              {isCityDataAvailable() 
+                                ? selected_location.district === '과천시'
+                                  ? '과천시의 실시간 교통, 날씨, 이벤트 등의 도시데이터를 영상에 반영합니다.'
+                                  : '서울시의 실시간 교통, 날씨, 이벤트 등의 도시데이터를 영상에 반영합니다.'
+                                : '선택된 지역에서는 실시간 도시데이터 사용이 불가능합니다.'
                               }
                             </p>
                           </div>
@@ -298,43 +363,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
                   )}
                 </AnimatePresence>
 
-                <ImageUploader
-                  uploaded_file={uploaded_file}
-                  on_file_change={handle_file_change}
-                />
-
-                <NaturalPromptInput
-                  prompt_text={prompt_text}
-                  on_prompt_change={handle_prompt_change}
-                />
-
-                {/* Reddit 전용 필드 */}
-                {selectedPlatform === 'reddit' && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"></div>
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                        Subreddit 설정
-                      </h3>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        게시할 Subreddit
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="예: funny, pics, videos (r/ 없이 입력)"
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        게시할 서브레딧의 이름을 입력하세요.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+            
           </div>
 
           {/* 푸터 */}
@@ -347,22 +376,13 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
               취소
             </Button>
             
-            {/* 통합 제출 버튼 */}
+            {/* 영상 생성 요청 버튼 */}
             <Button
               onClick={handle_submit}
               disabled={!is_form_valid}
-              className={`font-semibold disabled:opacity-50 ${
-                selectedPlatform === 'youtube'
-                  ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30'
-                  : 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30'
-              } text-gray-800 dark:text-white`}
+              className="font-semibold disabled:opacity-50 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white"
             >
-              {is_submitting 
-                ? '요청 중...' 
-                : selectedPlatform === 'youtube' 
-                  ? '동영상 생성 요청' 
-                  : '이미지 생성 요청'
-              }
+              {is_submitting ? '영상 생성 중...' : '9:16 영상 생성 요청'}
             </Button>
           </div>
         </motion.div>
@@ -373,7 +393,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
         key="success-modal"
         is_open={is_success_modal_open}
         on_close={handle_success_modal_close}
-        message="AI 미디어 제작 요청이 성공적으로 전송되었습니다!"
+        message="9:16 세로형 영상 생성 요청이 성공적으로 전송되었습니다!"
         title="요청 완료"
       />
     </AnimatePresence>,
