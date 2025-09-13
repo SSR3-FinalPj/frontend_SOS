@@ -24,6 +24,11 @@ import { use_content_modals } from '@/features/content-modals/logic/use-content-
 import { generateReactKey } from '@/common/utils/unique-id';
 import { requestVideoStream, reviseVideo, uploadToYoutube, uploadToReddit } from '@/common/api/video-api-wrapper';
 
+// 기존 모달 컴포넌트들 import
+import ContentPreviewModal from '@/features/content-modals/ui/ContentPreviewModal';
+import VideoEditModal from '@/features/video-edit/ui/VideoEditModal';
+import ContentPublishModal from '@/features/content-modals/ui/ContentPublishModal';
+
 const TestControlPanel = ({ dark_mode = false }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('youtube');
@@ -33,8 +38,19 @@ const TestControlPanel = ({ dark_mode = false }) => {
   const [directTestResultId, setDirectTestResultId] = useState('');
   const [directTestPrompt, setDirectTestPrompt] = useState('');
   const [directTestPlatform, setDirectTestPlatform] = useState('youtube');
-  const [directTestResults, setDirectTestResults] = useState(null);
-  const [isDirectTesting, setIsDirectTesting] = useState(false);
+
+  // DB 테스트(실제 API 호출)용 상태
+  const PRESET_IDS = [12345, 12346, 12347];
+  const [dbTestResultId, setDbTestResultId] = useState('');
+  const [dbTestPrompt, setDbTestPrompt] = useState('테스트 프롬프트');
+  const [dbIsLoading, setDbIsLoading] = useState(false);
+  const [dbLast, setDbLast] = useState(null); // { action: 'stream|revise|youtube|reddit|validate', ok: bool, data|error }
+
+  // 기존 모달들의 상태 관리
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [modalVideoData, setModalVideoData] = useState(null);
 
   // 외부 클릭 감지를 위한 ref
   const panelRef = useRef(null);
@@ -197,105 +213,67 @@ const TestControlPanel = ({ dark_mode = false }) => {
     setSelectedVideo(video);
   };
 
-  // S3 직접 테스트 함수들
-  const handleDirectPreview = async () => {
+  // S3 직접 테스트 함수들 - 기존 모달 호출 방식으로 변경
+  const handleDirectPreview = () => {
     if (!directTestResultId.trim()) {
       alert('resultId를 입력해주세요.');
       return;
     }
 
-    setIsDirectTesting(true);
-    setDirectTestResults(null);
+    // 테스트용 비디오 데이터 생성
+    const testVideoData = {
+      result_id: parseInt(directTestResultId),
+      id: parseInt(directTestResultId),
+      title: `S3 테스트 영상 (ID: ${directTestResultId})`,
+      platform: directTestPlatform,
+      status: 'ready',
+      type: 'video'
+    };
 
-    try {
-      const result = await requestVideoStream(parseInt(directTestResultId));
-      setDirectTestResults({
-        type: 'preview',
-        success: true,
-        data: result,
-        message: '미리보기 URL을 성공적으로 가져왔습니다.'
-      });
-
-      // 스트리밍 URL이 있으면 새 창에서 열기
-      if (result?.streamUrl || result?.url) {
-        const streamUrl = result.streamUrl || result.url;
-        window.open(streamUrl, '_blank');
-      }
-    } catch (error) {
-      setDirectTestResults({
-        type: 'preview',
-        success: false,
-        error: error.message,
-        message: '미리보기를 가져오는데 실패했습니다.'
-      });
-    } finally {
-      setIsDirectTesting(false);
-    }
+    setModalVideoData(testVideoData);
+    setIsPreviewModalOpen(true);
   };
 
-  const handleDirectEdit = async () => {
+  const handleDirectEdit = () => {
     if (!directTestResultId.trim()) {
       alert('resultId를 입력해주세요.');
       return;
     }
-    if (!directTestPrompt.trim()) {
-      alert('수정할 프롬프트를 입력해주세요.');
-      return;
-    }
 
-    setIsDirectTesting(true);
-    setDirectTestResults(null);
+    // 테스트용 비디오 데이터 생성 (프롬프트 포함)
+    const testVideoData = {
+      result_id: parseInt(directTestResultId),
+      id: parseInt(directTestResultId),
+      temp_id: `test_${directTestResultId}`,
+      title: `S3 테스트 영상 (ID: ${directTestResultId})`,
+      platform: directTestPlatform,
+      status: 'ready',
+      type: 'video',
+      user_request: directTestPrompt || '테스트 프롬프트'
+    };
 
-    try {
-      const result = await reviseVideo(parseInt(directTestResultId), directTestPrompt.trim());
-      setDirectTestResults({
-        type: 'edit',
-        success: true,
-        data: result,
-        message: '영상 수정 요청이 성공적으로 전송되었습니다.'
-      });
-    } catch (error) {
-      setDirectTestResults({
-        type: 'edit',
-        success: false,
-        error: error.message,
-        message: '영상 수정 요청에 실패했습니다.'
-      });
-    } finally {
-      setIsDirectTesting(false);
-    }
+    setModalVideoData(testVideoData);
+    setIsEditModalOpen(true);
   };
 
-  const handleDirectUpload = async () => {
+  const handleDirectUpload = () => {
     if (!directTestResultId.trim()) {
       alert('resultId를 입력해주세요.');
       return;
     }
 
-    setIsDirectTesting(true);
-    setDirectTestResults(null);
+    // 테스트용 비디오 데이터 생성
+    const testVideoData = {
+      result_id: parseInt(directTestResultId),
+      id: parseInt(directTestResultId),
+      title: `S3 테스트 영상 (ID: ${directTestResultId})`,
+      platform: directTestPlatform,
+      status: 'ready',
+      type: 'video'
+    };
 
-    try {
-      const result = directTestPlatform === 'youtube'
-        ? await uploadToYoutube(parseInt(directTestResultId))
-        : await uploadToReddit(parseInt(directTestResultId));
-
-      setDirectTestResults({
-        type: 'upload',
-        success: true,
-        data: result,
-        message: `${directTestPlatform.toUpperCase()} 업로드가 성공적으로 시작되었습니다.`
-      });
-    } catch (error) {
-      setDirectTestResults({
-        type: 'upload',
-        success: false,
-        error: error.message,
-        message: `${directTestPlatform.toUpperCase()} 업로드에 실패했습니다.`
-      });
-    } finally {
-      setIsDirectTesting(false);
-    }
+    setModalVideoData(testVideoData);
+    setIsPublishModalOpen(true);
   };
 
   if (!isVisible) {
@@ -313,13 +291,14 @@ const TestControlPanel = ({ dark_mode = false }) => {
   }
 
   return (
-    <div ref={panelRef} className="fixed bottom-4 right-4 z-50 w-80 max-h-[80vh]">
-      <Card className={`${dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-xl flex flex-col max-h-full`}>
+    <div ref={panelRef} className="fixed top-20 right-4 z-50 flex gap-4 max-h-[calc(100vh-10rem)]">
+      {/* 기본 기능 테스트 패널 */}
+      <Card className={`${dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-xl flex flex-col w-72 max-h-full`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className={`text-sm font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
               <TestTube className="w-4 h-4 mr-2 inline" />
-              테스트 패널
+              기본 테스트
             </CardTitle>
             <Button
               variant="ghost"
@@ -478,156 +457,287 @@ const TestControlPanel = ({ dark_mode = false }) => {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
 
-          {/* S3 영상 직접 테스트 섹션 */}
-          <div className={`space-y-3 border-t pt-4 ${dark_mode ? 'border-gray-600' : 'border-gray-200'}`}>
-            <h4 className={`text-xs font-semibold ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
-              S3 영상 직접 테스트
-            </h4>
+      {/* S3 직접 테스트 패널 */}
+      <Card className={`${dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-xl flex flex-col w-72 max-h-full`}>
+        <CardHeader className="pb-3">
+          <CardTitle className={`text-sm font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+            <TestTube className="w-4 h-4 mr-2 inline" />
+            S3 직접 테스트
+          </CardTitle>
+        </CardHeader>
 
-            {/* resultId 입력 */}
-            <div>
-              <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Result ID
-              </label>
-              <input
-                type="number"
-                placeholder="resultId 입력 (예: 1, 2, 3...)"
-                value={directTestResultId}
-                onChange={(e) => setDirectTestResultId(e.target.value)}
-                className={`w-full mt-1 px-2 py-1 text-xs rounded border ${
-                  dark_mode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-              />
-            </div>
+        <CardContent className="space-y-4 overflow-y-auto flex-1">
+          {/* resultId 입력 */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Result ID
+            </label>
+            <input
+              type="number"
+              placeholder="resultId 입력 (예: 1, 2, 3...)"
+              value={directTestResultId}
+              onChange={(e) => setDirectTestResultId(e.target.value)}
+              className={`w-full mt-1 px-2 py-1 text-xs rounded border ${
+                dark_mode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+            />
+          </div>
 
-            {/* 프롬프트 입력 (수정용) */}
-            <div>
-              <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
-                수정 프롬프트 (수정 테스트용)
-              </label>
-              <textarea
-                placeholder="수정할 프롬프트를 입력하세요..."
-                value={directTestPrompt}
-                onChange={(e) => setDirectTestPrompt(e.target.value)}
-                rows={2}
-                className={`w-full mt-1 px-2 py-1 text-xs rounded border resize-none ${
-                  dark_mode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-              />
-            </div>
+          {/* 프롬프트 입력 (수정용) */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              수정 프롬프트 (수정 테스트용)
+            </label>
+            <textarea
+              placeholder="수정할 프롬프트를 입력하세요..."
+              value={directTestPrompt}
+              onChange={(e) => setDirectTestPrompt(e.target.value)}
+              rows={2}
+              className={`w-full mt-1 px-2 py-1 text-xs rounded border resize-none ${
+                dark_mode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+            />
+          </div>
 
-            {/* 플랫폼 선택 (업로드용) */}
-            <div>
-              <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
-                업로드 플랫폼
-              </label>
-              <div className="flex gap-2 mt-1">
-                <Button
-                  variant={directTestPlatform === 'youtube' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setDirectTestPlatform('youtube')}
-                  className="flex-1 text-xs"
-                >
-                  YouTube
-                </Button>
-                <Button
-                  variant={directTestPlatform === 'reddit' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setDirectTestPlatform('reddit')}
-                  className="flex-1 text-xs"
-                >
-                  Reddit
-                </Button>
-              </div>
-            </div>
-
-            {/* 테스트 버튼들 */}
-            <div className="space-y-2">
+          {/* 플랫폼 선택 (업로드용) */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              업로드 플랫폼
+            </label>
+            <div className="flex gap-2 mt-1">
               <Button
-                onClick={handleDirectPreview}
-                variant="outline"
-                className="w-full"
+                variant={directTestPlatform === 'youtube' ? 'default' : 'outline'}
                 size="sm"
-                disabled={!directTestResultId.trim() || isDirectTesting}
+                onClick={() => setDirectTestPlatform('youtube')}
+                className="flex-1 text-xs"
               >
-                {isDirectTesting ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Eye className="w-4 h-4 mr-2" />
-                )}
-                미리보기 테스트
+                YouTube
               </Button>
-
               <Button
-                onClick={handleDirectEdit}
-                variant="outline"
-                className="w-full"
+                variant={directTestPlatform === 'reddit' ? 'default' : 'outline'}
                 size="sm"
-                disabled={!directTestResultId.trim() || !directTestPrompt.trim() || isDirectTesting}
+                onClick={() => setDirectTestPlatform('reddit')}
+                className="flex-1 text-xs"
               >
-                {isDirectTesting ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Edit className="w-4 h-4 mr-2" />
-                )}
-                수정 테스트
-              </Button>
-
-              <Button
-                onClick={handleDirectUpload}
-                variant="outline"
-                className="w-full"
-                size="sm"
-                disabled={!directTestResultId.trim() || isDirectTesting}
-              >
-                {isDirectTesting ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Upload className="w-4 h-4 mr-2" />
-                )}
-                업로드 테스트 ({directTestPlatform})
+                Reddit
               </Button>
             </div>
+          </div>
 
-            {/* 테스트 결과 표시 */}
-            {directTestResults && (
-              <div className={`text-xs p-2 rounded border ${
-                directTestResults.success
-                  ? dark_mode
-                    ? 'bg-green-900 border-green-600 text-green-200'
-                    : 'bg-green-50 border-green-300 text-green-800'
-                  : dark_mode
-                    ? 'bg-red-900 border-red-600 text-red-200'
-                    : 'bg-red-50 border-red-300 text-red-800'
-              }`}>
-                <div className="font-medium flex items-center gap-2">
-                  {directTestResults.success ? '✅' : '❌'} {directTestResults.message}
-                  {directTestResults.success && directTestResults.type === 'preview' && directTestResults.data?.streamUrl && (
-                    <ExternalLink className="w-3 h-3" />
-                  )}
-                </div>
-                {directTestResults.success && directTestResults.data && (
-                  <div className={`mt-1 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <pre className="whitespace-pre-wrap">
-                      {JSON.stringify(directTestResults.data, null, 2)}
-                    </pre>
-                  </div>
-                )}
-                {!directTestResults.success && directTestResults.error && (
-                  <div className={`mt-1 ${dark_mode ? 'text-red-300' : 'text-red-600'}`}>
-                    에러: {directTestResults.error}
-                  </div>
-                )}
-              </div>
-            )}
+          {/* 테스트 버튼들 */}
+          <div className="space-y-2">
+            <Button
+              onClick={handleDirectPreview}
+              variant="outline"
+              className="w-full"
+              size="sm"
+              disabled={!directTestResultId.trim()}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              미리보기 테스트
+            </Button>
+
+            <Button
+              onClick={handleDirectEdit}
+              variant="outline"
+              className="w-full"
+              size="sm"
+              disabled={!directTestResultId.trim()}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              수정 테스트
+            </Button>
+
+            <Button
+              onClick={handleDirectUpload}
+              variant="outline"
+              className="w-full"
+              size="sm"
+              disabled={!directTestResultId.trim()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              업로드 테스트 ({directTestPlatform})
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* DB 테스트 (resultId 기반 실제 API 호출) */}
+      <Card className={`${dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-xl flex flex-col w-80 max-h-full`}>
+        <CardHeader className="pb-3">
+          <CardTitle className={`text-sm font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+            <TestTube className="w-4 h-4 mr-2 inline" />
+            DB 테스트 (resultId 기반)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 overflow-y-auto flex-1">
+          {/* 프리셋 ID 버튼 */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>프리셋 ID</label>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {PRESET_IDS.map((id) => (
+                <Button key={id} size="sm" variant="outline" className="text-xs"
+                  onClick={() => setDbTestResultId(String(id))}>
+                  #{id}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* resultId 입력 */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>Result ID</label>
+            <input
+              type="number"
+              placeholder="예: 12345"
+              value={dbTestResultId}
+              onChange={(e) => setDbTestResultId(e.target.value)}
+              className={`w-full mt-1 px-2 py-1 text-xs rounded border ${dark_mode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
+            />
+          </div>
+
+          {/* 프롬프트 입력 (수정 테스트) */}
+          <div>
+            <label className={`text-xs font-medium ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>수정 프롬프트</label>
+            <textarea
+              rows={2}
+              value={dbTestPrompt}
+              onChange={(e) => setDbTestPrompt(e.target.value)}
+              className={`w-full mt-1 px-2 py-1 text-xs rounded border resize-none ${dark_mode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
+            />
+          </div>
+
+          {/* 액션 버튼들 */}
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              size="sm"
+              disabled={dbIsLoading || !dbTestResultId}
+              onClick={async () => {
+                setDbIsLoading(true);
+                try {
+                  const res = await requestVideoStream(Number(dbTestResultId));
+                  setDbLast({ action: 'stream', ok: true, data: res });
+                } catch (e) {
+                  setDbLast({ action: 'stream', ok: false, error: e?.message || String(e) });
+                } finally { setDbIsLoading(false); }
+              }}
+            >
+              <Play className="w-3 h-3 mr-1" /> 스트리밍
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={dbIsLoading || !dbTestResultId || !dbTestPrompt.trim()}
+              onClick={async () => {
+                setDbIsLoading(true);
+                try {
+                  const res = await reviseVideo(Number(dbTestResultId), dbTestPrompt.trim());
+                  setDbLast({ action: 'revise', ok: true, data: res });
+                } catch (e) {
+                  setDbLast({ action: 'revise', ok: false, error: e?.message || String(e) });
+                } finally { setDbIsLoading(false); }
+              }}
+            >
+              <Edit className="w-3 h-3 mr-1" /> 수정
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={dbIsLoading || !dbTestResultId}
+              onClick={async () => {
+                setDbIsLoading(true);
+                try {
+                  const res = await uploadToYoutube(Number(dbTestResultId), {
+                    title: `[테스트] 업로드 ${new Date().toLocaleString()}`,
+                    description: '테스트 업로드',
+                    tags: ['test','demo'],
+                    privacyStatus: 'private'
+                  });
+                  setDbLast({ action: 'youtube', ok: true, data: res });
+                } catch (e) {
+                  setDbLast({ action: 'youtube', ok: false, error: e?.message || String(e) });
+                } finally { setDbIsLoading(false); }
+              }}
+            >
+              <Upload className="w-3 h-3 mr-1" /> YouTube
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={dbIsLoading || !dbTestResultId}
+              onClick={async () => {
+                setDbIsLoading(true);
+                try {
+                  const res = await uploadToReddit(Number(dbTestResultId), {
+                    subreddit: 'test',
+                    title: `[테스트] Reddit 업로드 ${new Date().toLocaleString()}`
+                  });
+                  setDbLast({ action: 'reddit', ok: true, data: res });
+                } catch (e) {
+                  setDbLast({ action: 'reddit', ok: false, error: e?.message || String(e) });
+                } finally { setDbIsLoading(false); }
+              }}
+            >
+              <Upload className="w-3 h-3 mr-1" /> Reddit
+            </Button>
+          </div>
+
+          {/* 상태/결과 표시 */}
+          {dbIsLoading && (
+            <div className={`text-xs flex items-center ${dark_mode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" /> 처리 중...
+            </div>
+          )}
+          {dbLast && (
+            <div className={`text-xs p-2 rounded border ${dbLast.ok ? 'border-green-300 text-green-700' : 'border-red-300 text-red-600'} ${dark_mode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+              <div className="font-medium mb-1">{dbLast.action.toUpperCase()} {dbLast.ok ? '성공' : '실패'}</div>
+              {dbLast.ok ? (
+                <div className="break-all">
+                  {dbLast.action === 'stream' && (dbLast.data?.streamUrl || dbLast.data?.videoUrl || 'URL 응답 확인')}
+                  {dbLast.action === 'revise' && JSON.stringify(dbLast.data)}
+                  {dbLast.action === 'youtube' && (dbLast.data?.videoUrl || dbLast.data?.videoId || JSON.stringify(dbLast.data))}
+                  {dbLast.action === 'reddit' && (dbLast.data?.postUrl || dbLast.data?.postId || JSON.stringify(dbLast.data))}
+                </div>
+              ) : (
+                <div className="break-all">{dbLast.error}</div>
+              )}
+            </div>
+          )}
+
+        </CardContent>
+      </Card>
+
+      {/* 기존 모달들 */}
+      <ContentPreviewModal
+        is_open={isPreviewModalOpen}
+        item={modalVideoData}
+        dark_mode={dark_mode}
+        on_close={() => setIsPreviewModalOpen(false)}
+      />
+
+      <VideoEditModal
+        isOpen={isEditModalOpen}
+        selectedVideo={modalVideoData}
+        onClose={() => setIsEditModalOpen(false)}
+        dark_mode={dark_mode}
+      />
+
+      <ContentPublishModal
+        isOpen={isPublishModalOpen}
+        selectedVideo={modalVideoData}
+        onClose={() => setIsPublishModalOpen(false)}
+        dark_mode={dark_mode}
+      />
     </div>
   );
 };
