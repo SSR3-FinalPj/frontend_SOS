@@ -23,7 +23,7 @@ import { useMediaRequestForm } from '@/features/ai-media-request/logic/use-media
  * @param {Function} props.on_request_success - 요청 성공 시 콜백 함수
  * @returns {JSX.Element} AI 미디어 제작 요청 모달 컴포넌트
  */
-const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null, testModeData = null }) => {
+const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVideoData = null, on_request_success = null /*, testModeData = null*/ }) => {
   // 9:16 비율로 고정 (세로형 영상 전용)
   const selectedPlatform = 'youtube';
 
@@ -54,12 +54,13 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
     handle_submit,
     handle_success_modal_close
   } = useMediaRequestForm(
-    on_close, 
-    isPriority, 
-    selectedVideoData, 
-    on_request_success, 
-    selectedPlatform, 
-    testModeData?.testMode || false, // 테스트 모드 전달
+    on_close,
+    isPriority,
+    selectedVideoData,
+    on_request_success,
+    selectedPlatform,
+    false, // 테스트 모드 비활성화
+    // testModeData?.testMode || false, // 테스트 모드 전달
     useMascot, // 마스코트 사용 여부 전달
     useCityData // 도시데이터 사용 여부 전달
   );
@@ -125,69 +126,69 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
   // 자동 제출 상태 추적을 위한 ref
   const autoSubmitExecutedRef = useRef(false);
   
-  // 🧪 TEST: 테스트 모드 자동 입력 처리 (의존성 배열 최적화)
-  useEffect(() => {
-    if (is_open && testModeData?.testMode && testModeData?.autoFill) {
-      // 이미 자동 제출이 실행되었다면 중복 실행 방지
-      if (autoSubmitExecutedRef.current) {
-        return;
-      }
-      
-      // 플랫폼은 youtube로 고정 (테스트 데이터 무시)
-      
-      // 즉시 테스트용 위치 선택 (타이밍 문제 해결)
-      
-      const testLocation = {
-        poi_id: "POI001", // 백엔드 API 호환성을 위한 poi_id 사용
-        name: "강남역",
-        address: "서울특별시 강남구",
-        district: "강남구",
-        coordinates: { lat: 37.498095, lng: 127.027610 }
-      };
-      
-      // 위치 즉시 설정 (지연 없이)
-      handle_location_select(testLocation);
-      
-      
-      // 나머지 데이터는 약간의 지연 후 설정
-      setTimeout(() => {
-        // 테스트용 이미지 파일 생성
-        const canvas = document.createElement('canvas');
-        canvas.width = 200;
-        canvas.height = 200;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = testModeData.platform === 'youtube' ? '#FF0000' : '#FF4500';
-        ctx.fillRect(0, 0, 200, 200);
-        ctx.fillStyle = 'white';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('테스트 이미지', 100, 100);
-        ctx.fillText(testModeData.platform.toUpperCase(), 100, 120);
-        
-        canvas.toBlob((blob) => {
-          const testFile = new File([blob], `test-${testModeData.platform}.png`, {
-            type: 'image/png'
-          });
-          handle_file_change(testFile);
-          
-        });
-        
-        // 테스트용 프롬프트 입력
-        const testPrompt = `🧪 테스트 모드로 생성된 ${testModeData.platform === 'youtube' ? '영상' : '이미지'} 콘텐츠입니다.`;
-        handle_prompt_change(testPrompt);
-        
-        
-        // 자동 제출 모드라면 추가 지연 후 제출 (중복 방지)
-        if (testModeData.autoSubmit && !autoSubmitExecutedRef.current) {
-          setTimeout(() => {
-            
-            autoSubmitExecutedRef.current = true; // 실행 플래그 설정
-            handle_submit();
-          }, 1000);
-        }
-      }, 200);
-    }
-  }, [is_open, testModeData?.testMode, testModeData?.autoFill, testModeData?.autoSubmit, testModeData?.platform]); // handle_submit 제거
+  // // 🧪 TEST: 테스트 모드 자동 입력 처리 (의존성 배열 최적화) - 테스트 모드 비활성화
+  // useEffect(() => {
+  //   if (is_open && testModeData?.testMode && testModeData?.autoFill) {
+  //     // 이미 자동 제출이 실행되었다면 중복 실행 방지
+  //     if (autoSubmitExecutedRef.current) {
+  //       return;
+  //     }
+
+  //     // 플랫폼은 youtube로 고정 (테스트 데이터 무시)
+
+  //     // 즉시 테스트용 위치 선택 (타이밍 문제 해결)
+
+  //     const testLocation = {
+  //       poi_id: "POI001", // 백엔드 API 호환성을 위한 poi_id 사용
+  //       name: "강남역",
+  //       address: "서울특별시 강남구",
+  //       district: "강남구",
+  //       coordinates: { lat: 37.498095, lng: 127.027610 }
+  //     };
+
+  //     // 위치 즉시 설정 (지연 없이)
+  //     handle_location_select(testLocation);
+
+
+  //     // 나머지 데이터는 약간의 지연 후 설정
+  //     setTimeout(() => {
+  //       // 테스트용 이미지 파일 생성
+  //       const canvas = document.createElement('canvas');
+  //       canvas.width = 200;
+  //       canvas.height = 200;
+  //       const ctx = canvas.getContext('2d');
+  //       ctx.fillStyle = testModeData.platform === 'youtube' ? '#FF0000' : '#FF4500';
+  //       ctx.fillRect(0, 0, 200, 200);
+  //       ctx.fillStyle = 'white';
+  //       ctx.font = '16px Arial';
+  //       ctx.textAlign = 'center';
+  //       ctx.fillText('테스트 이미지', 100, 100);
+  //       ctx.fillText(testModeData.platform.toUpperCase(), 100, 120);
+
+  //       canvas.toBlob((blob) => {
+  //         const testFile = new File([blob], `test-${testModeData.platform}.png`, {
+  //           type: 'image/png'
+  //         });
+  //         handle_file_change(testFile);
+
+  //       });
+
+  //       // 테스트용 프롬프트 입력
+  //       const testPrompt = `🧪 테스트 모드로 생성된 ${testModeData.platform === 'youtube' ? '영상' : '이미지'} 콘텐츠입니다.`;
+  //       handle_prompt_change(testPrompt);
+
+
+  //       // 자동 제출 모드라면 추가 지연 후 제출 (중복 방지)
+  //       if (testModeData.autoSubmit && !autoSubmitExecutedRef.current) {
+  //         setTimeout(() => {
+
+  //           autoSubmitExecutedRef.current = true; // 실행 플래그 설정
+  //           handle_submit();
+  //         }, 1000);
+  //       }
+  //     }, 200);
+  //   }
+  // }, [is_open, testModeData?.testMode, testModeData?.autoFill, testModeData?.autoSubmit, testModeData?.platform]); // handle_submit 제거
 
   if (!is_open) return null;
 
@@ -208,13 +209,13 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-hidden"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl w-full max-w-3xl max-h-[95vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
-              AI 영상 생성 요청 (9:16)
+              AI 영상 생성하기
             </h2>
             <button
               onClick={handle_close}
@@ -382,7 +383,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
               disabled={!is_form_valid}
               className="font-semibold disabled:opacity-50 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white"
             >
-              {is_submitting ? '영상 생성 중...' : '9:16 영상 생성 요청'}
+              {is_submitting ? '영상 생성 중...' : '영상 생성'}
             </Button>
           </div>
         </motion.div>

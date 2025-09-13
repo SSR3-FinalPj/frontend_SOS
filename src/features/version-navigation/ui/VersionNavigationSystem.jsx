@@ -87,8 +87,7 @@ const VersionNavigationSystem = ({
     navigateToPathIndex,
     navigateUp,
     navigateToRoot,
-    goBack,
-    debugInfo
+    goBack
   } = useVersionNavigation(processedTreeData, initialResultId);
 
   // 수동 네비게이션 추적 헬퍼 함수들
@@ -150,8 +149,8 @@ const VersionNavigationSystem = ({
     if (currentNode && currentNode.children && currentNode.children.length > 0) {
       const latestChild = currentNode.children[currentNode.children.length - 1];
       
-      // 🧪 TEST: 새로운 자식 노드 감지 로깅
-      if (latestChild.title?.includes('AI 영상') || latestChild.result_id?.includes('temp-')) {
+      // 🧪 TEST: 새로운 자식 노드 감지 로깅 (result_id는 숫자 타입)
+      if (latestChild.title?.includes('AI 영상') || String(latestChild.result_id || '').includes('temp-')) {
         const currentChildrenCount = availableChildren.length;
         const nodeChildrenCount = currentNode.children.length;
         
@@ -214,7 +213,7 @@ const VersionNavigationSystem = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* 브레드크럼 네비게이션 - 항상 표시 */}
       <BreadcrumbNavigation
         versionPath={versionPath}
@@ -244,32 +243,6 @@ const VersionNavigationSystem = ({
         </AnimatePresence>
       </div>
 
-      {/* 개발 환경 디버그 패널 */}
-      {process.env.NODE_ENV === 'development' && (
-        <details className={`mt-4 p-3 rounded-md text-xs ${
-          darkMode 
-            ? 'bg-gray-800/30 text-gray-400 border border-gray-700' 
-            : 'bg-gray-50/30 text-gray-600 border border-gray-200'
-        }`}>
-          <summary className="cursor-pointer font-medium mb-2">
-            🔧 Version Navigation Debug
-          </summary>
-          <div className="font-mono space-y-1">
-            <div>Tree Valid: {debugInfo.isValidTree ? '✅' : '❌'}</div>
-            <div>Current Path: [{debugInfo.currentPath.join(' → ')}]</div>
-            <div>Current Node ID: {debugInfo.currentNodeId || 'N/A'}</div>
-            <div>Version Path: [{debugInfo.versionPath.join(' → ')}]</div>
-            <div>Children Count: {debugInfo.availableChildrenCount}</div>
-            <div>Can Go Deeper: {debugInfo.canGoDeeper ? '✅' : '❌'}</div>
-            <div>Can Go Up: {debugInfo.canGoUp ? '✅' : '❌'}</div>
-            <div>History Length: {navigationHistory.length}</div>
-            <div>Tree Data Length: {processedTreeData.length}</div>
-            {contents && (
-              <div>Original Contents: {contents.length}</div>
-            )}
-          </div>
-        </details>
-      )}
     </div>
   );
 };

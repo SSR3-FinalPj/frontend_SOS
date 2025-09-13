@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, GitBranch, Play, Edit, Share2, Eye } from 'lucide-react';
+import { GitBranch } from 'lucide-react';
 import { Button } from '@/common/ui/Button';
 import ContentItemCard from '@/features/content-management/ui/ContentItemCard';
 
@@ -76,7 +76,7 @@ const SingleVideoViewer = ({
       className="flex items-start gap-4"
     >
       {/* 현재 영상 카드 - 축소된 크기 */}
-      <div className="w-72 flex-shrink-0">
+      <div className="w-64 max-w-sm flex-shrink-0 mr-4">
         <ContentItemCard
           item={cardItem}
           dark_mode={darkMode}
@@ -88,108 +88,43 @@ const SingleVideoViewer = ({
         />
       </div>
 
-      {/* 액션 버튼들 - 세로 배치 */}
-      <div className="flex flex-col gap-2">
-        {/* 미리보기 버튼 */}
-        {onPreview && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPreview(cardItem)}
-            className={`flex items-center gap-2 ${
-              darkMode 
-                ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            <Eye className="w-3 h-3" />
-            미리보기
-          </Button>
-        )}
-
-        {/* 수정 버튼 */}
-        {onEdit && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(cardItem)}
-            className={`flex items-center gap-2 ${
-              darkMode 
-                ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            <Edit className="w-3 h-3" />
-            수정
-          </Button>
-        )}
-
-        {/* 게시 버튼 */}
-        {onPublish && (
-          <Button
-            size="sm"
-            onClick={() => onPublish(cardItem)}
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <Share2 className="w-3 h-3" />
-            게시
-          </Button>
-        )}
-
-        {/* 자식 노드 네비게이션 */}
-        {hasChildren && (
-          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <div className={`text-xs font-medium mb-2 ${
-              darkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              자식 버전 ({availableChildren.length}개)
-            </div>
-            <div className="flex flex-col gap-1">
-              {availableChildren.map((child, index) => (
-                <Button
-                  key={child.result_id || index}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onNavigateToChild && onNavigateToChild(child.result_id)}
-                  className={`text-xs justify-start p-2 h-auto ${
-                    darkMode 
-                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                  title={`${child.title}로 이동`}
-                >
-                  <GitBranch className="w-3 h-3 mr-2" />
-                  <div className="flex flex-col items-start">
-                    <div className="font-mono text-xs">
-                      v{child.version || `1.${index + 1}`}
-                    </div>
-                    <div className="text-xs truncate max-w-20">
-                      {child.title?.replace(/.*- /, '') || `버전 ${index + 1}`}
-                    </div>
-                  </div>
-                </Button>
-              ))}
-            </div>
+      {/* 자식 노드 네비게이션 */}
+      {hasChildren && (
+        <div className="ml-4">
+          <div className={`text-xs font-medium mb-2 ${
+            darkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            자식 버전 ({availableChildren.length}개)
           </div>
-        )}
-
-      </div>
-
-      {/* 노드 정보 (개발 환경에서만) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className={`mt-6 p-3 rounded-md text-xs ${
-          darkMode 
-            ? 'bg-gray-800/50 text-gray-400 border border-gray-700' 
-            : 'bg-gray-50 text-gray-600 border border-gray-200'
-        }`}>
-          <div className="font-mono">
-            <div>Result ID: {currentNode.result_id}</div>
-            <div>Children: {availableChildren.length}</div>
-            <div>Title: {currentNode.title || 'N/A'}</div>
-            <div>Status: {currentNode.status || 'N/A'}</div>
+          <div className="flex flex-col gap-1">
+            {availableChildren.map((child, index) => (
+              <Button
+                key={child.result_id || index}
+                variant="ghost"
+                size="sm"
+                onClick={() => onNavigateToChild && onNavigateToChild(child.result_id)}
+                className={`text-xs justify-start p-2 h-auto ${
+                  darkMode
+                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                title={`${child.title}로 이동`}
+              >
+                <GitBranch className="w-3 h-3 mr-2" />
+                <div className="flex flex-col items-start">
+                  <div className="font-mono text-xs">
+                    v{child.version || `1.${index + 1}`}
+                  </div>
+                  <div className="text-xs truncate max-w-20">
+                    {child.title?.replace(/.*- /, '') || `버전 ${index + 1}`}
+                  </div>
+                </div>
+              </Button>
+            ))}
           </div>
         </div>
       )}
+
     </motion.div>
   );
 };
