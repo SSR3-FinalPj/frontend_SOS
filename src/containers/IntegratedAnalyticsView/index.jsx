@@ -13,7 +13,7 @@ import {
 import GlassCard from '@/common/ui/glass-card';
 import YouTubeIcon from '@/assets/images/button/Youtube_Icon.svg';
 import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
-import { mockCrossPlatformContent } from '@/common/utils/comparison-mock-data';
+
 
 const IntegratedAnalyticsView = () => {
   const [selectedCrossPlatformContent, setSelectedCrossPlatformContent] = useState(null);
@@ -340,7 +340,6 @@ const IntegratedAnalyticsView = () => {
       <CrossPlatformSearchCard
         selectedContent={selectedCrossPlatformContent}
         onSelectContent={handleSelectCrossPlatformContent}
-        allContent={mockCrossPlatformContent}
       />
       
       {selectedCrossPlatformContent && (
