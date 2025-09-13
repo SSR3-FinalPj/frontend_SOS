@@ -2,14 +2,14 @@
  * Dashboard 관련 유틸리티 함수들
  */
 
-import { 
-  Play, 
-  MessageSquare, 
-  Eye, 
-  Heart, 
-  TrendingUp, 
-  BarChart3, 
-  Star 
+import {
+  Play,
+  MessageSquare,
+  Eye,
+  Heart,
+  TrendingUp,
+  BarChart3,
+  Star
 } from 'lucide-react';
 import { reddit_chart_data } from '@/domain/dashboard/logic/dashboard-constants';
 import YoutubeIcon from '@/assets/images/button/Youtube_Icon.svg';
@@ -34,7 +34,7 @@ export const format_date = (date) => {
  */
 export const format_number_korean = (num) => {
   if (!num || isNaN(num)) return '0';
-  
+
   if (num >= 100000000) {
     return `${(num / 100000000).toFixed(1)}억`;
   } else if (num >= 10000) {
@@ -65,37 +65,22 @@ export const format_date_for_api = (date) => {
  */
 export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
   if (selectedPlatform === 'youtube' && summaryData) {
-    // total 객체에서 데이터 추출
     const totalData = summaryData.total || summaryData;
-    
-    // 여러 가능한 필드명 패턴 시도 (total 객체에서)
-    const totalViews = totalData?.total_view_count || 
-                      totalData?.totalViews || 
-                      totalData?.viewCount || 
-                      totalData?.views || 
-                      summaryData.total_view_count || 
-                      summaryData.totalViews || 
-                      summaryData.viewCount || 
-                      summaryData.views || 0;
-                      
-    const totalLikes = totalData?.total_like_count || 
-                      totalData?.totalLikes || 
-                      totalData?.likeCount || 
-                      totalData?.likes || 
-                      summaryData.total_like_count || 
-                      summaryData.totalLikes || 
-                      summaryData.likeCount || 
-                      summaryData.likes || 0;
-                      
-    const totalComments = totalData?.total_comment_count || 
-                         totalData?.totalComments || 
-                         totalData?.commentCount || 
-                         totalData?.comments || 
-                         summaryData.total_comment_count || 
-                         summaryData.totalComments || 
-                         summaryData.commentCount || 
-                         summaryData.comments || 0;
 
+    const totalViews = totalData?.total_view_count || 0;
+    const totalLikes = totalData?.total_like_count || 0;
+    const totalComments = totalData?.total_comment_count || 0;
+
+    // 일별 데이터에서 최고/최저 뽑기
+    const videoViews = Array.isArray(summaryData.daily)
+      ? summaryData.daily.map(d => d.view_count || 0)
+      : [];
+    const videoLikes = Array.isArray(summaryData.daily)
+      ? summaryData.daily.map(d => d.like_count || 0)
+      : [];
+    const videoComments = Array.isArray(summaryData.daily)
+      ? summaryData.daily.map(d => d.comment_count || 0)
+      : [];
 
     return [
       {
@@ -103,34 +88,43 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         label: "총 조회수",
         value: format_number_korean(totalViews),
         bgColor: "bg-blue-50/80 dark:bg-blue-950/20",
-        iconBg: "bg-blue-100 dark:bg-blue-900/30"
+        iconBg: "bg-blue-100 dark:bg-blue-900/30",
+        extra: videoViews.length
+          ? `최고: ${Math.max(...videoViews)} | 최저: ${Math.min(...videoViews)}`
+          : null
       },
       {
         icon: Heart,
         label: "총 좋아요",
         value: format_number_korean(totalLikes),
         bgColor: "bg-red-50/80 dark:bg-red-950/20",
-        iconBg: "bg-red-100 dark:bg-red-900/30"
+        iconBg: "bg-red-100 dark:bg-red-900/30",
+        extra: videoLikes.length
+          ? `최고: ${Math.max(...videoLikes)} | 최저: ${Math.min(...videoLikes)}`
+          : null
       },
       {
         icon: MessageSquare,
         label: "총 댓글",
         value: format_number_korean(totalComments),
         bgColor: "bg-green-50/80 dark:bg-green-950/20",
-        iconBg: "bg-green-100 dark:bg-green-900/30"
-      }
+        iconBg: "bg-green-100 dark:bg-green-900/30",
+        extra: videoComments.length
+          ? `최고: ${Math.max(...videoComments)} | 최저: ${Math.min(...videoComments)}`
+          : null
+      },
     ];
-  } else if (selectedPlatform === 'reddit' && summaryData) {
-    const totalData = summaryData.total || summaryData;
+  }
 
-    const totalUpvotes = totalData?.total_upvote_count || 
-                         totalData?.totalUpvotes || 
-                         totalData?.upvotes || 0;
-    const totalComments = totalData?.total_comment_count || 
-                          totalData?.totalComments || 
-                          totalData?.comments || 0;
-    const averageScore = totalData?.average_score || 
-                         totalData?.averageScore || 0;
+  if (selectedPlatform === 'reddit' && summaryData) {
+    const totalData = summaryData.total || summaryData;
+    const totalUpvotes = totalData?.total_upvote_count || 0;
+    const totalComments = totalData?.total_comment_count || 0;
+    const averageScore = totalData?.total_upvote_ratio || 0;
+    // 일별 데이터에서 최고/최저 업보트/댓글 찾기
+    const dailyUpvotes = Array.isArray(summaryData.daily) ? summaryData.daily.map(d => d.upvote_count || 0) : [];
+    const dailyComments = Array.isArray(summaryData.daily) ? summaryData.daily.map(d => d.comment_count || 0) : [];
+
 
     return [
       {
@@ -138,26 +132,28 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         label: "총 업보트",
         value: format_number_korean(totalUpvotes),
         bgColor: "bg-orange-50/80 dark:bg-orange-950/20",
-        iconBg: "bg-orange-100 dark:bg-orange-900/30"
+        iconBg: "bg-orange-100 dark:bg-orange-900/30",
+        extra: dailyUpvotes.length ? `최고: ${Math.max(...dailyUpvotes)} | 최저: ${Math.min(...dailyUpvotes)}` : null
       },
       {
         icon: MessageSquare,
         label: "총 댓글",
         value: format_number_korean(totalComments),
         bgColor: "bg-green-50/80 dark:bg-green-950/20",
-        iconBg: "bg-green-100 dark:bg-green-900/30"
+        iconBg: "bg-green-100 dark:bg-green-900/30",
+        extra: dailyComments.length ? `최고: ${Math.max(...dailyComments)} | 최저: ${Math.min(...dailyComments)}` : null
       },
       {
         icon: Star,
         label: "평균 점수",
         value: format_number_korean(averageScore),
         bgColor: "bg-purple-50/80 dark:bg-purple-950/20",
-        iconBg: "bg-purple-100 dark:bg-purple-900/30"
+        iconBg: "bg-purple-100 dark:bg-purple-900/30",
+        extra: null // 또는 다른 정보 추가
       }
     ];
   }
-  
-  // Fallback to mock data for reddit or when no data available
+
   return get_kpi_mock_data(selectedPlatform);
 };
 
@@ -296,11 +292,11 @@ export const get_platform_data = (youtubeData, redditData) => {
     });
   }
 
-  const redditPlatform = { 
-    name: "Reddit", 
+  const redditPlatform = {
+    name: "Reddit",
     description: "커뮤니티 플랫폼",
     totalPosts: redditData?.total?.total_post_count?.toLocaleString() || 0,
-    status: "활성", 
+    status: "활성",
     statusColor: "text-green-500",
     icon: RedditIcon,
     color: "from-orange-500 to-orange-600",
@@ -344,19 +340,19 @@ export const get_platform_options = () => [
 export const get_header_info = (current_view) => {
   switch (current_view) {
     case 'dashboard':
-      return { 
-        title: "플랫폼 성과 분석", 
-        subtitle: "연동된 플랫폼의 정보를 간략하게 확인하세요" 
+      return {
+        title: "플랫폼 성과 분석",
+        subtitle: "연동된 플랫폼의 정보를 간략하게 확인하세요"
       };
     case 'analytics':
-      return { 
-        title: "상세 분석", 
-        subtitle: "상세한 플랫폼 데이터와 인사이트를 확인하세요" 
+      return {
+        title: "상세 분석",
+        subtitle: "상세한 플랫폼 데이터와 인사이트를 확인하세요"
       };
     case 'settings':
-      return { 
-        title: "환경설정", 
-        subtitle: "서비스 환경을 개인화하고 데이터를 안전하게 관리" 
+      return {
+        title: "환경설정",
+        subtitle: "서비스 환경을 개인화하고 데이터를 안전하게 관리"
       };
     case 'contentList':
       return {
@@ -369,9 +365,9 @@ export const get_header_info = (current_view) => {
         subtitle: 'AI가 생성한 미디어 콘텐츠를 검토하고 플랫폼에 론칭하세요'
       };
     default:
-      return { 
-        title: "플랫폼 성과 분석", 
-        subtitle: "연동된 플랫폼의 정보를 간략하게 확인하세요" 
+      return {
+        title: "플랫폼 성과 분석",
+        subtitle: "연동된 플랫폼의 정보를 간략하게 확인하세요"
       };
   }
 };
