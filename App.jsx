@@ -39,25 +39,6 @@ export default function App() {
     })();
   }, [navigate, location.pathname]);
 
-  // 다크 모드/언어 초기화
-  useEffect(() => {
-    const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
-
-    if (savedDarkMode !== null) {
-      setIsDarkMode(JSON.parse(savedDarkMode));
-    }
-  }, [setIsDarkMode]);
-
-  // 다크 모드 적용
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    localStorage.setItem('contentboost-dark-mode', JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
 
 
 

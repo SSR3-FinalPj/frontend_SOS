@@ -137,7 +137,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       // 현재 날짜 생성 (YYYY-MM-DD 형식)
       const creation_date = new Date().toISOString().split('T')[0];
       
-      // 마지막 요청 정보를 localStorage에 저장 (자동 생성용)
+      // 마지막 요청 정보를 store에 저장 (자동 생성용)
       const last_request_info = {
         location: selected_location,
         image_url: null,
@@ -145,7 +145,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         platform: selectedPlatform,
         timestamp: new Date().toISOString()
       };
-      localStorage.setItem('last_video_request', JSON.stringify(last_request_info));
+      setLastVideoRequest(last_request_info);
       
       // 마스코트 사용 시 프롬프트 텍스트 조합
       const finalPromptText = useMascot && selected_location?.district 
