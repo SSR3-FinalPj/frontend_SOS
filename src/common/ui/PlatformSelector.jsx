@@ -18,23 +18,23 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
   const platforms = [
     {
       id: 'youtube',
-      name: 'YouTube',
+      name: '9:16 (쇼츠용 영상)',
       icon: Play,
       color: 'from-red-500/20 to-red-600/20',
       borderColor: 'border-red-500/30',
       hoverColor: 'hover:from-red-500/30 hover:to-red-600/30',
       textColor: 'text-red-600',
-      description: '동영상 생성'
+      description: '세로형 영상 생성'
     },
     {
       id: 'reddit',
-      name: 'Reddit',
+      name: '16:9 (일반/Reddit용 영상)',
       icon: Image,
       color: 'from-orange-500/20 to-red-500/20',
       borderColor: 'border-orange-500/30',
       hoverColor: 'hover:from-orange-500/30 hover:to-red-500/30',
       textColor: 'text-orange-600',
-      description: '이미지 생성'
+      description: '가로형 영상 생성'
     }
   ];
 

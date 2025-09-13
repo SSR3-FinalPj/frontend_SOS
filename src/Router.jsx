@@ -15,6 +15,7 @@ import ContentLaunchPage from '@/pages/ContentLaunchPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import SettingsPage from '@/pages/SettingsPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import TreeTestPage from '@/pages/TreeTestPage';
 
 /**
  * Router 컴포넌트
@@ -35,6 +36,9 @@ const Router = () => {
       <Route path="/contentlaunch" element={<ContentLaunchPage />} />
       <Route path="/analytics" element={<AnalyticsPage />} />
       <Route path="/settings" element={<SettingsPage />} />
+      
+      {/* 테스트: 결과 트리 시각화 */}
+      <Route path="/tree-test" element={<TreeTestPage />} />
       
       
       {/* 404 페이지 */}

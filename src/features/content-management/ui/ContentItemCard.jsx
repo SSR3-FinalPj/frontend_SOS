@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/common/ui/card';
 import { Button } from '@/common/ui/button';
 import { Badge } from '@/common/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip';
-import { Clock, Upload, CheckCircle2, Loader2, Check, AlertTriangle } from 'lucide-react';
+import { Clock, Upload, CheckCircle2, Loader2, Check, AlertTriangle, GitBranch } from 'lucide-react';
 import Timer from '@/common/ui/timer';
 import jumpCatGif from '@/assets/images/Jumpcat/jump_cat.gif';
 import { 
@@ -38,8 +38,21 @@ const ContentItemCard = ({
   selected_video_id,
   on_video_select
 }) => {
-  // 백엔드 video_id 우선, 없으면 temp_id, 마지막으로 기존 id 사용
-  const item_id = item.video_id || item.temp_id || item.id;
+  // 🚀 백엔드 API 연동: result_id 우선 사용 (실제 백엔드 ID)
+  // TDZ 방지를 위해 가장 먼저 선언하여 이후 모든 사용 지점에서 안전하게 접근
+  const item_id = item.result_id || item.resultId || item.video_id || item.temp_id || item.id;
+
+  // 🧪 TEST-ONLY: ContentItemCard에서 받은 item 데이터 로깅 (타입 안전 검사)
+  const isTestItem = (
+    item.title?.includes('AI 영상') ||
+    (typeof item.id === 'string' && item.id.includes('temp-')) ||
+    (typeof item.temp_id === 'string' && item.temp_id.includes('temp-')) ||
+    (typeof item.temp_id === 'number' && item.temp_id > 1700000000000)
+  );
+  if (isTestItem) {
+    // debug removed
+  }
+  
   const is_uploading = uploading_items.includes(item_id);
   const is_selected = selected_video_id === item_id;
   
@@ -51,15 +64,7 @@ const ContentItemCard = ({
   
   // formatCreationTime은 이제 date-utils에서 import하여 사용
   
-  // console.log('ContentItemCard render:', {
-  //   title: item.title,
-  //   video_id: item.video_id,
-  //   temp_id: item.temp_id,
-  //   id: item.id,
-  //   final_item_id: item_id,
-  //   is_uploading,
-  //   uploading_items
-  // });
+  
 
   // 선택 클릭 핸들러
   const handle_select = (e) => {
@@ -139,10 +144,22 @@ const ContentItemCard = ({
           )}
           
           {/* 플랫폼 배지 - 공통 */}
-          <div className="absolute top-2 left-2">
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
             <Badge className={`${get_platform_color(item.platform)} rounded-full px-2 py-1 text-xs border`}>
               {item.platform}
             </Badge>
+            
+            {/* 파생 버전 배지 */}
+            {item.hasChildren && item.childrenCount > 0 && (
+              <Badge className={`${
+                dark_mode 
+                  ? 'bg-green-500/20 text-green-300 border-green-500/30' 
+                  : 'bg-green-500/10 text-green-600 border-green-500/20'
+              } rounded-full px-2 py-1 text-xs border flex items-center gap-1`}>
+                <GitBranch className="w-3 h-3" />
+                {item.childrenCount}개
+              </Badge>
+            )}
           </div>
           
           {/* 상태 아이콘 - 공통 */}

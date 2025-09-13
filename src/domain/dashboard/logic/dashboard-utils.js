@@ -12,8 +12,8 @@ import {
   Star
 } from 'lucide-react';
 import { reddit_chart_data } from '@/domain/dashboard/logic/dashboard-constants';
-import YoutubeIcon from '@/assets/images/button/Youtube_Icon.svg?react';
-import RedditIcon from '@/assets/images/button/Reddit_Icon.svg?react';
+import YoutubeIcon from '@/assets/images/button/Youtube_Icon.svg';
+import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 /**
  * 날짜를 한국어 형식으로 포맷팅
  * @param {Date} date - 포맷팅할 날짜

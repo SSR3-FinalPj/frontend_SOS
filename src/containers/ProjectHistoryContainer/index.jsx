@@ -17,7 +17,8 @@ import {
   Image,
   FileText,
   Plus,
-  RefreshCw
+  RefreshCw,
+  MapPin
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ContentTreeView from '@/features/content-tree/ui/ContentTreeView';
@@ -30,6 +31,53 @@ import SuccessModal from '@/common/ui/success-modal';
 import TestControlPanel from '@/common/ui/TestControlPanel';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
+import { LOCATION_DATA } from '@/common/constants/location-data';
+import VersionNavigationSystem from '@/features/version-navigation/ui/VersionNavigationSystem';
+
+/**
+ * POI ID로 장소명을 찾는 함수
+ * @param {string} poiId - POI ID (예: POI008)
+ * @returns {string} 장소명 또는 기본값
+ */
+function getLocationName(poiId) {
+  if (!poiId) return '기타 장소';
+  
+  for (const district in LOCATION_DATA) {
+    const locations = LOCATION_DATA[district];
+    if (locations[poiId]) {
+      return locations[poiId];
+    }
+  }
+  return '기타 장소';
+}
+
+/**
+ * 영상 데이터를 장소별로 그룹화하는 함수
+ * @param {Array} videos - 영상 데이터 배열
+ * @returns {Object} 장소별로 그룹화된 데이터
+ */
+function groupVideosByLocation(videos) {
+  const groups = {};
+  
+  videos.forEach(video => {
+    const locationId = video.location_id || video.poi_id;
+    const locationName = getLocationName(locationId);
+    
+    if (!groups[locationName]) {
+      groups[locationName] = {
+        id: locationName.replace(/[·\s]/g, '_'), // 안전한 ID 생성
+        name: locationName,
+        location_id: locationId,
+        items: [],
+        display_date: null // 장소별 그룹화에서는 날짜 표시 제거
+      };
+    }
+    
+    groups[locationName].items.push(video);
+  });
+  
+  return Object.values(groups);
+}
 
 /**
  * 소스 타입에 따른 아이콘을 반환
@@ -64,6 +112,8 @@ function get_category_color(category) {
       return 'bg-purple-500/10 text-purple-700 dark:text-purple-300';
     case 'event': 
       return 'bg-orange-500/10 text-orange-700 dark:text-orange-300';
+    case 'location': 
+      return 'bg-rose-500/10 text-rose-700 dark:text-rose-300';
     default: 
       return 'bg-gray-500/10 text-gray-700 dark:text-gray-300';
   }
@@ -80,6 +130,7 @@ function get_category_label(category) {
     case 'marketing': return '마케팅';
     case 'brand': return '브랜딩';
     case 'event': return '이벤트';
+    case 'location': return '장소별';
     default: return '기타';
   }
 }
@@ -104,7 +155,8 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     add_pending_video,
     replace_processing_video,
     select_video,
-    handle_multi_platform_publish
+    handle_multi_platform_publish,
+    results_tree
   } = use_content_launch();
 
   // 모달 상태 관리
@@ -139,43 +191,11 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     
     debounce_timer_ref.current = setTimeout(() => {
       fetch_folders();
-      console.log('[디바운스] 폴더 목록 갱신 실행');
     }, 200); // 200ms 디바운스로 증가하여 과도한 호출 방지
   }, [fetch_folders]);
 
-  // 컴포넌트 마운트 시 폴더 데이터 로딩 및 실시간 동기화
-  useEffect(() => {
-    fetch_folders();
-    
-    // 🔍 개발 환경에서만 디버그 기능 활성화
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[ProjectHistoryContainer] 컴포넌트 마운트됨 - 초기 폴더 로딩');
-      
-      // 전역 디버그 함수 등록 (함수 정의 후에 접근하도록 지연)
-      setTimeout(() => {
-        window.debugProjectHistory = {
-          checkSyncStatus: () => {
-            console.log('[디버그] 현재 동기화 상태:', {
-              folders_count: folders.length,
-              pending_videos_count: pending_videos.length,
-              folders: folders,
-              pending_videos: pending_videos
-            });
-          },
-          forceFolderUpdate: () => {
-            console.log('[디버그] 강제 폴더 업데이트 실행');
-            fetch_folders();
-          },
-          clearData: () => {
-            localStorage.removeItem('content-launch-storage');
-            window.location.reload();
-          }
-        };
-      }, 100);
-      
-      console.log('[ProjectHistoryContainer] 디버그 기능 활성화됨 - window.debugProjectHistory 사용 가능');
-    }
-  }, [fetch_folders]);
+  // 컴포넌트 마운트 시 강제 fetch_folders 호출 제거
+  // Zustand persist가 초기 상태를 복원하므로 별도 초기 페치가 필요하지 않습니다.
 
   // 🔥 핵심 추가: pending_videos와 folders 변화 시 실시간 동기화 (디바운스 적용)
   useEffect(() => {
@@ -185,31 +205,17 @@ function ProjectHistoryContainer({ dark_mode = false }) {
 
   // 폴더 데이터 변화 감지 및 프로젝트 목록 자동 갱신
   useEffect(() => {
-    // folders 데이터가 변경되면 convert_to_projects가 자동으로 호출되어 UI가 업데이트됨
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[상태 모니터링] folders 변경됨 - 개수: ${folders.length}`, folders);
-    }
+    // folders 데이터 변경 모니터링 (로그 제거)
   }, [folders]);
 
   // 🔍 상태 동기화 검증 useEffect
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[상태 검증] pending_videos: ${pending_videos.length}, folders: ${folders.length}`);
-      
-      // 불일치 감지 및 자동 복구
-      if (pending_videos.length > 0 && folders.length === 0) {
-        console.warn('⚠️ [상태 불일치] pending_videos가 있지만 folders가 비어있음 - 자동 복구 시도');
-        // 자동 복구: 1초 후 강제 폴더 갱신
-        setTimeout(() => {
-          console.log('🔄 [자동 복구] 폴더 목록 강제 갱신 실행');
-          fetch_folders();
-        }, 1000);
-      }
-      
-      if (pending_videos.length === 0 && folders.length > 0) {
-        console.warn('⚠️ [상태 불일치] folders가 있지만 pending_videos가 비어있음');
-        // 이 경우는 정상일 수 있음 (모든 영상이 완료되거나 삭제된 경우)
-      }
+    // 불일치 감지 및 자동 복구 (로그 제거)
+    if (pending_videos.length > 0 && folders.length === 0) {
+      console.warn('⚠️ [상태 불일치] pending_videos가 있지만 folders가 비어있음 - 자동 복구 시도');
+      setTimeout(() => {
+        fetch_folders();
+      }, 1000);
     }
   }, [pending_videos, folders, fetch_folders]);
 
@@ -225,11 +231,11 @@ function ProjectHistoryContainer({ dark_mode = false }) {
         set_pending_video_data({
           testMode: true,
           platform: platform || 'youtube',
-          autoFill: autoFill || false,
-          autoSubmit: autoSubmit || false
+          autoFill: autoFill !== false, // 기본값을 true로 변경
+          autoSubmit: autoSubmit === true // 명시적으로 true일 때만 자동 제출
         });
         
-        console.log(`[TEST] AI 미디어 요청 모달 열기 - 플랫폼: ${platform}, 자동채움: ${autoFill}, 자동제출: ${autoSubmit}`);
+        
       }
     };
 
@@ -237,7 +243,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       const { testMode, selectedVideo } = event.detail || {};
       if (testMode) {
         set_is_edit_modal_open(true);
-        console.log(`[TEST] 비디오 수정 모달 열기 - 비디오:`, selectedVideo);
+        
       }
     };
 
@@ -249,13 +255,13 @@ function ProjectHistoryContainer({ dark_mode = false }) {
         isPriority: false 
       });
       set_is_success_modal_open(true);
-      console.log(`[TEST] 성공 모달 열기 - 메시지: ${message}`);
+      
     };
 
     const handleTestOpenConfirmationModal = (event) => {
       const { title, message } = event.detail || {};
       set_is_priority_confirm_modal_open(true);
-      console.log(`[TEST] 확인 모달 열기 - 제목: ${title}, 메시지: ${message}`);
+      
     };
 
     // 이벤트 리스너 등록
@@ -269,14 +275,12 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       const { tree_data, type, message } = event.detail || {};
       
       if (tree_data) {
-        console.log(`[트리 테스트] ${type} 트리 구조 데이터 수신:`, tree_data);
+        
         set_tree_test_data(tree_data);
         set_is_tree_test_mode(true);
         
         // 테스트 모드 알림
-        if (message) {
-          console.log(`[트리 테스트] ${message}`);
-        }
+        
       }
     };
     
@@ -304,6 +308,16 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     set_is_success_modal_open(true);
     set_is_request_modal_open(false);
     
+    // 📊 ProjectHistoryContainer 전용: 새로 생성된 영상의 프로젝트 자동 확장 (poi_id 우선)
+    const videoLocationId = video_data.poi_id || video_data.location_id;
+    if (videoLocationId) {
+      setTimeout(() => {
+        const projectId = `project_${videoLocationId}`;
+        set_expanded_projects(prev => new Set([...prev, projectId]));
+        
+      }, 500);
+    }
+    
     // ⚡ 강화된 즉시 폴더 목록 갱신 - 다중 시도로 확실한 UI 반영 보장
     const ensureUIUpdate = async () => {
       // 첫 번째 시도: 즉시 갱신
@@ -317,7 +331,6 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       // 세 번째 시도: 200ms 후 최종 확인 갱신
       setTimeout(() => {
         fetch_folders();
-        console.log(`[UI 동기화] 파일 생성 요청 후 UI 업데이트 완료 - ${video_data.title}`);
       }, 200);
     };
     
@@ -354,57 +367,108 @@ function ProjectHistoryContainer({ dark_mode = false }) {
   const [is_tree_test_mode, set_is_tree_test_mode] = useState(false);
 
   /**
-   * 기존 folders 데이터를 projects 구조로 변환
+   * folders와 pending_videos 데이터를 통합하여 projects 구조로 변환
    */
   const convert_to_projects = useCallback(() => {
-    return folders.map(folder => {
-      // 🔥 핵심 수정: folder.videos → folder.items로 변경, folder.id 안전성 보장
-      const items = folder.items || [];
-      const folder_id = folder.id || folder.date; // date를 fallback ID로 사용
-      
+    // 🔥 folders와 pending_videos를 통합하면서 캐노니컬 ID로 중복 제거
+    const canonical = (v) => v?.result_id || v?.id || v?.resultId || v?.temp_id || null;
+    const all_videos = [];
+
+    folders.forEach(folder => {
+      if (folder.items && folder.items.length > 0) {
+        folder.items.forEach(item => {
+          all_videos.push(item);
+        });
+      }
+    });
+
+    pending_videos.forEach(video => {
+      const vid = canonical(video);
+      const exists = all_videos.some(ev => canonical(ev) && canonical(ev) === vid);
+      if (!exists) all_videos.push(video);
+    });
+
+    // 장소별로 재그룹화
+    const location_groups = groupVideosByLocation(all_videos);
+    
+    return location_groups.map(group => {
       return {
-        id: folder_id,
-        title: folder.name || folder.display_date || folder.date,
-        description: `${items.length}개의 영상이 포함된 프로젝트`,
-        category: 'social',
+        id: group.id,
+        title: group.name, // 장소명으로 표시 (예: 경복궁, 광화문·덕수궁)
+        description: `${group.items.length}개의 영상이 포함된 프로젝트`,
+        category: 'location', // 카테고리를 location으로 변경
         source_type: 'prompt',
-        content_count: items.length,
-        live_count: items.filter(v => v.status === 'completed' || v.status === 'uploaded').length,
-        last_activity: '최근 활동'
+        content_count: group.items.length,
+        live_count: group.items.filter(v => v.status === 'completed' || v.status === 'uploaded').length,
+        last_activity: '최근 활동',
+        location_id: group.location_id // 추가: location ID 정보 보존
       };
     });
-  }, [folders]);
+  }, [folders, pending_videos]);
 
   /**
-   * 기존 videos 데이터를 contents 구조로 변환
+   * folders와 pending_videos 데이터를 통합하여 contents 구조로 변환
    */
   const convert_to_contents = useCallback(() => {
     const all_contents = {};
-    
+    const canonical = (v) => v?.result_id || v?.id || v?.resultId || v?.temp_id || null;
+    const all_videos = [];
+
     folders.forEach(folder => {
-      // 🔥 핵심 수정: folder.videos → folder.items로 변경
-      const items = folder.items || [];
-      console.log(`[convert_to_contents] 폴더 "${folder.date}" 아이템 개수: ${items.length}`, items);
-      
-      all_contents[folder.id || folder.date] = items.map(video => ({
-        id: video.id || video.temp_id || video.resultId,
-        title: video.title || '제목 없음',
-        type: 'video',
-        version: '1.0',
-        parentId: null,
-        isLive: video.status === 'completed',
-        thumbnail: video.thumbnail || video.image_url || '',
-        createdAt: video.creation_date || video.createdAt || new Date().toISOString(),
-        prompt: video.prompt || video.user_request || '',
-        feedback: video.feedback || '',
-        resultId: video.resultId,
-        status: video.status
-      }));
+      if (folder.items && folder.items.length > 0) {
+        folder.items.forEach(item => all_videos.push(item));
+      }
     });
 
-    console.log(`[convert_to_contents] 변환된 all_contents:`, all_contents);
+    pending_videos.forEach(video => {
+      const vid = canonical(video);
+      const exists = all_videos.some(ev => canonical(ev) && canonical(ev) === vid);
+      if (!exists) all_videos.push(video);
+    });
+    
+    // 3. 장소별로 재그룹화
+    const location_groups = groupVideosByLocation(all_videos);
+    
+    location_groups.forEach(group => {
+      all_contents[group.id] = group.items.map(video => {
+        // 🧪 TEST-ONLY: 디버깅을 위한 로그 (타입 안전 검사 적용)
+        const isTestData = (
+          (typeof video.temp_id === 'string' && video.temp_id.includes('temp-')) ||
+          (typeof video.temp_id === 'number' && video.temp_id > 1700000000000) || // 타임스탬프 기반 숫자 ID 감지
+          video.title?.includes('🧪') || 
+          video.title?.includes('AI 영상')
+        );
+        if (isTestData) {
+          // 디버그 로그 제거
+        }
+        
+        const canonicalId = video.result_id || video.id || video.resultId || video.temp_id;
+        const parentCanonicalId = video.parent_video_id || video.parentId || video.parent_id || video.parentResultId || video.parent_temp_id || null;
+
+        return {
+          id: canonicalId,
+          result_id: canonicalId,
+          title: video.title || '제목 없음',
+          type: 'video',
+          version: video.version || '1.0', // 버전 정보 활용
+          parentId: parentCanonicalId,
+          parent_id: parentCanonicalId, // tree-utils.js 호환성
+          parent_video_id: parentCanonicalId, // 명시적 부모 ID
+          isLive: video.status === 'completed',
+          thumbnail: video.thumbnail || video.image_url || '',
+          createdAt: video.creation_date || video.createdAt || new Date().toISOString(),
+          prompt: video.prompt || video.user_request || '',
+          feedback: video.feedback || '',
+          resultId: video.resultId || canonicalId,
+          status: video.status,
+          location_id: video.location_id || video.poi_id, // 장소 정보 보존
+          location_name: group.name // 장소명 추가
+        };
+      });
+    });
+
     return all_contents;
-  }, [folders]);
+  }, [folders, pending_videos]);
 
   const projects = convert_to_projects();
   const all_contents = convert_to_contents();
@@ -440,20 +504,40 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     open_publish_modal(item);
   };
 
+  /**
+   * 비디오 수정 핸들러
+   */
+  const handle_video_edit = (item) => {
+    select_video(item.id || item.result_id);
+    set_is_edit_modal_open(true);
+  };
+
   // 빈 상태 메시지만 표시 (버튼은 상단에 일관되게 배치)
-  const render_empty_state = () => (
-    <div className="text-center py-12">
-      <Folder className={`w-12 h-12 mx-auto mb-4 ${
-        dark_mode ? 'text-gray-600' : 'text-gray-400'
-      }`} />
-      <h3 className={`mb-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
-        아직 생성된 프로젝트가 없습니다
-      </h3>
-      <p className={`text-sm ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
-        AI와 함께 첫 번째 콘텐츠를 만들어보세요
-      </p>
-    </div>
-  );
+  const render_empty_state = () => {
+    const has_raw_data = folders.length > 0 || pending_videos.length > 0;
+    
+    return (
+      <div className="text-center py-12">
+        <Folder className={`w-12 h-12 mx-auto mb-4 ${
+          dark_mode ? 'text-gray-600' : 'text-gray-400'
+        }`} />
+        <h3 className={`mb-2 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {has_raw_data ? '프로젝트를 불러오는 중입니다' : '아직 생성된 프로젝트가 없습니다'}
+        </h3>
+        <p className={`text-sm ${dark_mode ? 'text-gray-500' : 'text-gray-500'}`}>
+          {has_raw_data 
+            ? '잠시만 기다려주세요...' 
+            : 'AI와 함께 첫 번째 콘텐츠를 만들어보세요'
+          }
+        </p>
+        {process.env.NODE_ENV === 'development' && has_raw_data && (
+          <div className={`text-xs mt-2 ${dark_mode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+            개발 도구: window.debugProjectHistory.checkSyncStatus()
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // 모든 모달들을 렌더링하는 함수
   const render_modals = () => (
@@ -464,7 +548,13 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           is_open={preview_modal.open}
           item={preview_modal.item}
           dark_mode={dark_mode}
-          on_close={close_preview_modal}
+          on_close={(e) => {
+            // 이벤트 버블링 방지 (트리 패널이 함께 닫히는 것을 방지)
+            if (e && e.stopPropagation) {
+              e.stopPropagation();
+            }
+            close_preview_modal();
+          }}
           mode="launch"
           on_edit={(_item) => {
             close_preview_modal();
@@ -498,7 +588,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
         on_request_success={handleRequestSuccess}
         isEditMode={selected_video_data && (selected_video_data.status === 'PROCESSING' || selected_video_data.status === 'ready' || selected_video_data.status === 'uploaded')}
         dark_mode={dark_mode}
-        testModeData={pending_video_data?.testMode ? pending_video_data : null}
+        testModeData={pending_video_data?.testMode ? pending_video_data : null} // 테스트 모드 데이터 전달
       />
 
       {is_edit_modal_open && selected_video_data && (
@@ -508,7 +598,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           dark_mode={dark_mode}
           on_close={() => set_is_edit_modal_open(false)}
           on_save={(edited_data) => {
-            console.log('Video edited:', edited_data);
+            
             set_is_edit_modal_open(false);
           }}
         />
@@ -668,8 +758,6 @@ function ProjectHistoryContainer({ dark_mode = false }) {
       {projects.map((project) => {
         const is_expanded = expanded_projects.has(project.id);
         const project_contents = all_contents[project.id] || [];
-        
-        console.log(`[렌더링] 프로젝트 "${project.title}" (ID: ${project.id}) 콘텐츠 개수: ${project_contents.length}`, project_contents);
 
         return (
           <Card key={project.id} className={`overflow-hidden backdrop-blur-md border ${
@@ -684,12 +772,41 @@ function ProjectHistoryContainer({ dark_mode = false }) {
               onClick={() => handle_toggle_project(project.id)}
             >
               <div className="flex items-center gap-4 flex-1">
-                {/* 폴더 아이콘 */}
-                {is_expanded ? (
-                  <FolderOpen className="w-5 h-5 text-blue-500" />
-                ) : (
-                  <Folder className={`w-5 h-5 ${dark_mode ? 'text-gray-400' : 'text-gray-600'}`} />
-                )}
+                {/* 정사각형 폴더 아이콘 with 대각선 애니메이션 */}
+                <motion.div
+                  animate={{
+                    rotateZ: is_expanded ? 25 : 0,
+                    rotateX: is_expanded ? 15 : 0,
+                    scale: is_expanded ? 1.1 : 1
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.25, 0.46, 0.45, 0.94] // cubic-bezier for smooth diagonal opening
+                  }}
+                  style={{ transformOrigin: 'center center' }}
+                  className="relative"
+                >
+                  <div className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center ${
+                    is_expanded
+                      ? 'bg-blue-500/20 border-blue-500 text-blue-500'
+                      : `${dark_mode ? 'bg-gray-700/50 border-gray-600 text-gray-400' : 'bg-gray-100 border-gray-300 text-gray-600'}`
+                  }`}>
+                    {is_expanded ? (
+                      <FolderOpen className="w-4 h-4" />
+                    ) : (
+                      <Folder className="w-4 h-4" />
+                    )}
+                  </div>
+                  
+                  {/* 대각선 열림 효과를 위한 그림자 */}
+                  {is_expanded && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm transform translate-x-1 translate-y-1 -z-10"
+                    />
+                  )}
+                </motion.div>
 
                 {/* 프로젝트 정보 */}
                 <div className="text-left flex-1">
@@ -708,6 +825,8 @@ function ProjectHistoryContainer({ dark_mode = false }) {
                       </Badge>
                     )}
                   </div>
+
+                  {/* 버전 네비게이션 시스템이 확장되면 여기에 표시됨 */}
 
                   <div className={`text-sm mb-2 ${
                     dark_mode ? 'text-gray-400' : 'text-gray-600'
@@ -733,10 +852,23 @@ function ProjectHistoryContainer({ dark_mode = false }) {
               {/* 펼치기/접기 아이콘 */}
               <div className="flex items-center gap-2">
                 <motion.div
-                  animate={{ rotate: is_expanded ? 90 : 0 }}
-                  transition={{ duration: 0.2 }}
+                  animate={{ 
+                    rotate: is_expanded ? 90 : 0,
+                    scale: is_expanded ? 1.1 : 1
+                  }}
+                  transition={{ 
+                    duration: 0.4,
+                    ease: [0.25, 0.46, 0.45, 0.94]
+                  }}
+                  className={`p-1 rounded-full transition-colors duration-300 ${
+                    is_expanded 
+                      ? 'bg-blue-500/10' 
+                      : 'hover:bg-gray-500/10'
+                  }`}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className={`w-4 h-4 ${
+                    is_expanded ? 'text-blue-500' : ''
+                  }`} />
                 </motion.div>
               </div>
             </Button>
@@ -744,22 +876,42 @@ function ProjectHistoryContainer({ dark_mode = false }) {
             {/* 확장된 콘텐츠 영역 */}
             {is_expanded && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
+                initial={{ 
+                  opacity: 0, 
+                  height: 0, 
+                  scale: 0.95,
+                  rotateX: -10 
+                }}
+                animate={{ 
+                  opacity: 1, 
+                  height: 'auto', 
+                  scale: 1,
+                  rotateX: 0 
+                }}
+                exit={{ 
+                  opacity: 0, 
+                  height: 0, 
+                  scale: 0.95,
+                  rotateX: -10 
+                }}
+                transition={{ 
+                  duration: 0.4,
+                  ease: [0.25, 0.46, 0.45, 0.94] // 폴더와 동일한 easing
+                }}
+                style={{ transformOrigin: 'top center' }}
                 className={`border-t ${dark_mode ? 'border-gray-700/50' : 'border-gray-300/50'} ${
                   dark_mode ? 'bg-gray-800/30' : 'bg-gray-50/30'
                 }`}
               >
-                {/* ContentTreeView 재활용 - 트리 테스트 모드 지원 */}
-                <ContentTreeView
-                  tree_data={is_tree_test_mode ? tree_test_data : null}
-                  contents={!is_tree_test_mode ? project_contents : undefined}
-                  dark_mode={dark_mode}
-                  uploading_items={uploading_items}
-                  on_preview={handle_preview}
-                  on_publish={handle_publish}
+                {/* 새로운 버전 네비게이션 시스템 */}
+                <VersionNavigationSystem
+                  treeData={is_tree_test_mode ? tree_test_data : (results_tree && results_tree.length ? results_tree : null)}
+                  contents={!is_tree_test_mode && (!results_tree || results_tree.length === 0) ? project_contents : undefined}
+                  darkMode={dark_mode}
+                  uploadingItems={uploading_items}
+                  onPreview={handle_preview}
+                  onPublish={handle_publish}
+                  onEdit={handle_video_edit}
                 />
               </motion.div>
             )}
@@ -769,6 +921,11 @@ function ProjectHistoryContainer({ dark_mode = false }) {
 
       {/* 모든 모달들 */}
       {render_modals()}
+
+      {/* 테스트 컨트롤 패널 (개발 환경에서만 표시) */}
+      {process.env.NODE_ENV === 'development' && (
+        <TestControlPanel dark_mode={dark_mode} />
+      )}
     </div>
   );
 }

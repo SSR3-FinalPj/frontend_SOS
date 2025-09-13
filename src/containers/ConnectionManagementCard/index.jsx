@@ -41,7 +41,6 @@ function ConnectionManagementCard({ platformData }) {
 
         <div className="space-y-4 mb-6">
           {platformData.map((platform, index) => {
-            const Icon = platform.icon;
             const platformNameLower = platform.name.toLowerCase();
             let status;
 
@@ -68,7 +67,7 @@ function ConnectionManagementCard({ platformData }) {
               <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-br  flex items-center justify-center`}>
-                    <Icon className="w-8 h-10 text-white" />
+                    <img src={platform.icon} alt={platform.name} className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="font-medium text-gray-800 dark:text-white">{platform.name}</div>

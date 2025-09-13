@@ -41,7 +41,10 @@ const SSEProvider = ({ children }) => {
         simulate_video_ready_event,
         manual_refresh_videos,
         emergency_recovery,
-        debug_matching_status
+        debug_matching_status,
+        set_results_tree_from_api,
+        add_child_version,
+        debug_tree_state
       } = use_content_launch.getState();
       
       // 하이브리드 폴링 시스템 활성화
@@ -64,6 +67,11 @@ const SSEProvider = ({ children }) => {
         window.manualRefreshVideos = manual_refresh_videos;
         window.emergencyRecovery = emergency_recovery;
         window.debugMatchingStatus = debug_matching_status;
+
+        // 트리 디버깅 도구
+        window.setResultsTreeFromAPI = set_results_tree_from_api;
+        window.addChildVersion = add_child_version;
+        window.debugResultsTree = debug_tree_state;
       }
     }
   }, [token]);
