@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
+import { useMediaRequestStore } from '@/common/stores/media-request-store';
 import { uploadImageToS3Complete, reviseVideo } from '@/common/api/video-api-wrapper';
 import { generateTempVideoId } from '@/common/utils/unique-id';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
@@ -145,7 +146,8 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
         platform: selectedPlatform,
         timestamp: new Date().toISOString()
       };
-      setLastVideoRequest(last_request_info);
+      // 최근 요청 정보 저장 (zustand store)
+      useMediaRequestStore.getState().setLastVideoRequest(last_request_info);
       
       // 마스코트 사용 시 프롬프트 텍스트 조합
       const finalPromptText = useMascot && selected_location?.district 
@@ -272,7 +274,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
     } finally {
       set_is_submitting(false);
     }
-  }, [selected_location, uploaded_file, prompt_text, selectedPlatform, reset_form, on_request_success, isPriority]);
+  }, [selected_location, uploaded_file, prompt_text, selectedPlatform, reset_form, on_request_success, isPriority, useMascot, useCityData]);
 
   // 영상 재생성 핸들러
   const handle_regenerate = useCallback(async () => {
