@@ -55,7 +55,7 @@ const Sidebar = ({ current_view, isYoutubeConnected, isRedditConnected, isLoadin
                   whileTap={!is_disabled ? { scale: 0.98 } : {}}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     is_active
-                      ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-brand-secondary-500/20 to-brand-primary-500/20 border border-brand-secondary-500/30 text-gray-800 dark:text-white shadow-lg'
                       : is_disabled
                       ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/5 hover:text-gray-800 dark:hover:text-white'

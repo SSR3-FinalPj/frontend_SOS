@@ -169,7 +169,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
             <IntegratedAnalyticsView />
           ) : platforms.google.loading || platforms.reddit.loading ? (
             <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500" />
             </div>
           ) : !isSelectedPlatformConnected ? (
             <div className="flex flex-col items-center justify-center h-full text-center rounded-2xl p-8 shadow-inner bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 border border-gray-200/80 dark:border-gray-700/60">
@@ -181,7 +181,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
               </p>
               <button
                 onClick={() => navigate("/settings")}
-                className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+                className="px-6 py-2 bg-brand-secondary-500 text-white font-semibold rounded-lg shadow-md hover:bg-brand-secondary-600 transition-colors"
               >
                 설정으로 이동
               </button>

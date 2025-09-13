@@ -132,12 +132,12 @@ const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
               <GlassCard>
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <MessageSquare className="w-6 h-6 text-green-500" />
+                    <MessageSquare className="w-6 h-6 text-brand-primary-600 dark:text-brand-primary-400" />
                     <h3 className="text-lg font-semibold">댓글 반응 분석</h3>
                   </div>
                   {loading ? (
                     <div className="flex justify-center items-center h-48">
-                      <Loader2 className="w-8 h-8 animate-spin text-green-500" />
+                      <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500" />
                     </div>
                   ) : error ? (
                     <div className="text-center text-red-500">오류: {error}</div>

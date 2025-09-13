@@ -113,7 +113,7 @@ const IntegratedAnalyticsView = () => {
             placeholder="비교할 콘텐츠 제목을 검색해보세요..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-12 pr-10 py-4 bg-white/50 dark:bg-gray-800/50 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 rounded-xl transition-all duration-300"
+            className="w-full pl-12 pr-10 py-4 bg-white/50 dark:bg-gray-800/50 border-2 border-transparent focus:border-brand-secondary-500 focus:ring-2 focus:ring-brand-secondary-500/50 rounded-xl transition-all duration-300"
             disabled={isLoading}
           />
           {query && <button onClick={handleClearSearch} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">×</button>}
@@ -123,7 +123,7 @@ const IntegratedAnalyticsView = () => {
           <div className="mt-3 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl shadow-lg max-h-80 overflow-y-auto">
             {filteredResults.length > 0 ? (
               filteredResults.map((content) => (
-                <button key={content.resultId} onClick={() => handleSelectItem(content)} className="w-full p-4 text-left hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                <button key={content.resultId} onClick={() => handleSelectItem(content)} className="w-full p-4 text-left hover:bg-brand-secondary-50/50 dark:hover:bg-brand-secondary-900/20 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0">
                   <div className="flex-1">
                     <div className="flex items-center gap-2"><h5 className="font-semibold text-lg text-gray-800 dark:text-white">{content.title}</h5>{content.youtube && <img src={YouTubeIcon} alt="YouTube" className="w-5 h-5" />}{content.reddit && <img src={RedditIcon} alt="Reddit" className="w-5 h-5" />}</div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">업로드: {new Date(content.uploadedAt).toLocaleDateString('ko-KR')}</p>
@@ -152,7 +152,7 @@ const IntegratedAnalyticsView = () => {
 
       const metricContent = (
         <div className="flex items-center justify-center gap-1.5">
-            <span className="text-lg font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500 dark:from-blue-400 dark:to-purple-400">{metricName}</span>
+            <span className="text-lg font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-brand-secondary-500 to-brand-primary-500 dark:from-brand-secondary-400 dark:to-brand-primary-400">{metricName}</span>
             {tooltipText && <Info className="w-4 h-4 text-gray-400" />}
         </div>
       );
@@ -192,7 +192,7 @@ const IntegratedAnalyticsView = () => {
       <GlassCard>
         <div className="relative flex justify-between items-start mb-6">
           <div>
-            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">{title}</h3>
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 bg-clip-text text-transparent bg-gradient-to-r from-brand-secondary-600 to-brand-primary-500">{title}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">플랫폼별 성과 및 댓글 분석 요약</p>
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-800/50 px-3 py-1.5 rounded-lg font-semibold">
@@ -201,7 +201,7 @@ const IntegratedAnalyticsView = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6"> 
-          <div className="text-center flex flex-col gap-4 p-4 rounded-xl bg-gradient-to-b from-red-50/30 to-transparent dark:from-red-950/10">
+          <div className="text-center flex flex-col gap-4 p-4 rounded-xl bg-gradient-to-b from-brand-secondary-50/30 to-transparent dark:from-brand-secondary-950/10">
             <div className="flex items-center justify-center gap-2"><img src={YouTubeIcon} alt="YouTube" className="w-7 h-7" /><h4 className="font-bold text-xl text-gray-800 dark:text-white">YouTube</h4></div>
             {youtube ? (
               <>
@@ -209,7 +209,7 @@ const IntegratedAnalyticsView = () => {
                   <img src={youtube.thumbnail} alt={youtube.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"><Play className="w-12 h-12 text-white/80" /></div>
                 </div>
-                <TopCommentList commentData={comments.youtube} platformColor="border-red-500" />
+                <TopCommentList commentData={comments.youtube} platformColor="border-brand-secondary-500" />
               </>
             ) : <p className="text-gray-500">데이터 없음</p>}
           </div>
@@ -229,17 +229,17 @@ const IntegratedAnalyticsView = () => {
             </div>
           </div>
 
-          <div className="text-center flex flex-col gap-4 p-4 rounded-xl bg-gradient-to-b from-orange-50/30 to-transparent dark:from-orange-950/10">
+          <div className="text-center flex flex-col gap-4 p-4 rounded-xl bg-gradient-to-b from-brand-primary-50/30 to-transparent dark:from-brand-primary-950/10">
             <div className="flex items-center justify-center gap-2"><img src={RedditIcon} alt="Reddit" className="w-7 h-7" /><h4 className="font-bold text-xl text-gray-800 dark:text-white">Reddit</h4></div>
             {reddit ? (
               <>
                 <div className="aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group relative" onClick={() => openVideoModal(reddit.rd_video_url, reddit.title)}>
                   {reddit.rd_video_url ? 
                     <video src={reddit.rd_video_url} className="w-full h-full object-cover" autoPlay loop muted playsInline /> : 
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700"><MessageSquare className="w-12 h-12 mx-auto text-orange-500/70" /></div>}
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700"><MessageSquare className="w-12 h-12 mx-auto text-brand-primary-500/70" /></div>}
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"><Play className="w-12 h-12 text-white/80" /></div>
                 </div>
-                <TopCommentList commentData={comments.reddit} platformColor="border-orange-500" />
+                <TopCommentList commentData={comments.reddit} platformColor="border-brand-primary-500" />
               </>
             ) : <p className="text-gray-500">데이터 없음</p>}
           </div>
@@ -277,7 +277,7 @@ const IntegratedAnalyticsView = () => {
       
       <VideoPlayerModal isOpen={isVideoModalOpen} onClose={() => setIsVideoModalOpen(false)} video={modalVideo} />
 
-      {isLoadingDetails && <div className="flex justify-center items-center p-10"><Loader className="w-10 h-10 animate-spin text-blue-500" /></div>}
+      {isLoadingDetails && <div className="flex justify-center items-center p-10"><Loader className="w-10 h-10 animate-spin text-brand-secondary-500" /></div>}
       {error && <div className="p-4 text-center text-red-500 bg-red-50 dark:bg-red-950/20 rounded-lg">{error}</div>}
       
       {selectedContentDetails && !isLoadingDetails && (

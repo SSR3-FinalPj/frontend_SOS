@@ -6,13 +6,16 @@ import GlassCard from '@/common/ui/glass-card';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { cn } from '@/common/utils/ui-utils';
 
-// 브랜드 보라 톤 그라데이션 시스템 (농도 차이로 구분)
-const PURPLE_GRADIENT_COLORS = [
-  '#7c3aed', // brand-primary-500 - 검색 (주요 유입, 진한 보라)
-  '#9275ff', // brand-primary-400 - 추천/탐색 (알고리즘 유입, 중간 보라)
-  '#b8a9ff', // brand-primary-300 - 채널/구독 (직접 유입, 연한 보라)
-  '#d6cfff', // brand-primary-200 - 외부 링크 (외부 유입, 더 연한 보라)
-  '#e9e5ff'  // brand-primary-100 - 기타 (기타 유입, 가장 연한 보라)
+// 트래픽 소스 시각 구분을 위한 혼합 팔레트 (브랜드 보라/파랑 + 인디고/시안/청록)
+const TRAFFIC_COLORS = [
+  '#3b82f6', // brand-secondary-500 (파랑)
+  '#7c3aed', // brand-primary-500 (보라)
+  '#6366f1', // indigo-500 (인디고)
+  '#06b6d4', // cyan-500 (시안)
+  '#14b8a6', // teal-500 (청록)
+  '#60a5fa', // brand-secondary-400 (연파랑)
+  '#9275ff', // brand-primary-400 (연보라)
+  '#a5b4fc', // indigo-300 (연인디고)
 ];
 
 // 커스텀 툴팁 컴포넌트
@@ -83,7 +86,7 @@ const LoadingSkeleton = () => (
     animate={{ opacity: 1 }}
     transition={{ duration: 0.3 }}
   >
-    <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+    <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500 mb-4" />
     <p className="text-sm text-gray-600 dark:text-gray-300">트래픽 소스 데이터 로딩 중...</p>
   </motion.div>
 );
@@ -210,7 +213,7 @@ const TrafficSourceChart = () => {
                   {chartData.map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={PURPLE_GRADIENT_COLORS[index % PURPLE_GRADIENT_COLORS.length]}
+                      fill={TRAFFIC_COLORS[index % TRAFFIC_COLORS.length]}
                       stroke="rgba(255, 255, 255, 0.2)"
                       strokeWidth={2}
                     />

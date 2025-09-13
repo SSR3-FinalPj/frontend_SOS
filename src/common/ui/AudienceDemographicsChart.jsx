@@ -51,8 +51,8 @@ const AudienceDemographicsChart = ({ data }) => {
                 }}
               />
               <Legend wrapperStyle={{ fontSize: '14px' }} />
-              <Bar dataKey="male" name="남성" fill="#7c3aed" />
-              <Bar dataKey="female" name="여성" fill="#b8a9ff" />
+              <Bar dataKey="male" name="남성" fill="#3b82f6" />
+              <Bar dataKey="female" name="여성" fill="#7c3aed" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
