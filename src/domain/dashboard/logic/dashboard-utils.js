@@ -11,7 +11,6 @@ import {
   BarChart3,
   Star
 } from 'lucide-react';
-import { reddit_chart_data } from '@/domain/dashboard/logic/dashboard-constants';
 import YoutubeIcon from '@/assets/images/button/Youtube_Icon.svg';
 import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 
@@ -139,26 +138,10 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
     ];
   }
 
-  return get_kpi_mock_data(selectedPlatform);
+  return [];
 };
 
-/* ---------------- Mock KPI ---------------- */
 
-export const get_kpi_mock_data = (selectedPlatform) => {
-  if (selectedPlatform === 'youtube') {
-    return [
-      { icon: Eye, label: "총 조회수", value: "데이터 없음", bgColor: "bg-blue-50/80 dark:bg-blue-950/20", iconBg: "bg-blue-100 dark:bg-blue-900/30" },
-      { icon: Heart, label: "총 좋아요", value: "데이터 없음", bgColor: "bg-red-50/80 dark:bg-red-950/20", iconBg: "bg-red-100 dark:bg-red-900/30" },
-      { icon: MessageSquare, label: "총 댓글", value: "데이터 없음", bgColor: "bg-green-50/80 dark:bg-green-950/20", iconBg: "bg-green-100 dark:bg-green-900/30" }
-    ];
-  } else {
-    return [
-      { icon: TrendingUp, label: "총 업보트", value: "데이터 없음", bgColor: "bg-orange-50/80 dark:bg-orange-950/20", iconBg: "bg-orange-100 dark:bg-orange-900/30"},
-      { icon: MessageSquare, label: "총 댓글", value: "데이터 없음", bgColor: "bg-green-50/80 dark:bg-green-950/20", iconBg: "bg-green-100 dark:bg-green-900/30"},
-      { icon: Star, label: "평균 업보트 비율", value: "데이터 없음", bgColor: "bg-purple-50/80 dark:bg-purple-950/20", iconBg: "bg-purple-100 dark:bg-purple-900/30"}
-    ];
-  }
-};
 
 /* ---------------- 플랫폼 카드 데이터 ---------------- */
 
@@ -167,6 +150,8 @@ export const get_platform_data = (youtubeData, redditData) => {
   const totalViews = youtubeData?.total?.total_view_count || 0;
   const totalLikes = youtubeData?.total?.total_like_count || 0;
   const totalComments = youtubeData?.total?.total_comment_count || 0;
+
+  const youtubeEngagementRate = totalViews > 0 ? ((totalLikes * 0.5 + totalComments * 0.8) / totalViews) * 100 : 0;
 
   const youtubePlatform = {
     name: "YouTube",
@@ -179,16 +164,20 @@ export const get_platform_data = (youtubeData, redditData) => {
     bgColor: "bg-red-50/80 dark:bg-red-950/20",
     borderColor: "border-red-200/40 dark:border-red-800/30",
     accentColor: "text-red-600 dark:text-red-400",
+    growth: {
+      value: `${youtubeEngagementRate.toFixed(1)}%`,
+      period: "지난 7일 참여율"
+    },
     metrics: {
       views: { value: totalViews.toLocaleString(), label: "조회수", icon: Eye },
       likes: { value: totalLikes.toLocaleString(), label: "좋아요", icon: Heart },
       comments: { value: totalComments.toLocaleString(), label: "댓글", icon: MessageSquare }
     },
-    chartData: Array.isArray(youtubeData?.videos)
-      ? youtubeData.videos.map(v => ({
-        day: v.uploadDate?.substring(5) || "",
-        views: v.viewCount || 0,
-        likes: v.likeCount || 0
+    chartData: Array.isArray(youtubeData?.daily)
+      ? youtubeData.daily.map(v => ({
+        day: v.date?.substring(5) || "",
+        views: v.view_count || 0,
+        likes: v.like_count || 0
       }))
       : [],
     chartMetrics: {
@@ -200,7 +189,10 @@ export const get_platform_data = (youtubeData, redditData) => {
   // --- Reddit ---
   const totalUpvotes = redditData?.total?.total_upvote_count || 0;
   const totalCommentsReddit = redditData?.total?.total_comment_count || 0;
+  const totalPostsReddit = redditData?.total?.total_post_count || 0;
   const avgRatio = redditData?.total?.total_upvote_ratio || 0;
+
+  const redditAverageEngagement = totalPostsReddit > 0 ? (totalUpvotes + totalCommentsReddit) / totalPostsReddit : 0;
 
   const redditPlatform = {
     name: "Reddit",
@@ -213,18 +205,22 @@ export const get_platform_data = (youtubeData, redditData) => {
     bgColor: "bg-orange-50/80 dark:bg-orange-950/20",
     borderColor: "border-orange-200/40 dark:border-orange-800/30",
     accentColor: "text-orange-600 dark:text-orange-400",
+    growth: {
+      value: `${redditAverageEngagement.toFixed(1)}`,
+      period: "게시글 당 평균 참여"
+    },
     metrics: {
       upvotes: { value: totalUpvotes.toLocaleString(), label: "업보트", icon: TrendingUp },
       comments: { value: totalCommentsReddit.toLocaleString(), label: "댓글", icon: MessageSquare },
       upvoteRatio: { value: `${(avgRatio * 100).toFixed(1)}%`, label: "업보트 비율", icon: BarChart3 }
     },
-    chartData: Array.isArray(redditData?.posts)
-      ? redditData.posts.map(p => ({
-        day: p.upload_date?.substring(5) || "",
-        upvotes: p.upvote || 0,
+    chartData: Array.isArray(redditData?.daily)
+      ? redditData.daily.map(p => ({
+        day: p.date?.substring(5) || "",
+        upvotes: p.upvote_count || 0,
         comments: p.comment_count || 0
       }))
-      : reddit_chart_data,
+      : [],
     chartMetrics: {
       primary: { key: "upvotes", label: "업보트", color: "#ea580c" },
       secondary: { key: "comments", label: "댓글", color: "#16a34a" }

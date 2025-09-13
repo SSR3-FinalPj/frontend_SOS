@@ -3,7 +3,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import { motion } from 'framer-motion';
 import { PieChart as PieChartIcon, Loader2 } from 'lucide-react';
 import GlassCard from '@/common/ui/glass-card';
-import { traffic_source_data } from '@/domain/dashboard/logic/dashboard-constants';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { cn } from '@/common/utils/ui-utils';
 
@@ -140,10 +139,9 @@ const TrafficSourceChart = () => {
     fetchTrafficSourceData();
   }, [fetchTrafficSourceData]);
 
-  // 사용할 데이터 결정 (API 데이터가 있으면 사용, 없으면 Mock 데이터)
   const chartData = trafficSourceData && trafficSourceData.length > 0 
     ? trafficSourceData 
-    : traffic_source_data;
+    : [];
 
   return (
     <motion.div

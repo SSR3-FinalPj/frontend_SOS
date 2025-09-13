@@ -19,7 +19,14 @@ import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { MeaireLogo } from '@/common/ui/meaire-logo';
 import { usePageStore } from '@/common/stores/page-store';
-import { period_options } from '@/domain/dashboard/logic/dashboard-constants';
+
+const period_options = [
+  { id: 'last7Days', label: 'last7Days' },
+  { id: 'last30Days', label: 'last30Days' },
+  //{ id: 'last3Months', label: 'last3Months' },
+  //{ id: 'thisYear', label: 'thisYear' },
+  { id: 'custom', label: 'custom' }
+];
 
 /**
  * Analytics Filter Sidebar 컴포넌트
