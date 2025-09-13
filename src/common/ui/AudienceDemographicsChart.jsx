@@ -17,8 +17,8 @@ const AudienceDemographicsChart = ({ data }) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500/30 to-cyan-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center shadow-lg">
-            <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-primary-500/30 to-brand-secondary-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center shadow-lg">
+            <Users className="w-6 h-6 text-brand-primary-600 dark:text-brand-primary-400" />
           </div>
           <div>
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -51,8 +51,8 @@ const AudienceDemographicsChart = ({ data }) => {
                 }}
               />
               <Legend wrapperStyle={{ fontSize: '14px' }} />
-              <Bar dataKey="male" name="남성" fill="#3b82f6" />
-              <Bar dataKey="female" name="여성" fill="#ec4899" />
+              <Bar dataKey="male" name="남성" fill="#7c3aed" />
+              <Bar dataKey="female" name="여성" fill="#b8a9ff" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>

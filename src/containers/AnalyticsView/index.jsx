@@ -26,6 +26,7 @@ import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import UploadedContentList from '@/features/content-management/ui/UploadedContentList';
 import IntegratedAnalyticsView from '@/containers/IntegratedAnalyticsView';
 import PerformanceHighlight from '@/features/analytics/ui/PerformanceHighlight';
+import GlassCard from '@/common/ui/glass-card';
 
 const DetailedAnalyticsView = ({ onVideoCardClick }) => {
   const navigate = useNavigate();
@@ -128,36 +129,38 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
 
       <div className="flex-1 flex flex-col relative z-10">
         {/* 헤더 */}
-        <header className="p-6 border-b border-gray-200/40 dark:border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-light text-gray-800 dark:text-white mb-2">
-                {view_type === "integrated"
-                  ? "비교 분석"
-                  : selected_platform === "youtube"
-                  ? "유튜브 상세 분석"
-                  : "레딧 상세 분석"}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                {view_type === "integrated"
-                  ? "플랫폼 간 성과를 한눈에 비교 분석하세요"
-                  : get_selected_period_label()}
-              </p>
-            </div>
+        <header className="relative z-10 p-6">
+          <GlassCard hover={false}>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-light text-gray-800 dark:text-white mb-1">
+                  {view_type === "integrated"
+                    ? "비교 분석"
+                    : selected_platform === "youtube"
+                    ? "유튜브 상세 분석"
+                    : "레딧 상세 분석"}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {view_type === "integrated"
+                    ? "플랫폼 간 성과를 한눈에 비교 분석하세요"
+                    : get_selected_period_label()}
+                </p>
+              </div>
 
-            {/* 우측 버튼 */}
-            <div className="flex items-center gap-3">
-              <motion.button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
-              >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </motion.button>
-              <Notification />
+              {/* 우측 버튼 */}
+              <div className="flex items-center gap-3">
+                <motion.button
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
+                >
+                  {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </motion.button>
+                <Notification />
+              </div>
             </div>
-          </div>
+          </GlassCard>
         </header>
 
         {/* 메인 */}

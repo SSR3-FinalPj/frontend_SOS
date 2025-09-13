@@ -35,6 +35,7 @@ const DashboardHeader = ({ current_view }) => {
 
   const header_info = get_header_info(current_view);
 
+
   const toggle_dark_mode = useCallback(() => {
     setIsDarkMode(!isDarkMode);
   }, [isDarkMode, setIsDarkMode]);
@@ -82,39 +83,37 @@ const DashboardHeader = ({ current_view }) => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-
-            {/* Dark Mode Toggle */}
-            <motion.button
-              onClick={toggle_dark_mode}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
-            >
-              {isDarkMode ? (
-                <Sun className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-              ) : (
-                <Moon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-              )}
-            </motion.button>
-
-            {/* Notification */}
-            <Notification />
-
-            {/* User Profile Dropdown */}
-            <div className="relative">
+            <div className="flex items-center gap-3">
+              {/* Dark Mode Toggle */}
               <motion.button
-                ref={userButtonRef}
-                onClick={toggleDropdown}
+                onClick={toggle_dark_mode}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
               >
-                <User className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                {isDarkMode ? (
+                  <Sun className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                ) : (
+                  <Moon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                )}
               </motion.button>
 
+              {/* Notification */}
+              <Notification />
+
+              {/* User Profile Dropdown */}
+              <div className="relative">
+                <motion.button
+                  ref={userButtonRef}
+                  onClick={toggleDropdown}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
+                >
+                  <User className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                </motion.button>
+              </div>
             </div>
-          </div>
         </div>
       </GlassCard>
 

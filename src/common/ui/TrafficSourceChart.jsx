@@ -6,13 +6,13 @@ import GlassCard from '@/common/ui/glass-card';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { cn } from '@/common/utils/ui-utils';
 
-// 구분하기 쉬운 다양한 색상 시스템 (5개 카테고리용)
-const GRADIENT_COLORS = [
-  'hsl(217, 91%, 60%)', // 파란색 - 검색
-  'hsl(142, 71%, 45%)', // 초록색 - 추천/탐색  
-  'hsl(25, 95%, 53%)', // 주황색 - 채널/구독
-  'hsl(348, 83%, 47%)', // 빨간색 - 외부
-  'hsl(262, 83%, 58%)' // 보라색 - 기타
+// 브랜드 보라 톤 그라데이션 시스템 (농도 차이로 구분)
+const PURPLE_GRADIENT_COLORS = [
+  '#7c3aed', // brand-primary-500 - 검색 (주요 유입, 진한 보라)
+  '#9275ff', // brand-primary-400 - 추천/탐색 (알고리즘 유입, 중간 보라)
+  '#b8a9ff', // brand-primary-300 - 채널/구독 (직접 유입, 연한 보라)
+  '#d6cfff', // brand-primary-200 - 외부 링크 (외부 유입, 더 연한 보라)
+  '#e9e5ff'  // brand-primary-100 - 기타 (기타 유입, 가장 연한 보라)
 ];
 
 // 커스텀 툴팁 컴포넌트
@@ -157,8 +157,8 @@ const TrafficSourceChart = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center shadow-lg">
-            <PieChartIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-secondary-500/30 to-brand-primary-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center shadow-lg">
+            <PieChartIcon className="w-6 h-6 text-brand-primary-600 dark:text-brand-primary-400" />
           </div>
           
           <div>
@@ -208,9 +208,9 @@ const TrafficSourceChart = () => {
                   animationDuration={800}
                 >
                   {chartData.map((_, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={GRADIENT_COLORS[index % GRADIENT_COLORS.length]}
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={PURPLE_GRADIENT_COLORS[index % PURPLE_GRADIENT_COLORS.length]}
                       stroke="rgba(255, 255, 255, 0.2)"
                       strokeWidth={2}
                     />
