@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-
 import { tryRefreshOnBoot } from '@/common/lib/auth-bootstrap';
-import { usePageStore } from '@/common/stores/page-store';
+import { use_dark_mode } from '@/common/hooks/use-dark-mode';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import { usePlatformInitializer } from '@/domain/platform/logic/use-platform-initializer';
-import Router from '@/Router'; 
+import Router from '@/Router';
 import CookieConsentBanner from '@/common/ui/CookieConsentBanner';
 import SSEProvider from '@/common/ui/SSEProvider';
 
 export default function App() {
-  const { isDarkMode, setIsDarkMode } = usePageStore();
   const { platforms } = usePlatformStore();
+
+  // 다크모드 DOM 적용을 위한 훅 호출
+  use_dark_mode();
 
   const [bootDone, setBootDone] = useState(false);
   usePlatformInitializer(bootDone);
