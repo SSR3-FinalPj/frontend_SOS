@@ -59,8 +59,8 @@ const ContentItemCard = ({
   // 선택 가능한 상태인지 확인 (업로드 완료된 영상만)
   const is_selectable = item.status === 'uploaded';
   
-  // 미리보기 클릭 가능한 상태인지 확인 (생성 중이거나 완성된 영상)
-  const is_clickable_for_preview = item.status === 'ready' || item.status === 'PROCESSING';
+  // 미리보기 클릭 가능한 상태인지 확인 (생성 중이거나 완성된 영상, 업로드 완료된 영상)
+  const is_clickable_for_preview = item.status === 'ready' || item.status === 'PROCESSING' || item.status === 'uploaded';
   
   // formatCreationTime은 이제 date-utils에서 import하여 사용
   

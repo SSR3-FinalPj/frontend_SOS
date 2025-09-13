@@ -772,16 +772,14 @@ function ProjectHistoryContainer({ dark_mode = false }) {
               onClick={() => handle_toggle_project(project.id)}
             >
               <div className="flex items-center gap-4 flex-1">
-                {/* 정사각형 폴더 아이콘 with 대각선 애니메이션 */}
+                {/* 정사각형 폴더 아이콘 */}
                 <motion.div
                   animate={{
-                    rotateZ: is_expanded ? 25 : 0,
-                    rotateX: is_expanded ? 15 : 0,
-                    scale: is_expanded ? 1.1 : 1
+                    scale: is_expanded ? 1.05 : 1
                   }}
                   transition={{
-                    duration: 0.4,
-                    ease: [0.25, 0.46, 0.45, 0.94] // cubic-bezier for smooth diagonal opening
+                    duration: 0.3,
+                    ease: "easeOut"
                   }}
                   style={{ transformOrigin: 'center center' }}
                   className="relative"
@@ -798,14 +796,6 @@ function ProjectHistoryContainer({ dark_mode = false }) {
                     )}
                   </div>
                   
-                  {/* 대각선 열림 효과를 위한 그림자 */}
-                  {is_expanded && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm transform translate-x-1 translate-y-1 -z-10"
-                    />
-                  )}
                 </motion.div>
 
                 {/* 프로젝트 정보 */}
@@ -853,12 +843,11 @@ function ProjectHistoryContainer({ dark_mode = false }) {
               <div className="flex items-center gap-2">
                 <motion.div
                   animate={{ 
-                    rotate: is_expanded ? 90 : 0,
-                    scale: is_expanded ? 1.1 : 1
+                    rotate: is_expanded ? 90 : 0
                   }}
                   transition={{ 
-                    duration: 0.4,
-                    ease: [0.25, 0.46, 0.45, 0.94]
+                    duration: 0.3,
+                    ease: "easeOut"
                   }}
                   className={`p-1 rounded-full transition-colors duration-300 ${
                     is_expanded 

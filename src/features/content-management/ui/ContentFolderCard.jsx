@@ -48,10 +48,10 @@ const ContentFolderCard = ({
         dark_mode 
           ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' 
           : 'bg-white border-gray-200 hover:bg-gray-50'
-      } rounded-3xl overflow-hidden transition-all duration-300`}>
+      } rounded-3xl overflow-hidden transition-colors duration-300`}>
         
         {/* 폴더 헤더 */}
-        <CollapsibleTrigger className={`w-full shadow-lg hover:shadow-xl transition-all duration-300 ${
+        <CollapsibleTrigger className={`w-full shadow-lg hover:shadow-xl transition-shadow duration-300 ${
           is_open ? 'rounded-t-3xl' : 'rounded-3xl'
         }`}>
           <CardContent className="p-6">
@@ -110,7 +110,7 @@ const ContentFolderCard = ({
         </CollapsibleTrigger>
 
         {/* 폴더 내용 (3열 그리드) */}
-        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-up-1 data-[state=open]:slide-down-1 duration-300 ease-out rounded-b-3xl">
+        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-300 ease-out rounded-b-3xl">
           <div className={`px-6 pb-6 border-t ${
             dark_mode ? 'border-gray-600/30' : 'border-gray-300/30'
           }`}>

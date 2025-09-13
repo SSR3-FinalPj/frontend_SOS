@@ -31,6 +31,9 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   // 영상 수정 모달 상태
   const [is_edit_modal_open, set_is_edit_modal_open] = useState(false);
   
+  // 수정할 영상 데이터 상태 (미리보기 모달에서 전달받은 아이템)
+  const [edit_target_video, set_edit_target_video] = useState(null);
+  
   // 우선순위 확인 모달 상태
   const [is_priority_confirm_modal_open, set_is_priority_confirm_modal_open] = useState(false);
   const [is_priority_mode, set_is_priority_mode] = useState(false);
@@ -73,6 +76,23 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
   useEffect(() => {
     fetch_folders();
   }, [fetch_folders]);
+
+  // 테스트 패널 이벤트 리스너 등록
+  useEffect(() => {
+    const handleTestOpenVideoEditModal = (event) => {
+      const { testMode, selectedVideo } = event.detail || {};
+      if (testMode && selectedVideo) {
+        set_edit_target_video(selectedVideo);
+        set_is_edit_modal_open(true);
+      }
+    };
+
+    window.addEventListener('test-open-video-edit-modal', handleTestOpenVideoEditModal);
+    
+    return () => {
+      window.removeEventListener('test-open-video-edit-modal', handleTestOpenVideoEditModal);
+    };
+  }, []);
 
   // ref를 통해 외부에서 접근 가능한 함수들을 노출
   useImperativeHandle(ref, () => ({
@@ -173,7 +193,8 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
                 <div className="flex flex-col">
                   <Button
                     onClick={() => {
-                      // 전용 수정 모달 열기
+                      // 전용 수정 모달 열기 - 선택된 영상 데이터 사용
+                      set_edit_target_video(selected_video_data);
                       set_is_edit_modal_open(true);
                     }}
                     className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-orange-600 dark:text-orange-300 shadow-lg font-semibold rounded-2xl"
@@ -268,7 +289,8 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         on_edit={(item) => {
           // 미리보기 모달이 먼저 닫힌 후 수정 모달 열기
           // GeneratedVideoPreviewModal에서 이미 on_close()를 호출하므로
-          // 여기서는 수정 모달만 열면 됨
+          // 여기서는 수정할 아이템 데이터를 저장하고 수정 모달을 열기
+          set_edit_target_video(item);
           set_is_edit_modal_open(true);
         }}
       />
@@ -299,8 +321,11 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
       {/* 영상 수정 모달 */}
       <VideoEditModal
         is_open={is_edit_modal_open}
-        on_close={() => set_is_edit_modal_open(false)}
-        selected_video={selected_video_data}
+        on_close={() => {
+          set_is_edit_modal_open(false);
+          set_edit_target_video(null);
+        }}
+        selected_video={edit_target_video || selected_video_data}
         dark_mode={dark_mode}
       />
 

@@ -150,8 +150,8 @@ const VersionNavigationSystem = ({
     if (currentNode && currentNode.children && currentNode.children.length > 0) {
       const latestChild = currentNode.children[currentNode.children.length - 1];
       
-      // 🧪 TEST: 새로운 자식 노드 감지 로깅
-      if (latestChild.title?.includes('AI 영상') || latestChild.result_id?.includes('temp-')) {
+      // 🧪 TEST: 새로운 자식 노드 감지 로깅 (result_id는 숫자 타입)
+      if (latestChild.title?.includes('AI 영상') || String(latestChild.result_id || '').includes('temp-')) {
         const currentChildrenCount = availableChildren.length;
         const nodeChildrenCount = currentNode.children.length;
         

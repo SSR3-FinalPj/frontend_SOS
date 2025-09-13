@@ -214,7 +214,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
           {/* 헤더 */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
-              AI 영상 생성 요청 (9:16)
+              AI 영상 생성하기
             </h2>
             <button
               onClick={handle_close}
@@ -382,7 +382,7 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
               disabled={!is_form_valid}
               className="font-semibold disabled:opacity-50 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white"
             >
-              {is_submitting ? '영상 생성 중...' : '9:16 영상 생성 요청'}
+              {is_submitting ? '영상 생성 중...' : '영상 생성'}
             </Button>
           </div>
         </motion.div>

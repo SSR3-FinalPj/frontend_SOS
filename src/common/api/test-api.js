@@ -58,12 +58,14 @@ const generateUniqueId = (prefix = 'test') => {
 /**
  * 🧪 테스트: 이미지를 S3에 업로드하고 백엔드에 알림
  */
-export async function uploadImageToS3Complete(file, locationCode, promptText = "", platform = "YOUTUBE") {
+export async function uploadImageToS3Complete(file, locationCode, promptText = "", platform = "YOUTUBE", useMascot = false, useCityData = true) {
   console.log('🧪 [TEST API] S3 업로드 시뮬레이션 시작:', { 
     fileName: file?.name, 
     locationCode, 
     promptText, 
-    platform 
+    platform,
+    useMascot,
+    useCityData
   });
   
   if (!file || !locationCode) {
@@ -90,6 +92,8 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
       platform,
       locationCode,
       promptText,
+      useMascot,
+      useCityData,
       timestamp: new Date().toISOString()
     }
   };
