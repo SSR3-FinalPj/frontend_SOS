@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 import { Button } from '@/common/ui/button';
 import { Input } from '@/common/ui/input';
 import { Textarea } from '@/common/ui/textarea';
-import { Upload, X as XIcon, Play, MessageSquare } from 'lucide-react';
+import { Upload, X as XIcon, Play, MessageSquare, Loader2 } from 'lucide-react';
 import { 
   get_type_icon, 
   get_platform_icon, 
@@ -42,15 +42,16 @@ const PRIVACY_OPTIONS = [
   { value: 'public', label: '공개', description: '모든 사람이 볼 수 있음' }
 ];
 
-const ContentPublishModal = ({ 
-  is_open, 
-  item, 
+const ContentPublishModal = ({
+  is_open,
+  item,
   publish_form,
-  dark_mode, 
-  on_close, 
-  on_publish, 
+  dark_mode,
+  on_close,
+  on_publish,
   on_toggle_platform,
-  on_update_form
+  on_update_form,
+  is_publishing = false
 }) => {
   if (!item) return null;
 
@@ -578,12 +579,11 @@ const ContentPublishModal = ({
 
         {/* 푸터 영역 - Grid Row 3 (완전 불투명 고정) */}
         <div
-          className={`flex items-center gap-3 p-6 border-t-2 sticky bottom-0 ${
-            dark_mode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-white'
-          } rounded-b-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.5)] relative z-20`}
+          className={`flex items-center gap-3 p-6 sticky bottom-0 ${
+            dark_mode ? 'bg-gray-900' : 'bg-white'
+          } rounded-b-3xl relative z-20`}
           style={{
-            backgroundColor: dark_mode ? '#111827' : '#ffffff',
-            borderColor: dark_mode ? '#374151' : '#d1d5db'
+            backgroundColor: dark_mode ? '#111827' : '#ffffff'
           }}
         >
           <Button
@@ -598,13 +598,22 @@ const ContentPublishModal = ({
 
           <Button
             onClick={on_publish}
-            disabled={!getFormValidation()}
+            disabled={!getFormValidation() || is_publishing}
             className={`flex-1 ${
               dark_mode ? 'bg-blue-600 hover:bg-blue-700 border-blue-600' : 'bg-blue-600 hover:bg-blue-700 border-blue-600'
             } text-white rounded-xl disabled:opacity-50`}
           >
-            <Upload className="h-4 w-4 mr-2" />
-            지금 게시하기
+            {is_publishing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                게시 중...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                지금 게시하기
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>

@@ -36,8 +36,7 @@ import * as realApi from './api';
 //   console.log('🎬 영상 API 모드: 실제 백엔드');
 // }
 
-// 테스트 모드 비활성화 - 실제 API만 사용
-console.log('🎬 영상 API 모드: 실제 백엔드 (테스트 모드 비활성화)');
+// 실제 API만 사용
 
 // /**
 //  * 🧪 현재 영상 API 모드 확인
@@ -51,7 +50,6 @@ console.log('🎬 영상 API 모드: 실제 백엔드 (테스트 모드 비활�
 //                USE_FULL_TEST_MODE ? '완전 테스트 모드' : '실제 백엔드'
 // });
 
-// 테스트 모드 비활성화
 export const getVideoApiMode = () => ({
   hybrid: false,
   fullTest: false,
@@ -207,13 +205,8 @@ export const uploadToReddit = realApi.uploadToReddit;
 // 🔍 JOB STATUS API (백엔드 API 스펙)
 // ============================================================================
 
-/**
- * 작업 상태 확인
- * GET /api/images/jobs/{jobId}/results
- * 테스트 모드 비활성화: 실제 API만 사용
- */
-export const getJobResults = realApi.getJobResults || (async (jobId) => {
-  console.warn('실제 getJobResults API가 없습니다. jobId:', jobId);
+// 작업 상태 확인 API (현재 미사용)
+export const getJobResults = realApi.getJobResults || (async () => {
   throw new Error('getJobResults API not implemented');
 });
 
@@ -240,70 +233,7 @@ export const getJobResults = realApi.getJobResults || (async (jobId) => {
 // 🎯 개발자 도구 (개발 환경에서만 사용 가능)
 // ============================================================================
 
-if (import.meta.env.DEV) {
-  window.videoApiWrapper = {
-    getVideoApiMode,
-    
-    // 테스트 함수들
-    testVideoUpload: async (testFile = null) => {
-      if (!USE_FULL_TEST_MODE && !USE_HYBRID_MODE) {
-        console.warn('⚠️ 실제 API 모드에서는 testVideoUpload를 사용하지 마세요.');
-        return;
-      }
-      
-      const mockFile = testFile || new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-      console.log('🧪 영상 업로드 테스트 시작...');
-      
-      try {
-        const result = await uploadImageToS3Complete(mockFile, 'POI001', '테스트 영상 생성', 'YOUTUBE');
-        console.log('✅ 영상 업로드 테스트 성공:', result);
-        return result;
-      } catch (error) {
-        console.error('❌ 영상 업로드 테스트 실패:', error);
-        throw error;
-      }
-    },
-    
-    // jobId로 결과 확인 테스트
-    testJobResults: async (jobId) => {
-      try {
-        const result = await getJobResults(jobId);
-        console.log('✅ 작업 결과 확인 성공:', result);
-        return result;
-      } catch (error) {
-        console.error('❌ 작업 결과 확인 실패:', error);
-        throw error;
-      }
-    },
-
-    // resultId로 업로드 테스트
-    testUpload: async (resultId, platform = 'youtube') => {
-      try {
-        let result;
-        if (platform === 'youtube') {
-          result = await uploadToYoutube(resultId, {
-            title: '테스트 영상',
-            description: '테스트 설명',
-            tags: ['test'],
-            privacy: 'private'
-          });
-        } else if (platform === 'reddit') {
-          result = await uploadToReddit(resultId, {
-            subreddit: 'test',
-            title: '테스트 게시물'
-          });
-        }
-        console.log(`✅ ${platform} 업로드 테스트 성공:`, result);
-        return result;
-      } catch (error) {
-        console.error(`❌ ${platform} 업로드 테스트 실패:`, error);
-        throw error;
-      }
-    }
-  };
-  
-  console.log('🎬 영상 API 개발자 도구: window.videoApiWrapper 사용 가능');
-}
+// 개발자 전역 테스트 도구 노출 제거
 
 // ============================================================================
 // 🚀 기본 export

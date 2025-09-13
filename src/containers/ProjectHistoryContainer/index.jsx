@@ -179,6 +179,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
   const [is_priority_mode, set_is_priority_mode] = useState(false);
   const [is_success_modal_open, set_is_success_modal_open] = useState(false);
   const [pending_video_data, set_pending_video_data] = useState(null);
+  const [is_publishing, set_is_publishing] = useState(false);
 
   // 디바운스 타이머 ref
   const debounce_timer_ref = useRef(null);
@@ -348,13 +349,15 @@ function ProjectHistoryContainer({ dark_mode = false }) {
 
   // 게시 완료 핸들러 (FSD 아키텍처 준수)
   const handle_final_publish = async () => {
-    if (!publish_modal.item || !modal_publish_form) return;
+    if (!publish_modal.item || !modal_publish_form || is_publishing) return;
 
+    set_is_publishing(true);
     try {
       await handle_multi_platform_publish(modal_publish_form, publish_modal.item);
     } catch (error) {
       console.error('게시 실패:', error);
     } finally {
+      set_is_publishing(false);
       close_publish_modal();
     }
   };
@@ -573,6 +576,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           on_publish={handle_final_publish}
           on_toggle_platform={toggle_platform}
           on_update_form={update_publish_form}
+          is_publishing={is_publishing}
         />
       )}
 
@@ -752,7 +756,28 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     <div className="space-y-4">
       {/* 항상 상단에 배치되는 액션 버튼 섹션 */}
       {render_action_buttons()}
-      
+
+      {/* 트리 우선 표시: 결과 트리가 있으면 폴더 대신 트리 카드만 렌더 */}
+      {results_tree && results_tree.length > 0 ? (
+        <Card className={`overflow-hidden backdrop-blur-md border ${
+          dark_mode 
+            ? 'bg-gray-900/50 border-gray-700/50' 
+            : 'bg-white/50 border-gray-300/50'
+        }`}>
+          <div className="p-4">
+            <VersionNavigationSystem
+              treeData={results_tree}
+              contents={undefined}
+              darkMode={dark_mode}
+              uploadingItems={uploading_items}
+              onPreview={handle_preview}
+              onPublish={handle_publish}
+              onEdit={handle_video_edit}
+            />
+          </div>
+        </Card>
+      ) : (
+      <>
       {/* 빈 상태일 때만 메시지 표시 */}
       {projects.length === 0 && render_empty_state()}
       {projects.map((project) => {
@@ -892,29 +917,28 @@ function ProjectHistoryContainer({ dark_mode = false }) {
                   dark_mode ? 'bg-gray-800/30' : 'bg-gray-50/30'
                 }`}
               >
-                {/* 새로운 버전 네비게이션 시스템 */}
-                <VersionNavigationSystem
-                  treeData={is_tree_test_mode ? tree_test_data : (results_tree && results_tree.length ? results_tree : null)}
-                  contents={!is_tree_test_mode && (!results_tree || results_tree.length === 0) ? project_contents : undefined}
-                  darkMode={dark_mode}
-                  uploadingItems={uploading_items}
-                  onPreview={handle_preview}
-                  onPublish={handle_publish}
-                  onEdit={handle_video_edit}
-                />
+                <div className="p-4">
+                  {/* 새로운 버전 네비게이션 시스템 */}
+                  <VersionNavigationSystem
+                    treeData={is_tree_test_mode ? tree_test_data : (results_tree && results_tree.length ? results_tree : null)}
+                    contents={!is_tree_test_mode && (!results_tree || results_tree.length === 0) ? project_contents : undefined}
+                    darkMode={dark_mode}
+                    uploadingItems={uploading_items}
+                    onPreview={handle_preview}
+                    onPublish={handle_publish}
+                    onEdit={handle_video_edit}
+                  />
+                </div>
               </motion.div>
             )}
           </Card>
         );
       })}
+      </>
+      )}
 
       {/* 모든 모달들 */}
       {render_modals()}
-
-      {/* 테스트 컨트롤 패널 (개발 환경에서만 표시) */}
-      {process.env.NODE_ENV === 'development' && (
-        <TestControlPanel dark_mode={dark_mode} />
-      )}
     </div>
   );
 }

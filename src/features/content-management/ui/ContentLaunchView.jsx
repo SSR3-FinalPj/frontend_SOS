@@ -11,7 +11,6 @@ import GeneratedVideoPreviewModal from '@/features/content-modals/ui/GeneratedVi
 import ContentPublishModal from '@/features/content-modals/ui/ContentPublishModal';
 import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestModal';
 import VideoEditModal from '@/features/video-edit/ui/VideoEditModal';
-import TestControlPanel from '@/common/ui/TestControlPanel';
 import { Button } from '@/common/ui/button';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
@@ -351,10 +350,7 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
         title="요청 완료"
       />
 
-      {/* 테스트 컨트롤 패널 (개발 환경에서만 표시) */}
-      {process.env.NODE_ENV === 'development' && (
-        <TestControlPanel dark_mode={dark_mode} />
-      )}
+      {/* 테스트 컨트롤 패널 제거 */}
     </div>
   );
 });

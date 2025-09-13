@@ -221,7 +221,6 @@ export const use_content_launch = create(
         try {
           const normalized = normalizeResultsTree(apiTree, { labelMap });
           set({ results_tree: normalized });
-          // 디버그 로그 제거 (production safe)
         } catch (e) {
           console.error('[트리 동기화 실패]', e);
         }
@@ -234,21 +233,21 @@ export const use_content_launch = create(
        * @param {string} label - 표시명(없으면 `영상 ${childId}`)
        */
       add_child_version: (parentId, childId, label) => {
-        const pid = String(parentId);
-        const cid = String(childId);
+        const pidNum = typeof parentId === 'string' ? parseInt(parentId, 10) : parentId;
+        const cidNum = typeof childId === 'string' ? parseInt(childId, 10) : childId;
         const state = get();
 
-        const clone = (nodes) => nodes.map(n => ({ id: n.id, title: n.title, children: n.children ? clone(n.children) : [] }));
+        const clone = (nodes) => nodes.map(n => ({ result_id: n.result_id, title: n.title, children: n.children ? clone(n.children) : [] }));
         const tree = clone(state.results_tree);
 
         let inserted = false;
         const walk = (nodes) => {
           for (const n of nodes) {
-            if (n.id === pid) {
+            if (n.result_id === pidNum) {
               if (!n.children) n.children = [];
-              const exists = n.children.some(c => String(c.id) === cid);
+              const exists = n.children.some(c => c.result_id === cidNum);
               if (!exists) {
-                n.children.push({ id: cid, title: label || `영상 ${cid}`, children: [] });
+                n.children.push({ result_id: cidNum, title: label || `영상 ${cidNum}`, children: [] });
               }
               inserted = true;
               return;
@@ -261,9 +260,8 @@ export const use_content_launch = create(
 
         if (inserted) {
           set({ results_tree: tree });
-          // 디버그 로그 제거 (production safe)
         } else {
-          console.warn(`[트리 업데이트] 부모 ${pid}를 트리에서 찾지 못했습니다.`);
+          console.warn(`[트리 업데이트] 부모 ${parentId}를 트리에서 찾지 못했습니다.`);
         }
       },
 
