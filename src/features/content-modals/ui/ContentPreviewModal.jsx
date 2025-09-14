@@ -140,7 +140,8 @@ const ContentPreviewModal = ({
             ) : (
               <Button 
                 onClick={handleViewAnalytics}
-                className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
+                variant="brand"
+                className="w-full rounded-xl py-3 text-base"
               >
                 <BarChart2 className="h-5 w-5 mr-2" />
                 분석하기
@@ -160,7 +161,8 @@ const ContentPreviewModal = ({
               ) : (
                 <Button 
                   onClick={handleViewAnalytics}
-                  className="w-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base"
+                  variant="brand"
+                  className="w-full rounded-xl py-3 text-base"
                 >
                   <BarChart2 className="h-5 w-5 mr-2" />
                   분석하기
