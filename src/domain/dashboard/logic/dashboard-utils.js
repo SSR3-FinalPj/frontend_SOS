@@ -64,8 +64,8 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         icon: Eye,
         label: "총 조회수",
         value: format_number_korean(totalViews),
-        bgColor: "bg-blue-50/80 dark:bg-blue-950/20",
-        iconBg: "bg-blue-100 dark:bg-blue-900/30",
+        bgColor: "bg-brand-primary-50/80 dark:bg-brand-primary-950/20",
+        iconBg: "bg-brand-primary-100 dark:bg-brand-primary-900/30",
         extra: videoViews.length
           ? `최고: ${Math.max(...videoViews)} | 최저: ${Math.min(...videoViews)}`
           : null
@@ -74,8 +74,8 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         icon: Heart,
         label: "총 좋아요",
         value: format_number_korean(totalLikes),
-        bgColor: "bg-red-50/80 dark:bg-red-950/20",
-        iconBg: "bg-red-100 dark:bg-red-900/30",
+        bgColor: "bg-brand-secondary-50/80 dark:bg-brand-secondary-950/20",
+        iconBg: "bg-brand-secondary-100 dark:bg-brand-secondary-900/30",
         extra: videoLikes.length
           ? `최고: ${Math.max(...videoLikes)} | 최저: ${Math.min(...videoLikes)}`
           : null
@@ -84,8 +84,8 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         icon: MessageSquare,
         label: "총 댓글",
         value: format_number_korean(totalComments),
-        bgColor: "bg-green-50/80 dark:bg-green-950/20",
-        iconBg: "bg-green-100 dark:bg-green-900/30",
+        bgColor: "bg-brand-primary-100/80 dark:bg-brand-primary-900/20",
+        iconBg: "bg-brand-primary-200 dark:bg-brand-primary-800/30",
         extra: videoComments.length
           ? `최고: ${Math.max(...videoComments)} | 최저: ${Math.min(...videoComments)}`
           : null
@@ -112,8 +112,8 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         icon: TrendingUp,
         label: "총 업보트",
         value: format_number_korean(totalUpvotes),
-        bgColor: "bg-orange-50/80 dark:bg-orange-950/20",
-        iconBg: "bg-orange-100 dark:bg-orange-900/30",
+        bgColor: "bg-brand-secondary-50/80 dark:bg-brand-secondary-950/20",
+        iconBg: "bg-brand-secondary-100 dark:bg-brand-secondary-900/30",
         extra: postUpvotes.length
           ? `최고: ${Math.max(...postUpvotes)} | 최저: ${Math.min(...postUpvotes)}`
           : null
@@ -122,8 +122,8 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         icon: MessageSquare,
         label: "총 댓글",
         value: format_number_korean(totalComments),
-        bgColor: "bg-green-50/80 dark:bg-green-950/20",
-        iconBg: "bg-green-100 dark:bg-green-900/30",
+        bgColor: "bg-brand-primary-50/80 dark:bg-brand-primary-950/20",
+        iconBg: "bg-brand-primary-100 dark:bg-brand-primary-900/30",
         extra: postComments.length
           ? `최고: ${Math.max(...postComments)} | 최저: ${Math.min(...postComments)}`
           : null
@@ -132,8 +132,8 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
         icon: Star,
         label: "평균 업보트 비율",
         value: `${(averageRatio * 100).toFixed(1)}%`,
-        bgColor: "bg-purple-50/80 dark:bg-purple-950/20",
-        iconBg: "bg-purple-100 dark:bg-purple-900/30"
+        bgColor: "bg-brand-secondary-100/80 dark:bg-brand-secondary-900/20",
+        iconBg: "bg-brand-secondary-200 dark:bg-brand-secondary-800/30"
       }
     ];
   }

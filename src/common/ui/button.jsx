@@ -22,6 +22,11 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         glass:
           "backdrop-blur-sm bg-white/40 dark:bg-white/15 border border-white/30 dark:border-white/20 text-gray-800 dark:text-white shadow-lg hover:bg-white/50 dark:hover:bg-white/25 transition-colors rounded-2xl",
+        // 브랜드 그라데이션 버튼(사이드바 '비교 분석' 톤과 일치)
+        brand:
+          "bg-gradient-to-r from-brand-secondary-500/20 to-brand-primary-500/20 text-gray-800 dark:text-white border border-brand-secondary-500/30 hover:from-brand-secondary-500/30 hover:to-brand-primary-500/30",
+        'brand-weak':
+          "bg-gradient-to-r from-brand-secondary-50 to-brand-primary-100 text-gray-800 dark:text-gray-100 border border-brand-secondary-300 dark:border-white/15",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

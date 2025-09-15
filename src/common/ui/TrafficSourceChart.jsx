@@ -1,18 +1,21 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from 'recharts';
 import { motion } from 'framer-motion';
 import { PieChart as PieChartIcon, Loader2 } from 'lucide-react';
 import GlassCard from '@/common/ui/glass-card';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { cn } from '@/common/utils/ui-utils';
 
-// 구분하기 쉬운 다양한 색상 시스템 (5개 카테고리용)
-const GRADIENT_COLORS = [
-  'hsl(217, 91%, 60%)', // 파란색 - 검색
-  'hsl(142, 71%, 45%)', // 초록색 - 추천/탐색  
-  'hsl(25, 95%, 53%)', // 주황색 - 채널/구독
-  'hsl(348, 83%, 47%)', // 빨간색 - 외부
-  'hsl(262, 83%, 58%)' // 보라색 - 기타
+// 트래픽 소스 시각 구분을 위한 혼합 팔레트 (브랜드 보라/파랑 + 인디고/시안/청록)
+const TRAFFIC_COLORS = [
+  '#3b82f6', // brand-secondary-500 (파랑)
+  '#7c3aed', // brand-primary-500 (보라)
+  '#6366f1', // indigo-500 (인디고)
+  '#06b6d4', // cyan-500 (시안)
+  '#14b8a6', // teal-500 (청록)
+  '#60a5fa', // brand-secondary-400 (연파랑)
+  '#9275ff', // brand-primary-400 (연보라)
+  '#a5b4fc', // indigo-300 (연인디고)
 ];
 
 // 커스텀 툴팁 컴포넌트
@@ -47,33 +50,28 @@ const CustomTooltip = ({ active, payload, data }) => {
   return null;
 };
 
-// 커스텀 레전드 컴포넌트
-const CustomLegend = ({ payload }) => (
-  <motion.div 
-    className="flex flex-wrap justify-center gap-4 mt-4"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ duration: 0.5, delay: 0.8 }}
-  >
-    {payload.map((entry, index) => (
-      <motion.div
-        key={entry.value}
-        className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/20 dark:bg-white/5 border border-white/20 dark:border-white/10"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.4, delay: 0.9 + index * 0.1, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div 
-          className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: entry.color }}
-        />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-          {entry.value}
-        </span>
-      </motion.div>
-    ))}
-  </motion.div>
-);
+// 활성 섹터 렌더링 (호버 시 도넛 확장)
+const renderActiveShape = (props) => {
+  const {
+    cx, cy,
+    innerRadius, outerRadius,
+    startAngle, endAngle,
+    fill,
+  } = props;
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+};
 
 // 로딩 스켈레톤 컴포넌트
 const LoadingSkeleton = () => (
@@ -83,7 +81,7 @@ const LoadingSkeleton = () => (
     animate={{ opacity: 1 }}
     transition={{ duration: 0.3 }}
   >
-    <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+    <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500 mb-4" />
     <p className="text-sm text-gray-600 dark:text-gray-300">트래픽 소스 데이터 로딩 중...</p>
   </motion.div>
 );
@@ -143,6 +141,101 @@ const TrafficSourceChart = () => {
     ? trafficSourceData 
     : [];
 
+  // Pie & Legend hover 동기화 상태
+  const [activeIndex, setActiveIndex] = React.useState(null);
+  const onPieEnter = (_, index) => setActiveIndex(index);
+  const onPieLeave = () => setActiveIndex(null);
+
+  // 레전드 커스텀 렌더러: 호버 시 값/비율 표시 + Pie 하이라이트
+  const legendContainerRef = React.useRef(null);
+  const [legendHover, setLegendHover] = React.useState({ show: false, idx: null, x: 0, y: 0 });
+
+  const handleLegendEnter = (e, idx) => {
+    setActiveIndex(idx);
+    if (legendContainerRef.current) {
+      const containerRect = legendContainerRef.current.getBoundingClientRect();
+      const itemRect = e.currentTarget?.getBoundingClientRect?.() || { left: e.clientX, width: 0 };
+      const centerX = (itemRect.left - containerRect.left) + (itemRect.width / 2);
+      setLegendHover({ show: true, idx, x: centerX, y: 0 });
+    } else {
+      setLegendHover({ show: true, idx, x: 0, y: 0 });
+    }
+  };
+
+  const handleLegendMove = (e) => {
+    if (!legendContainerRef.current) return;
+    const containerRect = legendContainerRef.current.getBoundingClientRect();
+    const itemRect = e.currentTarget?.getBoundingClientRect?.() || { left: e.clientX, width: 0 };
+    const centerX = (itemRect.left - containerRect.left) + (itemRect.width / 2);
+    setLegendHover((s) => ({ ...s, x: centerX }));
+  };
+
+  const handleLegendLeave = () => {
+    setLegendHover({ show: false, idx: null, x: 0, y: 0 });
+    setActiveIndex(null);
+  };
+
+  const renderLegend = () => {
+    // payload에 의존하지 않고 항상 chartData 기반으로 렌더링
+    const total = chartData.reduce((s, d) => s + (d.value || 0), 0) || 0;
+    const hoveredItem = legendHover.idx != null ? chartData[legendHover.idx] : null;
+    const hoveredColor = legendHover.idx != null ? TRAFFIC_COLORS[legendHover.idx % TRAFFIC_COLORS.length] : null;
+    const hoveredPct = hoveredItem ? (total > 0 ? ((hoveredItem.value / total) * 100).toFixed(1) : '0.0') : null;
+
+    return (
+      <div
+        ref={legendContainerRef}
+        className="relative flex flex-wrap justify-center gap-3 mt-2"
+      >
+        {chartData.map((item, idx) => {
+          const isActive = activeIndex === idx;
+          const color = TRAFFIC_COLORS[idx % TRAFFIC_COLORS.length];
+          return (
+            <div
+              key={`${item.name}-${idx}`}
+              className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-colors ${
+                isActive
+                  ? 'bg-white/30 dark:bg-white/10 border-white/30 dark:border-white/20'
+                  : 'bg-white/20 dark:bg-white/5 border-white/20 dark:border-white/10'
+              }`}
+              onMouseEnter={(e) => handleLegendEnter(e, idx)}
+              onMouseMove={handleLegendMove}
+              onMouseLeave={handleLegendLeave}
+            >
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: color }}
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                {item.name}
+              </span>
+            </div>
+          );
+        })}
+
+        {/* 레전드 호버 툴팁 (차트 툴팁과 동일 형식) */}
+        {legendHover.show && hoveredItem && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="pointer-events-none absolute z-10 rounded-xl backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 border border-white/30 dark:border-gray-600/30 p-3 shadow-xl"
+            style={{ left: legendHover.x, bottom: 'calc(100% + 8px)', transform: 'translateX(-50%)' }}
+          >
+            <p className="font-semibold text-gray-800 dark:text-white mb-1">{hoveredItem.name}</p>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: hoveredColor }} />
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                {hoveredItem.value?.toLocaleString?.() ?? hoveredItem.value}회 ({hoveredPct}%)
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -157,8 +250,8 @@ const TrafficSourceChart = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center shadow-lg">
-            <PieChartIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-secondary-500/30 to-brand-primary-500/30 backdrop-blur-sm border border-white/40 dark:border-white/20 flex items-center justify-center shadow-lg">
+            <PieChartIcon className="w-6 h-6 text-brand-primary-600 dark:text-brand-primary-400" />
           </div>
           
           <div>
@@ -177,7 +270,7 @@ const TrafficSourceChart = () => {
         <motion.div 
           className={cn(
             "h-80 sm:h-96 w-full",
-            "relative"
+            "relative pb-16 sm:pb-20"
           )}
           role="img"
           aria-label="웹사이트 트래픽 소스별 비율을 나타내는 파이 차트"
@@ -197,30 +290,46 @@ const TrafficSourceChart = () => {
                 <Pie
                   data={chartData}
                   cx="50%"
-                  cy="50%"
+                  cy="44%"
                   labelLine={false}
-                  outerRadius={window.innerWidth < 640 ? 60 : 90}
-                  innerRadius={window.innerWidth < 640 ? 25 : 35}
+                  outerRadius={window.innerWidth < 640 ? 64 : 104}
+                  innerRadius={window.innerWidth < 640 ? 26 : 36}
                   fill="#8884d8"
                   dataKey="value"
                   nameKey="name"
                   animationBegin={500}
                   animationDuration={800}
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  onMouseEnter={onPieEnter}
+                  onMouseLeave={onPieLeave}
                 >
-                  {chartData.map((_, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={GRADIENT_COLORS[index % GRADIENT_COLORS.length]}
-                      stroke="rgba(255, 255, 255, 0.2)"
-                      strokeWidth={2}
-                    />
-                  ))}
+                  {chartData.map((_, index) => {
+                    const isDim = activeIndex !== null && activeIndex !== index;
+                    const color = isDim
+                      ? 'rgba(148, 163, 184, 0.55)' // gray-400 with alpha (명확한 회색 처리)
+                      : TRAFFIC_COLORS[index % TRAFFIC_COLORS.length];
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={color}
+                        fillOpacity={1}
+                        stroke="rgba(255, 255, 255, 0.2)"
+                        strokeWidth={2}
+                      />
+                    );
+                  })}
                 </Pie>
                 
                 <Tooltip content={<CustomTooltip data={chartData} />} />
-                <Legend content={<CustomLegend />} />
               </PieChart>
             </ResponsiveContainer>
+          )}
+          {/* 커스텀 레전드: 차트 영역 내부 하단에 절대 배치하여 전체 카드 높이 고정 */}
+          {chartData.length > 0 && (
+            <div className="absolute inset-x-0 bottom-0">
+              {renderLegend()}
+            </div>
           )}
         </motion.div>
       </GlassCard>

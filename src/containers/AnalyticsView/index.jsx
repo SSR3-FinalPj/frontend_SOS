@@ -26,6 +26,7 @@ import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import UploadedContentList from '@/features/content-management/ui/UploadedContentList';
 import IntegratedAnalyticsView from '@/containers/IntegratedAnalyticsView';
 import PerformanceHighlight from '@/features/analytics/ui/PerformanceHighlight';
+import GlassCard from '@/common/ui/glass-card';
 
 const DetailedAnalyticsView = ({ onVideoCardClick }) => {
   const navigate = useNavigate();
@@ -128,36 +129,38 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
 
       <div className="flex-1 flex flex-col relative z-10">
         {/* 헤더 */}
-        <header className="p-6 border-b border-gray-200/40 dark:border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-light text-gray-800 dark:text-white mb-2">
-                {view_type === "integrated"
-                  ? "비교 분석"
-                  : selected_platform === "youtube"
-                  ? "유튜브 상세 분석"
-                  : "레딧 상세 분석"}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                {view_type === "integrated"
-                  ? "플랫폼 간 성과를 한눈에 비교 분석하세요"
-                  : get_selected_period_label()}
-              </p>
-            </div>
+        <header className="relative z-10 p-6">
+          <GlassCard hover={false}>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-light text-gray-800 dark:text-white mb-1">
+                  {view_type === "integrated"
+                    ? "비교 분석"
+                    : selected_platform === "youtube"
+                    ? "유튜브 상세 분석"
+                    : "레딧 상세 분석"}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {view_type === "integrated"
+                    ? "플랫폼 간 성과를 한눈에 비교 분석하세요"
+                    : get_selected_period_label()}
+                </p>
+              </div>
 
-            {/* 우측 버튼 */}
-            <div className="flex items-center gap-3">
-              <motion.button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
-              >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </motion.button>
-              <Notification />
+              {/* 우측 버튼 */}
+              <div className="flex items-center gap-3">
+                <motion.button
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200"
+                >
+                  {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </motion.button>
+                <Notification />
+              </div>
             </div>
-          </div>
+          </GlassCard>
         </header>
 
         {/* 메인 */}
@@ -166,7 +169,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
             <IntegratedAnalyticsView />
           ) : platforms.google.loading || platforms.reddit.loading ? (
             <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500" />
             </div>
           ) : !isSelectedPlatformConnected ? (
             <div className="flex flex-col items-center justify-center h-full text-center rounded-2xl p-8 shadow-inner bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 border border-gray-200/80 dark:border-gray-700/60">
@@ -178,7 +181,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
               </p>
               <button
                 onClick={() => navigate("/settings")}
-                className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+                className="px-6 py-2 bg-brand-secondary-500 text-white font-semibold rounded-lg shadow-md hover:bg-brand-secondary-600 transition-colors"
               >
                 설정으로 이동
               </button>

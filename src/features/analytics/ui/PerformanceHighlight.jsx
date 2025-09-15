@@ -150,26 +150,26 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
 
           {/* 성과 지표 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200/30 dark:border-blue-800/30">
+            <div className="bg-brand-primary-100/50 dark:bg-brand-primary-950/20 rounded-lg p-3 border border-brand-primary-200/30 dark:border-brand-primary-800/30">
               <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs font-medium text-blue-700 dark:text-blue-400">
+                <TrendingUp className="w-4 h-4 text-brand-primary-600 dark:text-brand-primary-400" />
+                <span className="text-xs font-medium text-brand-primary-700 dark:text-brand-primary-400">
                   참여율
                 </span>
               </div>
-              <p className="text-lg font-semibold text-blue-800 dark:text-blue-300">
+              <p className="text-lg font-semibold text-brand-primary-800 dark:text-brand-primary-300">
                 {engagementRate}%
               </p>
             </div>
 
-            <div className="bg-green-50/50 dark:bg-green-950/20 rounded-lg p-3 border border-green-200/30 dark:border-green-800/30">
+            <div className="bg-brand-primary-50/50 dark:bg-brand-primary-900/20 rounded-lg p-3 border border-brand-primary-200/30 dark:border-brand-primary-700/30">
               <div className="flex items-center gap-2 mb-1">
-                <Heart className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-xs font-medium text-green-700 dark:text-green-400">
+                <Heart className="w-4 h-4 text-brand-primary-500 dark:text-brand-primary-400" />
+                <span className="text-xs font-medium text-brand-primary-600 dark:text-brand-primary-400">
                   총 콘텐츠
                 </span>
               </div>
-              <p className="text-lg font-semibold text-green-800 dark:text-green-300">
+              <p className="text-lg font-semibold text-brand-primary-700 dark:text-brand-primary-300">
                 {contentData ? contentData.length : 0}개
               </p>
             </div>
@@ -181,7 +181,7 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
               <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                 📊 성과 비교
                 {performanceDiff && (
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-brand-primary-100 dark:bg-brand-primary-900/30 text-brand-primary-700 dark:text-brand-primary-300 px-2 py-0.5 rounded-full">
                     {performanceDiff}배 차이
                   </span>
                 )}
@@ -189,15 +189,15 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
               
               <div className="grid grid-cols-2 gap-3">
                 {/* 최고 성과 */}
-                <div className="bg-green-50/50 dark:bg-green-950/20 rounded-lg p-2 border border-green-200/30 dark:border-green-800/30">
+                <div className="bg-brand-primary-600/20 dark:bg-brand-primary-800/30 rounded-lg p-2 border-2 border-brand-primary-600/40 dark:border-brand-primary-400/40 shadow-sm">
                   <div className="flex items-center gap-2 mb-1">
-                    <ArrowUp className="w-3 h-3 text-green-600 dark:text-green-400" />
-                    <span className="text-xs font-medium text-green-700 dark:text-green-400">BEST</span>
+                    <ArrowUp className="w-3 h-3 text-brand-primary-700 dark:text-brand-primary-300" />
+                    <span className="text-xs font-bold text-brand-primary-800 dark:text-brand-primary-200">BEST</span>
                   </div>
                   <h5 className="text-xs font-medium text-gray-800 dark:text-white line-clamp-1 mb-1">
                     {topPerformer.title}
                   </h5>
-                  <p className="text-xs text-green-700 dark:text-green-400">
+                  <p className="text-xs text-brand-primary-700 dark:text-brand-primary-300 font-medium">
                     {selectedPlatform === 'youtube' ? (
                       `${format_number_korean(topPerformer.statistics?.viewCount || 0)} 조회`
                     ) : (
@@ -207,15 +207,15 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
                 </div>
 
                 {/* 최저 성과 */}
-                <div className="bg-red-50/50 dark:bg-red-950/20 rounded-lg p-2 border border-red-200/30 dark:border-red-800/30">
+                <div className="bg-brand-primary-100/60 dark:bg-brand-primary-950/40 rounded-lg p-2 border border-brand-primary-200/50 dark:border-brand-primary-800/50">
                   <div className="flex items-center gap-2 mb-1">
-                    <ArrowDown className="w-3 h-3 text-red-600 dark:text-red-400" />
-                    <span className="text-xs font-medium text-red-700 dark:text-red-400">WORST</span>
+                    <ArrowDown className="w-3 h-3 text-brand-primary-400 dark:text-brand-primary-600" />
+                    <span className="text-xs font-medium text-brand-primary-500 dark:text-brand-primary-500">WORST</span>
                   </div>
                   <h5 className="text-xs font-medium text-gray-800 dark:text-white line-clamp-1 mb-1">
                     {worstPerformer.title}
                   </h5>
-                  <p className="text-xs text-red-700 dark:text-red-400">
+                  <p className="text-xs text-brand-primary-400 dark:text-brand-primary-600">
                     {selectedPlatform === 'youtube' ? (
                       `${format_number_korean(worstPerformer.statistics?.viewCount || 0)} 조회`
                     ) : (

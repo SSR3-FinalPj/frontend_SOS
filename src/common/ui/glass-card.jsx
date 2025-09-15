@@ -22,7 +22,7 @@ const GlassCard = ({
   return (
     <motion.div
       whileHover={hover ? { y: -4 } : {}}
-      className={`backdrop-blur-xl bg-gray-50/70 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 rounded-2xl p-6 shadow-lg transition-all duration-300 ${className}`}
+      className={`backdrop-blur-xl bg-gray-50/70 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 rounded-2xl p-6 shadow-none transition-all duration-300 ${className}`}
     >
       {children}
     </motion.div>

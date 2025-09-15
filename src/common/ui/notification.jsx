@@ -40,8 +40,8 @@ const Notification = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 12, // 더 넓은 간격
-        left: rect.right + window.scrollX - 320, // 더 넓은 드롭다운
+        top: rect.bottom + 8,
+        left: rect.right - 280, // 320 → 280으로 조정하여 더 오른쪽으로
       });
     }
   }, []);
@@ -54,10 +54,6 @@ const Notification = () => {
     setIsOpen(prev => !prev);
   }, [isOpen, calculateDropdownPosition]);
 
-  // 드롭다운 닫기 함수
-  const closeDropdown = useCallback(() => {
-    setIsOpen(false);
-  }, []);
 
   // 알림 클릭 핸들러 (네비게이션 기능 추가)
   const handleNotificationClick = useCallback((notification) => {
@@ -71,7 +67,7 @@ const Notification = () => {
       navigate(notification.path);
       setIsOpen(false); // 드롭다운 닫기
     }
-  }, [mark_as_read, navigate]);
+  }, [mark_as_read, navigate, setIsOpen]);
 
   // 모든 알림 읽음 처리
   const handleMarkAllRead = useCallback(() => {
@@ -92,8 +88,8 @@ const Notification = () => {
     remove_notification(notificationId);
   }, [remove_notification]);
 
-  // 외부 클릭 감지
-  useOnClickOutside(dropdownRef, closeDropdown);
+  // 외부 클릭 감지 - 벨 버튼과 드롭다운 둘 다 예외 처리
+  useOnClickOutside([dropdownRef, buttonRef], () => setIsOpen(false));
 
   // formatToKST는 이제 date-utils에서 import하여 사용
 
@@ -135,22 +131,24 @@ const Notification = () => {
       </motion.button>
 
       {/* Enhanced 드롭다운 메뉴 - Portal로 렌더링 */}
-      {isOpen && createPortal(
+      {createPortal(
         <AnimatePresence>
-          <motion.div
-            ref={dropdownRef}
-            initial={{ opacity: 0, scale: 0.9, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -20 }}
-            transition={{ type: "spring", duration: 0.3, bounce: 0.2 }}
-            style={{
-              position: 'absolute',
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              zIndex: 9999,
-            }}
-            className="w-80 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl shadow-2xl border border-white/50 dark:border-white/10 overflow-hidden"
-          >
+          {isOpen && (
+            <motion.div
+              key="notification-modal"
+              ref={dropdownRef}
+              initial={{ opacity: 0, scale: 0.9, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              transition={{ type: "spring", duration: 0.2, bounce: 0.1 }}
+              style={{
+                position: 'absolute',
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                zIndex: 9999,
+              }}
+              className="w-80 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl shadow-2xl border border-white/50 dark:border-white/10 overflow-hidden"
+            >
             {/* Enhanced 헤더 */}
             <div className="px-6 py-4 bg-gradient-to-r from-white/60 to-white/30 dark:from-gray-800/60 dark:to-gray-800/30 border-b border-white/30 dark:border-white/10">
               <div className="flex items-center justify-between">
@@ -260,7 +258,8 @@ const Notification = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}

@@ -381,7 +381,8 @@ const AIMediaRequestModal = ({ is_open, on_close, isPriority = false, selectedVi
             <Button
               onClick={handle_submit}
               disabled={!is_form_valid}
-              className="font-semibold disabled:opacity-50 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white"
+              variant="brand"
+              className="font-semibold disabled:opacity-50"
             >
               {is_submitting ? '영상 생성 중...' : '영상 생성'}
             </Button>

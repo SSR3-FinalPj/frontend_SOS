@@ -228,7 +228,8 @@ const GeneratedVideoPreviewModal = ({
               <Button 
                 onClick={handleViewAnalytics}
                 disabled={!!error}
-                className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="brand"
+                className="w-full rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <BarChart2 className="h-5 w-5 mr-2" />
                 분석하기
