@@ -5,6 +5,7 @@ import { getDashboardData, getGoogleStatus, getRedditStatus, getRedditDashboardD
 import { format, subDays } from 'date-fns';
 import { TooltipProvider } from '@/common/ui/tooltip';
 import NoconnectView from '../NoconnectView';
+import { Loader } from "lucide-react";
 
 const MainDashboardView = () => {
   const [youtubeData, setYoutubeData] = useState(null);
@@ -75,7 +76,12 @@ const MainDashboardView = () => {
   });
 
   if (loading) {
-    return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading dashboard data...</div>;
+    return (
+      <div className="h-full flex flex-col justify-center items-center gap-4 text-gray-500 dark:text-gray-400">
+        <Loader className="w-10 h-10 animate-spin text-brand-secondary-500" />
+        <span>Loading dashboard data...</span>
+      </div>
+    );
   }
 
   if (error) {
@@ -92,9 +98,9 @@ const MainDashboardView = () => {
       <div className="p-6 relative z-10">
         <div className={`grid ${connected_platforms.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-6 h-[calc(100vh-200px)]`}>
           {connected_platforms.map((platform, index) => (
-            <EnhancedPlatformCard 
-              key={platform.name} 
-              platform={platform} 
+            <EnhancedPlatformCard
+              key={platform.name}
+              platform={platform}
               index={index}
             />
           ))}
