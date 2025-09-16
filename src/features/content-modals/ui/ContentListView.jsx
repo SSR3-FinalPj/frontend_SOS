@@ -26,7 +26,7 @@ function ContentListView({
   const { platforms } = usePlatformStore();
   const { isDarkMode } = usePageStore();
   const { preview_modal, open_preview_modal, close_preview_modal } = use_content_modals();
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 9;
 
   const platformOptions = [
     { id: 'all', label: '모든 채널' },
@@ -109,6 +109,11 @@ function ContentListView({
     }
     return pages;
   };
+
+  const paginatedContents = contents.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const PlatformBadge = ({ platform }) => {
     const isYoutube = platform.toLowerCase() === 'youtube';
@@ -243,7 +248,7 @@ function ContentListView({
           className="min-h-[500px]"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {contents.map((content, index) => (
+            {paginatedContents.map((content, index) => (
               <motion.div
                 key={content.id}
                 initial={{ opacity: 0, y: 20 }}
