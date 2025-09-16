@@ -981,6 +981,39 @@ export async function reviseVideo(resultId, promptText) {
   return await res.json();
 }
 
+'''/* ------------------ 신규 트리 구조 API ------------------ */
+
+/**
+ * 모든 루트 노드 ID 목록을 가져옵니다.
+ * @returns {Promise<Array<{resultId: number}>>}
+ */
+export async function getRootNodes() {
+  const res = await apiFetch('/api/dashboard/rootnode');
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류' }));
+    throw new Error(`루트 노드 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+  return await res.json();
+}
+
+/**
+ * 특정 resultId를 기반으로 전체 트리 구조를 가져옵니다.
+ * @param {number|string} resultId - 트리의 루트가 되는 resultId
+ * @returns {Promise<Array<Object>>} 해당 resultId의 전체 트리 구조
+ */
+export async function getJobTree(resultId) {
+  if (!resultId) {
+    throw new Error('Job Tree 조회를 위한 resultId가 필요합니다.');
+  }
+  const res = await apiFetch(`/api/images/jobs/${resultId}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류' }));
+    throw new Error(`Job Tree 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+  return await res.json();
+}
+
+
 /* ------------------ 통합 분석 데이터 조회 ------------------ */
 /**
  * 비교 분석할 전체 콘텐츠 목록을 가져옵니다.
@@ -995,7 +1028,7 @@ export async function getCommonContentList() {
   }
 
   return await res.json();
-}
+}''
 
 /**
  * 특정 resultId에 대한 상세 비교 데이터를 가져옵니다.
