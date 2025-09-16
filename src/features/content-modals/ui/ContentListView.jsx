@@ -8,6 +8,7 @@ import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
 import ContentPreviewModal from '@/features/content-modals/ui/ContentPreviewModal';
 import { usePageStore } from '@/common/stores/page-store';
+import { Loader } from "lucide-react";
 
 function ContentListView({
   selectedPlatform,
@@ -26,7 +27,7 @@ function ContentListView({
   const { platforms } = usePlatformStore();
   const { isDarkMode } = usePageStore();
   const { preview_modal, open_preview_modal, close_preview_modal } = use_content_modals();
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 9;
 
   const platformOptions = [
     { id: 'all', label: '모든 채널' },
@@ -109,6 +110,11 @@ function ContentListView({
     }
     return pages;
   };
+
+  const paginatedContents = contents.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const PlatformBadge = ({ platform }) => {
     const isYoutube = platform.toLowerCase() === 'youtube';
@@ -228,7 +234,8 @@ function ContentListView({
 
       {/* Content Grid */}
       {isLoading ? (
-        <div className="flex justify-center items-center min-h-[500px]">
+        <div className="flex flex-col justify-center items-center min-h-[500px] gap-4">
+          <Loader className="w-10 h-10 animate-spin text-blue-500 dark:text-blue-400" />
           <p className="text-gray-500 dark:text-gray-400">콘텐츠를 불러오는 중...</p>
         </div>
       ) : error ? (
@@ -243,7 +250,7 @@ function ContentListView({
           className="min-h-[500px]"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {contents.map((content, index) => (
+            {paginatedContents.map((content, index) => (
               <motion.div
                 key={content.id}
                 initial={{ opacity: 0, y: 20 }}
