@@ -8,6 +8,7 @@ import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
 import ContentPreviewModal from '@/features/content-modals/ui/ContentPreviewModal';
 import { usePageStore } from '@/common/stores/page-store';
+import { Loader } from "lucide-react";
 
 function ContentListView({
   selectedPlatform,
@@ -233,7 +234,8 @@ function ContentListView({
 
       {/* Content Grid */}
       {isLoading ? (
-        <div className="flex justify-center items-center min-h-[500px]">
+        <div className="flex flex-col justify-center items-center min-h-[500px] gap-4">
+          <Loader className="w-10 h-10 animate-spin text-blue-500 dark:text-blue-400" />
           <p className="text-gray-500 dark:text-gray-400">콘텐츠를 불러오는 중...</p>
         </div>
       ) : error ? (

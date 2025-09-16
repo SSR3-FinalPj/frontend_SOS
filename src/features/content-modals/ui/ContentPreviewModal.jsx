@@ -5,6 +5,7 @@ import { Button } from '@/common/ui/button';
 import { Clock, BarChart2, X as XIcon, ExternalLink, Wand2 } from 'lucide-react';
 import { getCommentAnalysis, getRedditContentById, getRedditCommentAnalysis } from '@/common/api/api';
 import CommentAnalysisView from './CommentAnalysisView';
+import { Loader } from "lucide-react";
 
 const ContentPreviewModal = ({
   is_open,
@@ -115,7 +116,10 @@ const ContentPreviewModal = ({
             {/* 🔹 Reddit 텍스트 영역 */}
             <div className="p-6 overflow-y-auto flex-1">
               {loading ? (
-                <p>Loading Reddit post...</p>
+                <div className="flex flex-col justify-center items-center min-h-[200px] gap-4 mt-6">
+                  <Loader className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
+                  <p className="text-gray-500 dark:text-gray-400">Reddit 게시글 불러오는 중...</p>
+                </div>
               ) : redditContent ? (
                 <div>
                   <h3 className="text-lg font-bold">{redditContent.title}</h3>
@@ -263,7 +267,10 @@ const ContentPreviewModal = ({
                 {/* 🔹 Reddit 텍스트 영역 */}
                 <div className="p-6 overflow-y-auto flex-1">
                   {loading ? (
-                    <p>Loading Reddit post...</p>
+                    <div className="flex flex-col justify-center items-center min-h-[200px] gap-4 mt-6">
+                      <Loader className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
+                      <p className="text-gray-500 dark:text-gray-400">Reddit 게시글 불러오는 중...</p>
+                    </div>
                   ) : redditContent ? (
                     <div>
                       <h3 className="text-lg font-bold">{redditContent.title}</h3>
