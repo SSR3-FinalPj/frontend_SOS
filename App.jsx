@@ -15,8 +15,8 @@ export default function App() {
   // 다크모드 DOM 적용을 위한 훅 호출
   use_dark_mode();
 
-  const [bootDone, setBootDone] = useState(false);
-  usePlatformInitializer(bootDone);
+  const [authStatus, setAuthStatus] = useState({ bootDone: false, isAuthenticated: false });
+  usePlatformInitializer(authStatus);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -36,14 +36,14 @@ export default function App() {
           navigate('/');
         }
       }
-      setBootDone(true);
+      setAuthStatus({ bootDone: true, isAuthenticated: ok });
     })();
   }, [navigate, location.pathname]);
 
 
 
 
-  if (!bootDone || platforms.google.loading || platforms.reddit.loading) {
+  if (!authStatus.bootDone || platforms.google.loading || platforms.reddit.loading) {
     return <div />; // 로딩 화면
   }
 
