@@ -43,7 +43,9 @@ export default function App() {
 
 
 
-  if (!bootDone || platforms.google.loading || platforms.reddit.loading) {
+  const isContentLaunchPage = location.pathname.startsWith('/contentlaunch');
+
+  if (!bootDone || ((platforms.google.loading || platforms.reddit.loading) && !isContentLaunchPage)) {
     return <div />; // 로딩 화면
   }
 

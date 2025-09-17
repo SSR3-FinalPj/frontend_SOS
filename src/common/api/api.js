@@ -981,7 +981,7 @@ export async function reviseVideo(resultId, promptText) {
   return await res.json();
 }
 
-'''/* ------------------ 신규 트리 구조 API ------------------ */
+/* ------------------ 신규 트리 구조 API ------------------ */
 
 /**
  * 모든 루트 노드 ID 목록을 가져옵니다.
