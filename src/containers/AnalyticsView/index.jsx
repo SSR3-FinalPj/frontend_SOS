@@ -164,7 +164,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
         </header>
 
         {/* 메인 */}
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto p-6 relative z-10">
           {view_type === "integrated" ? (
             <IntegratedAnalyticsView />
           ) : platforms.google.loading || platforms.reddit.loading ? (
@@ -187,9 +187,9 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
               </button>
             </div>
           ) : (
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 gap-6">
               {/* KPI 카드 */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {kpiData.map((kpi, index) => {
                   const Icon = kpi.icon;
                   return (
@@ -198,34 +198,42 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-lg p-3 shadow-sm relative`}
+                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-xl p-4 shadow-sm flex flex-col items-center text-center relative`}
                     >
                       {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
                           <Loader2 className="w-6 h-6 animate-spin" />
                         </div>
                       )}
-                      <div className="flex items-center justify-between mb-2">
+
+                      {/* 상단: 아이콘 */}
+                      <div className="flex justify-center mb-2">
                         <div
                           className={`w-8 h-8 rounded-md ${kpi.iconBg} flex items-center justify-center`}
                         >
                           <Icon className="w-4 h-4" />
                         </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{kpi.label}</p>
-                        <p className="text-lg font-semibold mb-1">
-                          {isLoading ? "로딩 중..." : kpi.value}
+
+                      {/* 중앙: 라벨 + 숫자 */}
+                      <p className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
+                        {kpi.label}
+                      </p>
+                      <p className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                        {isLoading ? "..." : kpi.value}
+                      </p>
+
+                      {/* 하단: 최고/최저 */}
+                      {!isLoading && kpi.extra && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {kpi.extra}
                         </p>
-                        {!isLoading && kpi.extra && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{kpi.extra}</p>
-                        )}
-                        {error && (
-                          <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                            {error.message || "데이터 로딩 실패"}
-                          </p>
-                        )}
-                      </div>
+                      )}
+                      {error && (
+                        <p className="text-sm text-red-500 dark:text-red-400 mt-1">
+                          {error.message || "데이터 로딩 실패"}
+                        </p>
+                      )}
                     </motion.div>
                   );
                 })}
