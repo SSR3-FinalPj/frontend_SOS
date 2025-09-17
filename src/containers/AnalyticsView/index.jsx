@@ -211,10 +211,20 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-xl p-4 shadow-sm flex flex-col items-center text-center relative`}
+                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-xl p-4 shadow-sm flex flex-col relative`}
                     >
-                      {/* 상단: 아이콘 */}
-                      <div className="flex justify-center mb-2">
+                      {/* 로딩 처리 */}
+                      {isLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+                          <Loader className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
+                        </div>
+                      )}
+
+                      {/* 상단: 라벨 + 아이콘 */}
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
+                          {kpi.label}
+                        </p>
                         <div
                           className={`w-8 h-8 rounded-md ${kpi.iconBg} flex items-center justify-center`}
                         >
@@ -222,22 +232,19 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                         </div>
                       </div>
 
-                      {/* 중앙: 라벨 + 숫자 */}
-                      <p className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
-                        {kpi.label}
-                      </p>
-                      <p className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                      {/* 중앙: 숫자 */}
+                      <p className="text-4xl font-bold text-gray-900 dark:text-white mb-1 text-center">
                         {isLoading ? "..." : kpi.value}
                       </p>
 
                       {/* 하단: 최고/최저 */}
                       {!isLoading && kpi.extra && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                           {kpi.extra}
                         </p>
                       )}
                       {error && (
-                        <p className="text-sm text-red-500 dark:text-red-400 mt-1">
+                        <p className="text-sm text-red-500 dark:text-red-400 mt-1 text-center">
                           {error.message || "데이터 로딩 실패"}
                         </p>
                       )}
@@ -246,10 +253,11 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                 })}
               </div>
 
+
               {/* 콘텐츠 섹션 */}
               <div className="grid grid-cols-2 gap-6">
                 <UploadedContentList
-                  contentData={contentData} 
+                  contentData={contentData}
                   startDate={date_range?.from}
                   endDate={date_range?.to}
                   onVideoCardClick={onVideoCardClick}
@@ -297,5 +305,5 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
       )}
     </div>
   );
-};  
+};
 export default DetailedAnalyticsView;
