@@ -60,11 +60,19 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
     const fetchContentData = async () => {
       if (!date_range?.from || !date_range?.to) return;
 
+      // 플랫폼 연결 상태 확인
+      const isYoutubeConnected = platforms.google.connected;
+      const isRedditConnected = platforms.reddit.connected;
+
       try {
         const start = new Date(date_range.from);
         const end = new Date(date_range.to);
 
         if (selected_platform === "youtube") {
+          if (!isYoutubeConnected) {
+            setContentData([]);
+            return;
+          }
           const channelInfo = await getYouTubeChannelId();
           if (channelInfo?.channelId) {
             const videoData = await getYouTubeVideosByChannelId(channelInfo.channelId, {
@@ -79,6 +87,10 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
             setContentData(filteredVideos);
           }
         } else if (selected_platform === "reddit") {
+          if (!isRedditConnected) {
+            setContentData([]);
+            return;
+          }
           const channelInfo = await getRedditChannelInfo();
           if (channelInfo?.channelId) {
             const postData = await getRedditUploadsByRange(
@@ -96,7 +108,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
     };
 
     fetchContentData();
-  }, [selected_platform, date_range]);
+  }, [selected_platform, date_range, platforms.google.connected, platforms.reddit.connected]);
 
   // 요약 데이터 가져오기
   useEffect(() => {
