@@ -45,6 +45,23 @@ export const convertToTreeData = (flat_contents) => {
     }
   });
 
+  // 버전 정보 자동 부여: 루트는 1.0, 1레벨 자식부터 1.1, 1.2 ...
+  const assignVersions = (rootNodes) => {
+    const assignChildren = (children, base) => {
+      if (!Array.isArray(children)) return;
+      children.forEach((n, i) => {
+        if (!n.version) n.version = `${base}.${i + 1}`;
+        if (n.children && n.children.length) assignChildren(n.children, n.version);
+      });
+    };
+    rootNodes.forEach((n) => {
+      if (!n.version) n.version = '1.0';
+      // 루트의 자식은 1.1, 1.2 ...로 표기
+      assignChildren(n.children, '1');
+    });
+  };
+
+  assignVersions(roots);
   return roots;
 };
 

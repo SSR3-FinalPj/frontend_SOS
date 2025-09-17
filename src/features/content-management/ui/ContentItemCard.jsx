@@ -32,8 +32,15 @@ const ContentItemCard = ({
   const item_id = item.result_id || item.resultId || item.video_id || item.temp_id || item.id;
   const is_uploading = uploading_items.includes(item_id);
   const is_selected = selected_video_id === item_id;
-  const is_selectable = item.status === 'uploaded';
-  const is_clickable_for_preview = item.status === 'ready' || item.status === 'PROCESSING' || item.status === 'uploaded';
+  const status = (item.status || '').toString();
+  const is_selectable = status === 'uploaded' || status === 'COMPLETED' || status === 'completed' || status === 'READY_TO_LAUNCH';
+  const is_clickable_for_preview = (
+    status === 'ready' || status === 'READY' ||
+    status === 'PROCESSING' || status === 'processing' ||
+    status === 'uploaded' ||
+    status === 'COMPLETED' || status === 'completed' ||
+    status === 'READY_TO_LAUNCH'
+  );
 
   const handle_select = (e) => {
     e.stopPropagation();
@@ -95,6 +102,12 @@ const ContentItemCard = ({
             
             {/* 상태 아이콘 */}
             <div className="absolute top-2 right-2 flex gap-1">
+              {/* 버전 배지 (루트/카드에서도 표시) */}
+              {item.version && (
+                <Badge className={`${dark_mode ? 'bg-gray-700/80 text-gray-300' : 'bg-gray-100/80 text-gray-600'} rounded-full px-2 py-1 text-xs border`}>
+                  v{item.version}
+                </Badge>
+              )}
               {is_selected && (
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />

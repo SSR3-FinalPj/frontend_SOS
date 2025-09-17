@@ -17,6 +17,8 @@ import { use_content_modals } from '@/features/content-modals/logic/use-content-
 import { LOCATION_DATA } from '@/common/constants/location-data';
 import VersionNavigationSystem from '@/features/version-navigation/ui/VersionNavigationSystem';
 import { convertToTreeData } from '@/features/content-tree/logic/tree-utils';
+import SuccessModal from '@/common/ui/success-modal';
+import VideoEditModal from '@/features/video-edit/ui/VideoEditModal';
 
 // Helper function to get project name from a synthetic project ID
 function getProjectName(poiId) {
@@ -51,6 +53,9 @@ function ProjectHistoryContainer({ dark_mode = false }) {
   const [is_request_modal_open, set_is_request_modal_open] = useState(false);
   const [is_publishing, set_is_publishing] = useState(false);
   const [expanded_projects, set_expanded_projects] = useState(new Set());
+  const [is_request_success_modal_open, set_is_request_success_modal_open] = useState(false);
+  const [is_edit_modal_open, set_is_edit_modal_open] = useState(false);
+  const [edit_target_video, set_edit_target_video] = useState(null);
 
   useEffect(() => {
     fetch_folders();
@@ -160,7 +165,10 @@ function ProjectHistoryContainer({ dark_mode = false }) {
                       uploadingItems={uploading_items}
                       onPreview={open_preview_modal}
                       onPublish={open_publish_modal}
-                      onEdit={() => {}}
+                      onEdit={(item) => {
+                        set_edit_target_video(item);
+                        set_is_edit_modal_open(true);
+                      }}
                     />
                   </div>
                 </motion.div>
@@ -177,6 +185,12 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           item={preview_modal.item}
           dark_mode={dark_mode}
           on_close={close_preview_modal}
+          mode="launch"
+          on_edit={(item) => {
+            // 미리보기에서 수정하기
+            set_edit_target_video(item);
+            set_is_edit_modal_open(true);
+          }}
         />
       )}
       {publish_modal.open && publish_modal.item && (
@@ -192,11 +206,34 @@ function ProjectHistoryContainer({ dark_mode = false }) {
           is_publishing={is_publishing}
         />
       )}
+      {/* 영상 수정 모달 */}
+      <VideoEditModal
+        is_open={is_edit_modal_open}
+        on_close={() => {
+          set_is_edit_modal_open(false);
+          set_edit_target_video(null);
+        }}
+        selected_video={edit_target_video}
+        dark_mode={dark_mode}
+      />
       <AIMediaRequestModal
         is_open={is_request_modal_open}
         on_close={() => set_is_request_modal_open(false)}
-        on_request_success={fetch_folders}
+        on_request_success={(data) => {
+          // 폴더 갱신 후 성공 모달 표시
+          fetch_folders();
+          set_is_request_modal_open(false);
+          set_is_request_success_modal_open(true);
+        }}
         dark_mode={dark_mode}
+      />
+
+      {/* 영상 생성 요청 성공 모달 */}
+      <SuccessModal
+        is_open={is_request_success_modal_open}
+        on_close={() => set_is_request_success_modal_open(false)}
+        title="요청 완료"
+        message="AI 미디어 제작 요청이 성공적으로 전송되었습니다!"
       />
     </div>
   );
