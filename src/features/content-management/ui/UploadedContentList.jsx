@@ -120,121 +120,96 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
               }
             }}
           >
+            {/* 순번 (퍼포먼스 색상 반영) */}
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 flex items-center justify-center text-gray-800 dark:text-white font-semibold text-sm shadow-lg">
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-md
+                ${selectedPlatform === 'youtube'
+                    ? content.statistics?.viewCount > 1000
+                      ? 'bg-green-500'
+                      : content.statistics?.viewCount > 100
+                        ? 'bg-yellow-500'
+                        : 'bg-gray-400'
+                    : content.upvote > 50
+                      ? 'bg-green-500'
+                      : content.upvote > 10
+                        ? 'bg-yellow-500'
+                        : 'bg-gray-400'
+                  }`}
+              >
                 {index + 1}
               </div>
             </div>
 
-            {/* 썸네일/프리뷰 */}
+            {/* 썸네일 */}
             <div className="w-24 h-14 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
               {selectedPlatform === 'youtube' ? (
-                <img
-                  src={content.thumbnail}
-                  alt={content.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={content.thumbnail} alt={content.title} className="w-full h-full object-cover" />
+              ) : content.url && content.url.includes("preview.redd.it") ? (
+                <img src={content.url} alt={content.title} className="w-full h-full object-cover" />
               ) : (
-                content.url && content.url.includes("preview.redd.it") ? (
-                  <img
-                    src={content.url}
-                    alt={content.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-2 text-center">
-                    <img src={RedditIcon} alt="Reddit Icon" className="w-6 h-6 mb-1" />
-                    <span className="font-semibold text-[0.6rem] line-clamp-2">{content.sub_reddit}</span>
-                  </div>
-                )
+                <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-2 text-center">
+                  <img src={RedditIcon} alt="Reddit Icon" className="w-6 h-6 mb-1" />
+                  <span className="font-semibold text-[0.6rem] line-clamp-2">{content.sub_reddit}</span>
+                </div>
               )}
             </div>
 
             {/* 본문 */}
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium text-gray-800 dark:text-white truncate">
+              {/* 제목 */}
+              <h4 className="text-base font-bold text-gray-900 dark:text-white truncate">
                 {content.title}
               </h4>
 
-              {selectedPlatform === 'youtube' ? (
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    <span>{Number(content.statistics?.viewCount || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Heart className="w-3 h-3" />
-                    <span>{Number(content.statistics?.likeCount || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
-                    <span>{Number(content.statistics?.commentCount || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    <span>{Number(content.upvote || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
-                    <span>{Number(content.comment_count || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3" />
-                    <span>{Number(content.score || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* 날짜 + 퍼포먼스 인디케이터 */}
-              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mt-2">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  <span>
-                    {selectedPlatform === 'youtube'
-                      ? new Date(content.publishedAt).toLocaleDateString('ko-KR')
-                      : new Date(content.upload_date + "T00:00:00").toLocaleDateString('ko-KR')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      selectedPlatform === 'youtube'
-                        ? (content.statistics?.viewCount > 1000
-                            ? 'bg-green-500'
-                            : content.statistics?.viewCount > 100
-                            ? 'bg-yellow-500'
-                            : 'bg-gray-400')
-                        : (content.upvote > 50
-                            ? 'bg-green-500'
-                            : content.upvote > 10
-                            ? 'bg-yellow-500'
-                            : 'bg-gray-400')
-                    }`}
-                  />
-                  <span className="text-[10px]">
-                    {selectedPlatform === 'youtube'
-                      ? (content.statistics?.viewCount > 1000
-                          ? '높음'
-                          : content.statistics?.viewCount > 100
-                          ? '보통'
-                          : '낮음')
-                      : (content.upvote > 50
-                          ? '높음'
-                          : content.upvote > 10
-                          ? '보통'
-                          : '낮음')}
-                  </span>
-                </div>
+              {/* 조회수/좋아요/댓글 (한 줄) */}
+              <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-gray-400">
+                {selectedPlatform === 'youtube' ? (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-4 h-4" />
+                      <span>{Number(content.statistics?.viewCount || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Heart className="w-4 h-4" />
+                      <span>{Number(content.statistics?.likeCount || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageSquare className="w-4 h-4" />
+                      <span>{Number(content.statistics?.commentCount || 0).toLocaleString()}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="w-4 h-4" />
+                      <span>{Number(content.upvote || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageSquare className="w-4 h-4" />
+                      <span>{Number(content.comment_count || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4" />
+                      <span>{Number(content.score || 0).toLocaleString()}</span>
+                    </div>
+                  </>
+                )}
               </div>
+            </div>
+
+            {/* 날짜 (우측 끝) */}
+            <div className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 ml-auto">
+              {selectedPlatform === 'youtube'
+                ? new Date(content.publishedAt).toLocaleDateString('ko-KR')
+                : new Date(content.upload_date + "T00:00:00").toLocaleDateString('ko-KR')}
             </div>
           </div>
         ))}
       </div>
     );
   };
+
 
   return (
     <motion.div
@@ -283,13 +258,11 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
                     <button
                       key={option.value}
                       onClick={() => handleSortChange(option.value)}
-                      className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                        sortBy === option.value
+                      className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${sortBy === option.value
                           ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                           : 'text-gray-700 dark:text-gray-300'
-                      } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${
-                        option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''
-                      }`}
+                        } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''
+                        }`}
                     >
                       {option.label}
                     </button>
