@@ -57,7 +57,7 @@ const IntegratedAnalyticsView = () => {
         : 0;
       
       const redditScore = details.reddit && details.reddit.score > 0
-        ? ((details.reddit.upvote * 0.5) + (details.reddit.comment_count * 0.8)) / details.reddit.score
+        ? ((details.reddit.upvote) + (details.reddit.comment_count )) / details.reddit.score
         : 0;
 
       const mappedData = {
@@ -76,10 +76,10 @@ const IntegratedAnalyticsView = () => {
     }
   }, []);
 
-  const openVideoModal = (url, title) => {
-    setModalVideo({ url, title });
-    setIsVideoModalOpen(true);
-  };
+  // const openVideoModal = (url, title) => {
+  //   setModalVideo({ url, title });
+  //   setIsVideoModalOpen(true);
+  // };
 
   // --- Sub-components --- 
 
