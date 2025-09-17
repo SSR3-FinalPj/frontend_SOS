@@ -6,10 +6,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Sun, 
-  Moon, 
-  Loader2,
+import {
+  Sun,
+  Moon,
+  Loader,
   AlertTriangle
 } from 'lucide-react';
 
@@ -18,10 +18,15 @@ import { Calendar as CalendarComponent } from '@/common/ui/calendar';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import { get_kpi_data_from_api } from '@/domain/dashboard/logic/dashboard-utils';
-import { getYouTubeChannelId, getYouTubeVideosByChannelId, getRedditChannelInfo, getRedditUploadsByRange } from '@/common/api/api';
+import {
+  getYouTubeChannelId,
+  getYouTubeVideosByChannelId,
+  getRedditChannelInfo,
+  getRedditUploadsByRange
+} from '@/common/api/api';
 import AnalyticsFilterSidebar from '@/containers/AnalyticsFilterSidebar/index';
 import Notification from '@/common/ui/notification';
-import AudienceDemoContainer from '@/containers/AudienceDemoContainer/index'; // ✅ 수정
+import AudienceDemoContainer from '@/containers/AudienceDemoContainer/index';
 import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import UploadedContentList from '@/features/content-management/ui/UploadedContentList';
 import IntegratedAnalyticsView from '@/containers/IntegratedAnalyticsView';
@@ -137,8 +142,8 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                   {view_type === "integrated"
                     ? "비교 분석"
                     : selected_platform === "youtube"
-                    ? "유튜브 상세 분석"
-                    : "레딧 상세 분석"}
+                      ? "유튜브 상세 분석"
+                      : "레딧 상세 분석"}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300">
                   {view_type === "integrated"
@@ -165,12 +170,20 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
 
         {/* 메인 */}
         <main className="flex-1 overflow-y-auto p-6 relative z-10">
+          {/* ✅ 메인 콘텐츠 로딩 오버레이 */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 
+                            flex flex-col justify-center items-center gap-6 
+                            backdrop-blur-sm z-20">
+              <Loader className="w-12 h-12 animate-spin text-blue-500 dark:text-blue-400" />
+              <p className="text-gray-600 dark:text-gray-400 text-base font-medium">
+                데이터를 불러오는 중...
+              </p>
+            </div>
+          )}
+
           {view_type === "integrated" ? (
             <IntegratedAnalyticsView />
-          ) : platforms.google.loading || platforms.reddit.loading ? (
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500" />
-            </div>
           ) : !isSelectedPlatformConnected ? (
             <div className="flex flex-col items-center justify-center h-full text-center rounded-2xl p-8 shadow-inner bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 border border-gray-200/80 dark:border-gray-700/60">
               <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
@@ -200,12 +213,6 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-xl p-4 shadow-sm flex flex-col items-center text-center relative`}
                     >
-                      {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                        </div>
-                      )}
-
                       {/* 상단: 아이콘 */}
                       <div className="flex justify-center mb-2">
                         <div
