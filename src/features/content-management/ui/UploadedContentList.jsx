@@ -144,16 +144,36 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
             {/* 썸네일 */}
             <div className="w-24 h-14 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
               {selectedPlatform === 'youtube' ? (
-                <img src={content.thumbnail} alt={content.title} className="w-full h-full object-cover" />
+                <img
+                  src={content.thumbnail}
+                  alt={content.title}
+                  className="w-full h-full object-cover"
+                />
               ) : content.url && content.url.includes("preview.redd.it") ? (
-                <img src={content.url} alt={content.title} className="w-full h-full object-cover" />
+                // Reddit 이미지 썸네일
+                <img
+                  src={content.url}
+                  alt={content.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : content.rd_video_url ? (
+                // Reddit 비디오 (재생 안 되고 첫 프레임만 보여줌)
+                <video
+                  src={content.rd_video_url}
+                  className="w-full h-full object-cover"
+                  playsInline
+                  preload="metadata"
+                />
               ) : (
+                // 썸네일 없으면 subreddit + Reddit 아이콘
                 <div className="w-full h-full flex flex-col items-center justify-center bg-orange-500/20 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 p-2 text-center">
                   <img src={RedditIcon} alt="Reddit Icon" className="w-6 h-6 mb-1" />
                   <span className="font-semibold text-[0.6rem] line-clamp-2">{content.sub_reddit}</span>
                 </div>
               )}
             </div>
+
+
 
             {/* 본문 */}
             <div className="flex-1 min-w-0">
@@ -259,8 +279,8 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
                       key={option.value}
                       onClick={() => handleSortChange(option.value)}
                       className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${sortBy === option.value
-                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                          : 'text-gray-700 dark:text-gray-300'
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-300'
                         } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''
                         }`}
                     >
