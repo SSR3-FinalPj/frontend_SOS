@@ -203,7 +203,8 @@ const GeneratedVideoPreviewModal = ({
             <Button 
               onClick={handleDownload}
               disabled={isDownloading || !!error}
-              className="w-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-emerald-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="brand"
+              className="w-full rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-5 w-5 mr-2" />
               {isDownloading ? '다운로드 중...' : '다운로드'}
@@ -219,7 +220,8 @@ const GeneratedVideoPreviewModal = ({
                   }, 150);
                 }}
                 disabled={!!error}
-                className="w-full bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-yellow-500/30 text-gray-800 dark:text-white rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="brand"
+                className="w-full rounded-xl py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Wand2 className="h-5 w-5 mr-2" />
                 수정하기

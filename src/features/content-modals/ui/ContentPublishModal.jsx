@@ -599,9 +599,8 @@ const ContentPublishModal = ({
           <Button
             onClick={on_publish}
             disabled={!getFormValidation() || is_publishing}
-            className={`flex-1 ${
-              dark_mode ? 'bg-blue-600 hover:bg-blue-700 border-blue-600' : 'bg-blue-600 hover:bg-blue-700 border-blue-600'
-            } text-white rounded-xl disabled:opacity-50`}
+            variant="brand"
+            className="flex-1 rounded-xl font-semibold disabled:opacity-60"
           >
             {is_publishing ? (
               <>

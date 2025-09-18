@@ -3,7 +3,7 @@
  * 날짜별 콘텐츠 폴더를 표시하는 카드
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/common/ui/card';
 import { Badge } from '@/common/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/common/ui/collapsible';
@@ -39,6 +39,41 @@ const ContentFolderCard = ({
   selected_video_id,
   on_video_select
 }) => {
+  const versionGroups = useMemo(() => {
+    if (!folder?.items || folder.items.length === 0) return [];
+
+    const toNumericVersion = (version) => {
+      if (!version) return 1000; // 기본값: v1.0
+      const [majorStr, minorStr] = version.split('.');
+      const major = parseInt(majorStr, 10) || 1;
+      const minor = parseInt(minorStr, 10) || 0;
+      return major * 1000 + minor;
+    };
+
+    const map = new Map();
+    folder.items.forEach((item) => {
+      const versionValue = item?.version || (typeof item?.version_depth === 'number' ? (item.version_depth === 0 ? '1.0' : `1.${item.version_depth}`) : '1.0');
+      if (!map.has(versionValue)) {
+        map.set(versionValue, []);
+      }
+      map.get(versionValue).push(item);
+    });
+
+    return Array.from(map.entries())
+      .map(([version, items]) => ({
+        version,
+        label: `v${version}`,
+        items: items.sort((a, b) => {
+          const aTime = new Date(a.createdAt || a.creationTime || a.created_at || 0).getTime();
+          const bTime = new Date(b.createdAt || b.creationTime || b.created_at || 0).getTime();
+          return bTime - aTime;
+        }),
+        readyCount: items.filter((i) => (i.status || '').toLowerCase() === 'ready' || i.status === 'READY_TO_LAUNCH').length,
+        uploadedCount: items.filter((i) => (i.status || '').toLowerCase() === 'uploaded').length,
+      }))
+      .sort((a, b) => toNumericVersion(a.version) - toNumericVersion(b.version));
+  }, [folder.items]);
+
   return (
     <Collapsible
       open={is_open}
@@ -109,23 +144,51 @@ const ContentFolderCard = ({
           </CardContent>
         </CollapsibleTrigger>
 
-        {/* 폴더 내용 (3열 그리드) */}
+        {/* 폴더 내용 - 버전 그룹 단위로 렌더링 */}
         <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-300 ease-out rounded-b-3xl">
           <div className={`px-6 pb-6 border-t ${
             dark_mode ? 'border-gray-600/30' : 'border-gray-300/30'
           }`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
-              {folder.items.map((item) => (
-                <ContentItemCard
-                  key={item.id || item.temp_id}
-                  item={item}
-                  dark_mode={dark_mode}
-                  uploading_items={uploading_items}
-                  on_preview={on_preview}
-                  on_publish={on_publish}
-                  selected_video_id={selected_video_id}
-                  on_video_select={on_video_select}
-                />
+            <div className="flex flex-col gap-6 pt-6">
+              {versionGroups.map((group) => (
+                <div
+                  key={group.version}
+                  className={`${dark_mode ? 'bg-gray-800/50 border-gray-700/50' : 'bg-white/70 border-gray-200/70'} border rounded-2xl p-5 transition-colors`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className={`text-lg font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+                        {group.label}
+                      </h4>
+                      <p className={`text-sm ${dark_mode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {group.items.length}개 영상 묶음
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={`${dark_mode ? 'bg-yellow-900/40 text-yellow-300' : 'bg-yellow-100 text-yellow-700'} rounded-full px-3 py-1`}>
+                        {group.readyCount}개 론칭 대기
+                      </Badge>
+                      <Badge className={`${dark_mode ? 'bg-green-900/40 text-green-300' : 'bg-green-100 text-green-700'} rounded-full px-3 py-1`}>
+                        {group.uploadedCount}개 완료
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {group.items.map((item) => (
+                      <ContentItemCard
+                        key={item.id || item.temp_id}
+                        item={{ ...item, version: item.version || group.version }}
+                        dark_mode={dark_mode}
+                        uploading_items={uploading_items}
+                        on_preview={on_preview}
+                        on_publish={on_publish}
+                        selected_video_id={selected_video_id}
+                        on_video_select={on_video_select}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

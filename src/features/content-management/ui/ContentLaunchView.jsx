@@ -170,12 +170,12 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
               <div className="flex flex-col">
                 <Button
                   onClick={() => {
-                    // 일반 영상 생성
                     set_is_priority_mode(false);
                     set_is_request_modal_open(true);
                   }}
-                  className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white shadow-lg font-semibold rounded-2xl"
+                  variant="brand"
                   size="lg"
+                  className="shadow-lg font-semibold rounded-2xl"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   새로운 미디어 제작 요청
@@ -192,15 +192,15 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
                 <div className="flex flex-col">
                   <Button
                     onClick={() => {
-                      // 전용 수정 모달 열기 - 선택된 영상 데이터 사용
                       set_edit_target_video(selected_video_data);
                       set_is_edit_modal_open(true);
                     }}
-                    className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 text-orange-600 dark:text-orange-300 shadow-lg font-semibold rounded-2xl"
+                    variant="brand"
                     size="lg"
+                    className="shadow-lg font-semibold rounded-2xl"
                   >
                     <RefreshCw className="w-5 h-5 mr-2" />
-영상 수정하기
+                    영상 수정하기
                   </Button>
                   
                   

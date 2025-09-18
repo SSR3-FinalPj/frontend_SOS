@@ -1,5 +1,6 @@
 import React from 'react';
 import { usePageStore } from '@/common/stores/page-store';
+import { useStatusMonitor } from '@/features/content-management/logic/use-status-monitor';
 
 // FSD Blocks & Features 조합
 import DashboardLayout from '@/containers/DashboardLayout';
@@ -11,6 +12,7 @@ import ProjectHistoryContainer from '@/containers/ProjectHistoryContainer';
  */
 const ContentLaunchPage = () => {
   const { isDarkMode } = usePageStore();
+  useStatusMonitor();
 
   return (
     <DashboardLayout currentView="contentLaunch" title="AI 콘텐츠 론칭">

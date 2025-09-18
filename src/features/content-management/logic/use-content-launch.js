@@ -9,6 +9,7 @@ import { generateTempVideoId, generateCompletedVideoId, generateDummyId } from '
 import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId, getRootNodes, getJobTree } from '@/common/api/api';
 import { uploadToYoutube, uploadToReddit } from '@/common/api/video-api-wrapper';
 import { normalizeResultsTree } from '@/domain/tree/logic/normalize-results-tree';
+import { assignVersionByDepth } from '@/features/content-tree/logic/tree-utils';
 
 /**
  * 백엔드에서 오는 날짜 형식을 안전하게 파싱하는 함수
@@ -169,14 +170,28 @@ export const use_content_launch = create(
             const tree = await getJobTree(rootNode.resultId);
             console.log(`LOG 5: 프로젝트 ID ${rootNode.resultId}의 트리 데이터 수신`, tree);
 
+            if (Array.isArray(tree) && tree.length > 0) {
+              assignVersionByDepth(tree, 0);
+            }
+
             // 트리를 평탄화하고, 각 비디오에 프로젝트 ID를 주입
             function flattenWithProjectId(nodes, parentId = null) {
               if (!nodes) return;
               for (const node of nodes) {
+                const normalizedVersion = node?.version || (typeof node?.version_depth === 'number' ? (node.version_depth === 0 ? '1.0' : `1.${node.version_depth}`) : null);
+                const resultId = node?.result_id || node?.resultId || node?.id;
+                const childCount = Array.isArray(node?.children) ? node.children.length : 0;
+
                 all_videos_with_project_id.push({
                   ...node,
                   poi_id: `project_${rootNode.resultId}_${rootNode.regionCode}`, // 가상의 위치 ID 주입
                   parent_id: parentId, // 부모 ID 설정
+                  version: normalizedVersion,
+                  version_depth: node?.version_depth ?? (parentId == null ? 0 : null),
+                  hasChildren: childCount > 0,
+                  childrenCount: childCount,
+                  id: resultId,
+                  result_id: resultId,
                 });
                 if (node.children && node.children.length > 0) {
                   flattenWithProjectId(node.children, node.resultId);
