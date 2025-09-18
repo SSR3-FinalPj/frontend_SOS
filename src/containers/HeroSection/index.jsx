@@ -105,7 +105,7 @@ export default function HeroSection() {
               scale: 0.95,
               transition: { duration: 0.1 }
             }}
-            className="backdrop-blur-xl bg-gradient-to-r from-blue-500/90 to-purple-500/90 hover:from-blue-500/95 hover:to-purple-500/95 border border-white/30 dark:border-white/20 hover:border-white/40 dark:hover:border-white/30 text-white px-12 py-5 rounded-xl text-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center gap-3"
+            className="px-12 py-5 rounded-xl text-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center gap-3 text-gray-900 dark:text-white bg-gradient-to-r from-[#d7e3ff] to-[#eadfff] border border-[#c2d1ff] hover:from-[#ccdbff] hover:to-[#e2d5ff]"
           >
             지금 시작하기
             <motion.div

@@ -147,7 +147,7 @@ export default function FloatingNav() {
                     transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
                   }}
                   whileTap={{ scale: 0.97 }}
-                  className="backdrop-blur-xl bg-gradient-to-r from-blue-500/90 to-purple-500/90 hover:from-blue-500/95 hover:to-purple-500/95 border border-white/30 dark:border-white/20 hover:border-white/40 dark:hover:border-white/30 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium"
+                  className="px-6 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium text-gray-900 dark:text-white bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30"
                 >
                   시작하기
                 </motion.button>
