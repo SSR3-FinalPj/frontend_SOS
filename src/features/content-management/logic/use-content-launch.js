@@ -208,19 +208,45 @@ export const use_content_launch = create(
           // (예: 업로드 성공 후 API에는 아직 반영되지 않아도, 클라이언트에서 'uploaded' 표시)
           const { pending_videos } = get();
           if (Array.isArray(pending_videos) && pending_videos.length > 0) {
-            // 빠른 조회를 위한 맵 구성
             const overlayMap = new Map();
             pending_videos.forEach(v => {
               const key = String(v.resultId || v.result_id || v.video_id || v.temp_id || v.id || '');
               if (key) overlayMap.set(key, v);
             });
 
+            const normalizeStatus = (value) => (value ? value.toString().toUpperCase() : '');
+            const statusPriority = {
+              FAILED: 5,
+              UPLOADED: 4,
+              COMPLETED: 3,
+              READY: 3,
+              READY_TO_LAUNCH: 3,
+              PROCESSING: 2,
+              PENDING: 1,
+            };
+            const getPriority = (status) => statusPriority[status] ?? 0;
+
             all_videos_with_project_id.forEach(item => {
               const key = String(item.resultId || item.result_id || item.video_id || item.id || '');
               if (!key) return;
+
               const overlay = overlayMap.get(key);
-              if (overlay && overlay.status) {
-                item.status = overlay.status; // 상태 우선 적용: PROCESSING/ready/uploaded 등
+              if (!overlay || !overlay.status) {
+                return;
+              }
+
+              const overlayStatusNormalized = normalizeStatus(overlay.status);
+              const backendStatusNormalized = normalizeStatus(item.status);
+
+              if (!overlayStatusNormalized) {
+                return;
+              }
+
+              const overlayPriority = getPriority(overlayStatusNormalized);
+              const backendPriority = getPriority(backendStatusNormalized);
+
+              if (!backendStatusNormalized || overlayPriority > backendPriority) {
+                item.status = overlay.status; // 더 최신 상태 우선 적용
               }
             });
           }
