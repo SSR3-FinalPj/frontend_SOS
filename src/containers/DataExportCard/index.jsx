@@ -6,6 +6,8 @@ import { ZipWriter } from '@/common/utils/zip';
 import { toCSV, downloadBlob } from '@/common/utils/csv';
 import { format_date_for_api } from '@/domain/dashboard/logic/dashboard-utils';
 import { getYouTubeChannelId, getRedditChannelInfo, getYouTubeUploadsByRange, getRedditUploadsByRange, getTrafficSourceSummary, getYouTubeDailyDemographics } from '@/common/api/api';
+import { usePlatformStore } from '@/domain/platform/logic/store';
+
 import { Button } from '@/common/ui/button';
 import SuccessModal from '@/common/ui/success-modal';
 
@@ -15,6 +17,7 @@ function DataExportCard() {
   const [loading, setLoading] = useState(false);
   const [copying, setCopying] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const { platforms } = usePlatformStore();
 
   const computeRange = () => {
     const end = new Date();
@@ -31,7 +34,7 @@ function DataExportCard() {
       const parts = [];
       parts.push(`기간: ${start} ~ ${end}`);
       // YouTube
-      if (include.yt) {
+      if (include.yt && (platforms.google.connected || platforms.google.linked)) {
         const ytCh = await getYouTubeChannelId().catch(() => null);
         if (ytCh?.channelId) {
           const yt = await getYouTubeUploadsByRange(start, end, ytCh.channelId).catch(() => null);
@@ -47,7 +50,7 @@ function DataExportCard() {
         }
       }
       // Reddit
-      if (include.rd) {
+      if (include.rd && (platforms.reddit.connected || platforms.reddit.linked)) {
         const rdCh = await getRedditChannelInfo().catch(() => null);
         if (rdCh?.channelId) {
           const rd = await getRedditUploadsByRange(start, end, rdCh.channelId).catch(() => null);
@@ -63,7 +66,7 @@ function DataExportCard() {
         }
       }
       // Traffic source
-      if (include.traffic) {
+      if (include.traffic && (platforms.google.connected || platforms.google.linked)) {
         const ts = await getTrafficSourceSummary(start, end).catch(() => null);
         const rows = (ts?.data || []);
         const total = rows.reduce((s, r) => s + (Number(r.views)||0), 0) || 1;
@@ -75,7 +78,7 @@ function DataExportCard() {
         if (rows.length) parts.push(`트래픽 상위: ${top}`);
       }
       // Demographics (optional)
-      if (include.demo) {
+      if (include.demo && (platforms.google.connected || platforms.google.linked)) {
         const demo = await getYouTubeDailyDemographics(start, end).catch(() => null);
         const arr = (demo?.data || demo || []);
         if (arr.length) {
@@ -93,7 +96,10 @@ function DataExportCard() {
       } else {
         const ta = document.createElement('textarea');
         ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
-        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
       }
       setCopySuccess(true);
     } catch (_) {
@@ -110,7 +116,7 @@ function DataExportCard() {
       const zip = new ZipWriter();
       let added = 0;
 
-      if (include.yt) {
+      if (include.yt && (platforms.google.connected || platforms.google.linked)) {
         const ytCh = await getYouTubeChannelId().catch(() => null);
         if (ytCh?.channelId) {
           const yt = await getYouTubeUploadsByRange(start, end, ytCh.channelId).catch(() => null);
@@ -130,7 +136,7 @@ function DataExportCard() {
         }
       }
 
-      if (include.rd) {
+      if (include.rd && (platforms.reddit.connected || platforms.reddit.linked)) {
         const rdCh = await getRedditChannelInfo().catch(() => null);
         if (rdCh?.channelId) {
           const rd = await getRedditUploadsByRange(start, end, rdCh.channelId).catch(() => null);
@@ -149,7 +155,7 @@ function DataExportCard() {
         }
       }
 
-      if (include.traffic) {
+      if (include.traffic && (platforms.google.connected || platforms.google.linked)) {
         const ts = await getTrafficSourceSummary(start, end).catch(() => null);
         const rows = (ts?.data || []).map((t) => ({ source: t.insightTrafficSourceType, views: t.views }));
         const csv = toCSV(rows, ['source','views']);
@@ -159,7 +165,7 @@ function DataExportCard() {
         }
       }
 
-      if (include.demo) {
+      if (include.demo && (platforms.google.connected || platforms.google.linked)) {
         const demo = await getYouTubeDailyDemographics(start, end).catch(() => null);
         const rows = (demo?.data || demo || []).map((d) => ({ date: d.date || d.day, male: d.male, female: d.female }));
         const csv = toCSV(rows, ['date','male','female']);
@@ -182,6 +188,7 @@ function DataExportCard() {
       setLoading(false);
     }
   };
+
 
   return (
     <motion.div

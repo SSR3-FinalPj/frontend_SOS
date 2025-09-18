@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ContentListView as ContentListFeature } from '@/features/content-modals/ui/ContentListView';
 import { getYouTubeChannelId, getRedditChannelInfo, getYouTubeVideosByChannelId, getRedditChannelPosts } from '@/common/api/api';
+import { usePlatformStore } from '@/domain/platform/logic/store';
 
 const ContentListView = () => {
   const [selected_platform, set_selected_platform] = useState('all');
@@ -8,6 +9,7 @@ const ContentListView = () => {
   const [contents, set_contents] = useState([]);
   const [is_loading, set_is_loading] = useState(true);
   const [error, set_error] = useState(null);
+  const { platforms } = usePlatformStore(); // 플랫폼 상태 가져오기
 
   useEffect(() => {
     const fetch_data = async () => {
@@ -19,6 +21,10 @@ const ContentListView = () => {
         let allData = [];
 
         const fetchYoutubeData = async () => {
+          // YouTube 연동 상태 확인
+          if (!platforms.google.connected && !platforms.google.linked) {
+            return [];
+          }
           const channel_info = await getYouTubeChannelId();
           if (channel_info && channel_info.channelId) {
             const video_data = await getYouTubeVideosByChannelId(channel_info.channelId, { sort_by: sort_order });
@@ -28,6 +34,10 @@ const ContentListView = () => {
         };
 
         const fetchRedditData = async () => {
+          // Reddit 연동 상태 확인
+          if (!platforms.reddit.connected && !platforms.reddit.linked) {
+            return [];
+          }
           const channel_info = await getRedditChannelInfo();
           if (channel_info && channel_info.channelTitle) {
             const post_data = await getRedditChannelPosts(channel_info.channelTitle);
@@ -68,7 +78,7 @@ const ContentListView = () => {
     };
 
     fetch_data();
-  }, [selected_platform, sort_order]);
+  }, [selected_platform, sort_order, platforms.google.connected, platforms.reddit.connected]); // 의존성 배열에 플랫폼 상태 추가
 
   return (
     <ContentListFeature 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from 'recharts';
 import { motion } from 'framer-motion';
-import { PieChart as PieChartIcon, Loader2 } from 'lucide-react';
+import { PieChart as PieChartIcon } from 'lucide-react';
 import GlassCard from '@/common/ui/glass-card';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { cn } from '@/common/utils/ui-utils';
@@ -81,8 +81,6 @@ const LoadingSkeleton = () => (
     animate={{ opacity: 1 }}
     transition={{ duration: 0.3 }}
   >
-    <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500 mb-4" />
-    <p className="text-sm text-gray-600 dark:text-gray-300">트래픽 소스 데이터 로딩 중...</p>
   </motion.div>
 );
 

@@ -151,10 +151,18 @@ export const useAnalyticsStore = create(
           const endDate = format_date_for_api(date_range.to);
 
           try {
+            const { platforms } = usePlatformStore.getState();
+
             let channelInfo;
             if (selected_platform === 'youtube') {
+              if (!platforms.google.connected && !platforms.google.linked) {
+                throw new Error('YouTube 계정이 연동되어 있지 않습니다.');
+              }
               channelInfo = await getYouTubeChannelId();
             } else if (selected_platform === 'reddit') {
+              if (!platforms.reddit.connected && !platforms.reddit.linked) {
+                throw new Error('Reddit 계정이 연동되어 있지 않습니다.');
+              }
               channelInfo = await getRedditChannelInfo();
             } else {
               throw new Error('지원하지 않는 플랫폼입니다.');

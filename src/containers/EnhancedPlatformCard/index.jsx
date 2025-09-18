@@ -137,6 +137,8 @@ function EnhancedPlatformCard({ platform, index }) {
                     dataKey="day"
                     axisLine={false}
                     tickLine={false}
+                    interval="preserveStartEnd"
+                    minTickGap={0}
                     tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.7 }}
                   />
                   <YAxis hide />
