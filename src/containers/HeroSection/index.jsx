@@ -36,7 +36,7 @@ export default function HeroSection() {
                 ease: [0.16, 1, 0.3, 1] 
               }}
             >
-              콘텐츠의 진화
+              지역의 미래
             </motion.span>
             <br />
             <motion.span 
@@ -49,7 +49,7 @@ export default function HeroSection() {
                 ease: [0.16, 1, 0.3, 1] 
               }}
             >
-              Meaire
+              Meaire로 그리다
             </motion.span>
           </h1>
           
@@ -63,7 +63,7 @@ export default function HeroSection() {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            세상의 반응을 듣고 완성합니다.
+            지역 홍보의 새로운 기준이 됩니다.
           </motion.p>
           
           <motion.p 
@@ -76,7 +76,7 @@ export default function HeroSection() {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            AI가 실시간 데이터를 분석하여 가장 트렌디한 콘텐츠를 만들고, 모든 SNS 채널의 반응을 하나로 모아 분석합니다.
+            Me-aire는 지자체 및 공공기관 홍보 담당자를 위한 AI 기반 콘텐츠 자동 생성 및 다채널 배포 플랫폼입니다.
           </motion.p>
         </motion.div>
 
