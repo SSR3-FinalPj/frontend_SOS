@@ -189,6 +189,27 @@ export const use_content_launch = create(
           await Promise.all(treePromises);
           console.log("LOG 6: 모든 프로젝트의 영상 목록 (가상 위치 ID 포함) 취합 완료", all_videos_with_project_id);
 
+          // ✅ 로컬 pending_videos 상태를 오버레이하여 UI 상태 일관성 유지
+          // (예: 업로드 성공 후 API에는 아직 반영되지 않아도, 클라이언트에서 'uploaded' 표시)
+          const { pending_videos } = get();
+          if (Array.isArray(pending_videos) && pending_videos.length > 0) {
+            // 빠른 조회를 위한 맵 구성
+            const overlayMap = new Map();
+            pending_videos.forEach(v => {
+              const key = String(v.resultId || v.result_id || v.video_id || v.temp_id || v.id || '');
+              if (key) overlayMap.set(key, v);
+            });
+
+            all_videos_with_project_id.forEach(item => {
+              const key = String(item.resultId || item.result_id || item.video_id || item.id || '');
+              if (!key) return;
+              const overlay = overlayMap.get(key);
+              if (overlay && overlay.status) {
+                item.status = overlay.status; // 상태 우선 적용: PROCESSING/ready/uploaded 등
+              }
+            });
+          }
+
           // 최종적으로 UI가 사용하는 `folders` 형태로 변환 (날짜별 그룹화)
           const groups = {};
           all_videos_with_project_id.forEach(item => {
@@ -639,6 +660,8 @@ export const use_content_launch = create(
           const completedVideos = await getVideoResultId();
           
           if (!completedVideos || completedVideos.length === 0) {
+            // 백엔드 트리만이라도 최신화하여 UI를 갱신
+            await get().fetch_folders();
             return;
           }
           
@@ -649,6 +672,8 @@ export const use_content_launch = create(
           const newCompletedVideos = completedVideos.filter(cv => !allKnownResultIds.has(cv.resultId));
 
           if (newCompletedVideos.length === 0) {
+            // 새로운 완료가 없더라도 트리를 동기화해 최신 상태 표시
+            await get().fetch_folders();
             return;
           }
 
@@ -658,6 +683,8 @@ export const use_content_launch = create(
             .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
           if (processingVideos.length === 0) {
+            // 처리 중 목록이 없더라도 트리를 동기화
+            await get().fetch_folders();
             return;
           }
 
@@ -742,7 +769,7 @@ export const use_content_launch = create(
             });
             
             // 6. UI를 갱신합니다.
-            get().fetch_folders();
+            await get().fetch_folders();
           }
 
           // 7. 남은 '처리 중' 영상이 없으면 폴링을 중지합니다.
@@ -1311,14 +1338,35 @@ export const use_content_launch = create(
           // 성공한 플랫폼이 있으면 아이템 상태를 'uploaded'로 변경
           const successfulPlatforms = results.filter(r => r.success);
           if (successfulPlatforms.length > 0) {
-            set((state) => ({
-              pending_videos: state.pending_videos.map(video => {
+            set((state) => {
+              let found = false;
+              const updated = state.pending_videos.map(video => {
                 const video_id = video.video_id || video.temp_id || video.id;
-                return video_id === item_id 
-                  ? { ...video, status: 'uploaded' }
-                  : video;
-              })
-            }));
+                if (video_id === item_id) {
+                  found = true;
+                  return { ...video, status: 'uploaded' };
+                }
+                return video;
+              });
+
+              // 기존 pending_videos에 없다면 오버레이용 항목을 추가하여 UI 상태를 반영
+              if (!found) {
+                updated.push({
+                  temp_id: `overlay-${Date.now()}`,
+                  id: resultId,
+                  result_id: resultId,
+                  resultId: resultId,
+                  video_id: item_id,
+                  title: item.title || `영상 ${resultId}`,
+                  status: 'uploaded',
+                  created_at: item.created_at || item.createdAt || new Date().toISOString(),
+                  creation_date: (item.created_at || item.createdAt || new Date().toISOString()).toString().split('T')[0],
+                  type: item.type || 'video'
+                });
+              }
+
+              return { pending_videos: updated };
+            });
             
             // 폴더 목록 갱신
             get().fetch_folders();
