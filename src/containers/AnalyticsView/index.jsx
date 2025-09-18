@@ -6,10 +6,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Sun, 
-  Moon, 
-  Loader2,
+import {
+  Sun,
+  Moon,
+  Loader,
   AlertTriangle
 } from 'lucide-react';
 
@@ -17,11 +17,16 @@ import { usePageStore } from '@/common/stores/page-store';
 import { Calendar as CalendarComponent } from '@/common/ui/calendar';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
-import { get_kpi_data_from_api } from '@/domain/dashboard/logic/dashboard-utils';
-import { getYouTubeChannelId, getYouTubeVideosByChannelId, getRedditChannelInfo, getRedditUploadsByRange } from '@/common/api/api';
+import { get_kpi_data_from_api, format_date_for_api } from '@/domain/dashboard/logic/dashboard-utils';
+import {
+  getYouTubeChannelId,
+  getYouTubeVideosByChannelId,
+  getRedditChannelInfo,
+  getRedditUploadsByRange
+} from '@/common/api/api';
 import AnalyticsFilterSidebar from '@/containers/AnalyticsFilterSidebar/index';
 import Notification from '@/common/ui/notification';
-import AudienceDemoContainer from '@/containers/AudienceDemoContainer/index'; // ✅ 수정
+import AudienceDemoContainer from '@/containers/AudienceDemoContainer/index';
 import TrafficSourceChart from '@/common/ui/TrafficSourceChart';
 import UploadedContentList from '@/features/content-management/ui/UploadedContentList';
 import IntegratedAnalyticsView from '@/containers/IntegratedAnalyticsView';
@@ -55,30 +60,47 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
     const fetchContentData = async () => {
       if (!date_range?.from || !date_range?.to) return;
 
+      // 플랫폼 연결 상태 확인
+      const isYoutubeConnected = platforms.google.connected;
+      const isRedditConnected = platforms.reddit.connected;
+
       try {
         const start = new Date(date_range.from);
         const end = new Date(date_range.to);
 
         if (selected_platform === "youtube") {
+          if (!isYoutubeConnected) {
+            setContentData([]);
+            return;
+          }
           const channelInfo = await getYouTubeChannelId();
           if (channelInfo?.channelId) {
             const videoData = await getYouTubeVideosByChannelId(channelInfo.channelId, {
               sortBy: "latest",
               limit: 50,
             });
+            const start = new Date(date_range.from);
+            const end = new Date(date_range.to);
+            const startStr = format_date_for_api(start);
+            const endStr = format_date_for_api(end);
             const filteredVideos =
               videoData.videos?.filter((video) => {
-                const publishedAt = new Date(video.publishedAt);
-                return publishedAt >= start && publishedAt <= end;
+                if (!video?.publishedAt) return false;
+                const pubLocalStr = format_date_for_api(new Date(video.publishedAt));
+                return pubLocalStr >= startStr && pubLocalStr <= endStr;
               }) || [];
             setContentData(filteredVideos);
           }
         } else if (selected_platform === "reddit") {
+          if (!isRedditConnected) {
+            setContentData([]);
+            return;
+          }
           const channelInfo = await getRedditChannelInfo();
           if (channelInfo?.channelId) {
             const postData = await getRedditUploadsByRange(
-              date_range.from.toISOString().slice(0, 10),
-              date_range.to.toISOString().slice(0, 10),
+              format_date_for_api(date_range.from),
+              format_date_for_api(date_range.to),
               channelInfo.channelId
             );
             setContentData(postData.posts || []);
@@ -91,7 +113,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
     };
 
     fetchContentData();
-  }, [selected_platform, date_range]);
+  }, [selected_platform, date_range, platforms.google.connected, platforms.reddit.connected]);
 
   // 요약 데이터 가져오기
   useEffect(() => {
@@ -137,8 +159,8 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                   {view_type === "integrated"
                     ? "비교 분석"
                     : selected_platform === "youtube"
-                    ? "유튜브 상세 분석"
-                    : "레딧 상세 분석"}
+                      ? "유튜브 상세 분석"
+                      : "레딧 상세 분석"}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300">
                   {view_type === "integrated"
@@ -164,13 +186,21 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
         </header>
 
         {/* 메인 */}
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto p-6 relative z-10">
+          {/* ✅ 메인 콘텐츠 로딩 오버레이 */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 
+                            flex flex-col justify-center items-center gap-6 
+                            backdrop-blur-sm z-20">
+              <Loader className="w-12 h-12 animate-spin text-blue-500 dark:text-blue-400" />
+              <p className="text-gray-600 dark:text-gray-400 text-base font-medium">
+                데이터를 불러오는 중...
+              </p>
+            </div>
+          )}
+
           {view_type === "integrated" ? (
             <IntegratedAnalyticsView />
-          ) : platforms.google.loading || platforms.reddit.loading ? (
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-8 h-8 animate-spin text-brand-secondary-500" />
-            </div>
           ) : !isSelectedPlatformConnected ? (
             <div className="flex flex-col items-center justify-center h-full text-center rounded-2xl p-8 shadow-inner bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 border border-gray-200/80 dark:border-gray-700/60">
               <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
@@ -187,9 +217,9 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
               </button>
             </div>
           ) : (
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 gap-6">
               {/* KPI 카드 */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {kpiData.map((kpi, index) => {
                   const Icon = kpi.icon;
                   return (
@@ -198,43 +228,53 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-lg p-3 shadow-sm relative`}
+                      className={`${kpi.bgColor} border border-white/30 dark:border-white/10 rounded-xl p-4 shadow-sm flex flex-col relative`}
                     >
+                      {/* 로딩 처리 */}
                       {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
-                          <Loader2 className="w-6 h-6 animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+                          <Loader className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
                         </div>
                       )}
-                      <div className="flex items-center justify-between mb-2">
+
+                      {/* 상단: 라벨 + 아이콘 */}
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
+                          {kpi.label}
+                        </p>
                         <div
                           className={`w-8 h-8 rounded-md ${kpi.iconBg} flex items-center justify-center`}
                         >
                           <Icon className="w-4 h-4" />
                         </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{kpi.label}</p>
-                        <p className="text-lg font-semibold mb-1">
-                          {isLoading ? "로딩 중..." : kpi.value}
+
+                      {/* 중앙: 숫자 */}
+                      <p className="text-4xl font-bold text-gray-900 dark:text-white mb-1 text-center">
+                        {isLoading ? "..." : kpi.value}
+                      </p>
+
+                      {/* 하단: 최고/최저 */}
+                      {!isLoading && kpi.extra && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                          {kpi.extra}
                         </p>
-                        {!isLoading && kpi.extra && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{kpi.extra}</p>
-                        )}
-                        {error && (
-                          <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                            {error.message || "데이터 로딩 실패"}
-                          </p>
-                        )}
-                      </div>
+                      )}
+                      {error && (
+                        <p className="text-sm text-red-500 dark:text-red-400 mt-1 text-center">
+                          {error.message || "데이터 로딩 실패"}
+                        </p>
+                      )}
                     </motion.div>
                   );
                 })}
               </div>
 
+
               {/* 콘텐츠 섹션 */}
               <div className="grid grid-cols-2 gap-6">
                 <UploadedContentList
-                  contentData={contentData} 
+                  contentData={contentData}
                   startDate={date_range?.from}
                   endDate={date_range?.to}
                   onVideoCardClick={onVideoCardClick}
@@ -282,5 +322,5 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
       )}
     </div>
   );
-};  
+};
 export default DetailedAnalyticsView;

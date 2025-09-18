@@ -94,58 +94,25 @@ const ContentPreviewModal = ({
             className="w-full h-full"
           ></iframe>
         ) : item.platform === 'Reddit' ? (
-          <div
-            className={`w-full h-full flex flex-col ${dark_mode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black'
-              }`}
-          >
-            {/* 🔹 Reddit 비디오 영역 (있으면 보여주고, 없으면 건너뜀) */}
-            {redditContent?.rd_video_url && (
-              <div className="w-full aspect-video bg-black">
-                <video
-                  src={redditContent.rd_video_url}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            {/* 🔹 Reddit 텍스트 영역 */}
-            <div className="p-6 overflow-y-auto flex-1">
-              {loading ? (
-                <div className="flex flex-col justify-center items-center min-h-[200px] gap-4 mt-6">
-                  <Loader className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
-                  <p className="text-gray-500 dark:text-gray-400">Reddit 게시글 불러오는 중...</p>
-                </div>
-              ) : redditContent ? (
-                <div>
-                  <h3 className="text-lg font-bold">{redditContent.title}</h3>
-                  <p className="text-sm text-gray-400">
-                    in r/{redditContent.sub_reddit} on {formatDate(redditContent.upload_date)}
-                  </p>
-                  <hr className="my-4" />
-                  <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words">
-                    {redditContent.text && redditContent.text.trim() !== "" ? (
-                      redditContent.text.includes("<") ? (
-                        // HTML 태그 포함된 경우
-                        <div dangerouslySetInnerHTML={{ __html: redditContent.text }} />
-                      ) : (
-                        // 순수 텍스트인 경우
-                        <p>{redditContent.text}</p>
-                      )
-                    ) : (
-                      <span className="text-gray-400 italic">본문 없음</span>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p>Could not load Reddit post.</p>
-              )}
+          loading ? (
+            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+              <Loader className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
             </div>
-          </div>
+          ) : redditContent?.rd_video_url ? (
+            <video
+              src={redditContent.rd_video_url}
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-400">
+              (Video not available)
+            </div>
+          )
         ) : null}
 
         {/* 닫기 버튼 */}
@@ -174,6 +141,17 @@ const ContentPreviewModal = ({
               <span>{formatDate(item.uploadDate)}</span>
             </div>
           </DialogDescription>
+
+          {/* Reddit 본문 내용 */}
+          {item.platform === 'Reddit' && redditContent?.text && (
+            <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words mt-4 text-gray-700 dark:text-gray-300">
+              {redditContent.text.includes("<") ? (
+                <div dangerouslySetInnerHTML={{ __html: redditContent.text }} />
+              ) : (
+                <p>{redditContent.text}</p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 w-40 flex-shrink-0">
@@ -232,9 +210,15 @@ const ContentPreviewModal = ({
   );
 
   const detailedView = (
-    <DialogContent className={`max-w-6xl w-[90vw] ${dark_mode ? 'bg-gray-900/90 border-gray-700/20' : 'bg-white/90 border-gray-300/20'} backdrop-blur-2xl rounded-3xl shadow-xl border p-8 space-y-6`}>
-      <div className="grid grid-cols-3 gap-8">
-        <div className="col-span-2 space-y-4">
+    <DialogContent
+      className={`max-w-6xl w-[90vw] h-[90vh] ${dark_mode
+          ? 'bg-gray-900/90 border-gray-700/20'
+          : 'bg-white/90 border-gray-300/20'
+        } backdrop-blur-2xl rounded-3xl shadow-xl border p-8 flex flex-col`}
+    >
+      <div className="grid grid-cols-3 gap-8 flex-1 min-h-0">
+        {/* Left Column: Media */}
+        <div className="col-span-2 flex flex-col min-h-0">
           <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
             {item.platform === 'YouTube' ? (
               <iframe
@@ -246,87 +230,78 @@ const ContentPreviewModal = ({
                 className="w-full h-full"
               ></iframe>
             ) : item.platform === 'Reddit' ? (
-              <div className={`w-full h-full flex flex-col ${dark_mode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black'}`}>
-                <div className="w-full aspect-video bg-black">
-                  {redditContent?.rd_video_url ? (
-                    <video
-                      src={redditContent.rd_video_url}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      controls
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No video available
-                    </div>
-                  )}
+              loading ? (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                  <Loader className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
                 </div>
-                {/* 🔹 Reddit 텍스트 영역 */}
-                <div className="p-6 overflow-y-auto flex-1">
-                  {loading ? (
-                    <div className="flex flex-col justify-center items-center min-h-[200px] gap-4 mt-6">
-                      <Loader className="w-8 h-8 animate-spin text-blue-500 dark:text-blue-400" />
-                      <p className="text-gray-500 dark:text-gray-400">Reddit 게시글 불러오는 중...</p>
-                    </div>
-                  ) : redditContent ? (
-                    <div>
-                      <h3 className="text-lg font-bold">{redditContent.title}</h3>
-                      <p className="text-sm text-gray-400">
-                        in r/{redditContent.sub_reddit} on {formatDate(redditContent.upload_date)}
-                      </p>
-                      <hr className="my-4" />
-                      <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words">
-                        {redditContent.text && redditContent.text.trim() !== "" ? (
-                          redditContent.text.includes("<") ? (
-                            // HTML 태그 포함된 경우
-                            <div dangerouslySetInnerHTML={{ __html: redditContent.text }} />
-                          ) : (
-                            // 순수 텍스트인 경우
-                            <p>{redditContent.text}</p>
-                          )
-                        ) : (
-                          <span className="text-gray-400 italic">본문 없음</span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <p>Could not load Reddit post.</p>
-                  )}
+              ) : redditContent?.rd_video_url ? (
+                <video
+                  src={redditContent.rd_video_url}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-400">
+                  (Video not available)
                 </div>
-              </div>
+              )
             ) : null}
+
+            {/* 닫기 버튼 */}
+            <DialogClose asChild>
+              <button
+                type="button"
+                className="absolute top-3 right-3 z-20 rounded-full p-1.5 bg-black/50 text-white/70 hover:bg-black/70 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-white"
+                aria-label="닫기"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </DialogClose>
           </div>
         </div>
-        <div className="col-span-1">
-          <DialogClose asChild>
-            <button
-              type="button"
-              className="absolute top-3 right-3 z-20 rounded-full p-1.5 bg-black/50 text-white/70 hover:bg-black/70 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="닫기"
-            >
-              <XIcon className="h-5 w-5" />
-            </button>
-          </DialogClose>
-          <DialogTitle asChild>
-            <h2 className={`text-2xl font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>{item.title}</h2>
-          </DialogTitle>
-          <DialogDescription asChild>
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2">
-              <Clock className="w-4 h-4" />
-              <span>{formatDate(item.uploadDate)}</span>
+
+        {/* Right Column: Info & Analysis */}
+        <div className="col-span-1 flex flex-col min-h-0">
+          <div className="flex-shrink-0">
+            <DialogTitle asChild>
+              <h2 className={`text-2xl font-bold ${dark_mode ? 'text-white' : 'text-gray-900'}`}>
+                {item.title}
+              </h2>
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2">
+                <Clock className="w-4 h-4" />
+                <span>{formatDate(item.uploadDate)}</span>
+              </div>
+            </DialogDescription>
+          </div>
+
+          {/* Reddit Text Body */}
+          {item.platform === 'Reddit' && redditContent?.text && (
+            <div className="flex-shrink-0 mt-4 p-4 bg-gray-100/80 dark:bg-gray-800/80 rounded-lg max-h-48 overflow-y-auto">
+              <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words text-gray-800 dark:text-gray-200">
+                {redditContent.text.includes('<') ? (
+                  <div dangerouslySetInnerHTML={{ __html: redditContent.text }} />
+                ) : (
+                  <p>{redditContent.text}</p>
+                )}
+              </div>
             </div>
-          </DialogDescription>
-          <div className="mt-6">
-            {item.platform === 'YouTube' && <CommentAnalysisView data={commentAnalysisData} />}
-            {item.platform === 'Reddit' && <CommentAnalysisView data={commentAnalysisData} />}
+          )}
+
+          {/* Comment Analysis */}
+          <div className="flex-1 mt-6 min-h-0">
+            <CommentAnalysisView data={commentAnalysisData} />
           </div>
         </div>
       </div>
     </DialogContent>
   );
+
 
   return (
     <Dialog open={is_open} onOpenChange={(open) => !open && on_close()}>

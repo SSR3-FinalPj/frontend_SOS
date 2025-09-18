@@ -146,6 +146,31 @@ export const get_kpi_data_from_api = (selectedPlatform, summaryData) => {
 /* ---------------- 플랫폼 카드 데이터 ---------------- */
 
 export const get_platform_data = (youtubeData, redditData) => {
+  // 최근 7일(로컬) 날짜 배열 생성: oldest -> newest
+  const getLastNDays = (n) => {
+    const days = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      days.push(format_date_for_api(d));
+    }
+    return days;
+  };
+
+  // 일자 누락을 0으로 채워 정규화
+  const normalizeDaily = (daily, mappings) => {
+    const map = new Map(Array.isArray(daily) ? daily.map((it) => [it.date, it]) : []);
+    return getLastNDays(7).map((dateStr) => {
+      const src = map.get(dateStr) || {};
+      const out = { day: dateStr.substring(5) };
+      for (const { from, to } of mappings) {
+        out[to] = Number(src[from] || 0);
+      }
+      return out;
+    });
+  };
   // --- YouTube ---
   const totalViews = youtubeData?.total?.total_view_count || 0;
   const totalLikes = youtubeData?.total?.total_like_count || 0;
@@ -173,13 +198,10 @@ export const get_platform_data = (youtubeData, redditData) => {
       likes: { value: totalLikes.toLocaleString(), label: "좋아요", icon: Heart },
       comments: { value: totalComments.toLocaleString(), label: "댓글", icon: MessageSquare }
     },
-    chartData: Array.isArray(youtubeData?.daily)
-      ? youtubeData.daily.map(v => ({
-        day: v.date?.substring(5) || "",
-        views: v.view_count || 0,
-        likes: v.like_count || 0
-      }))
-      : [],
+    chartData: normalizeDaily(youtubeData?.daily, [
+      { from: 'view_count', to: 'views' },
+      { from: 'like_count', to: 'likes' },
+    ]),
     chartMetrics: {
       primary: { key: "views", label: "조회수", color: "#dc2626" },
       secondary: { key: "likes", label: "좋아요", color: "#7c3aed" }
@@ -214,13 +236,10 @@ export const get_platform_data = (youtubeData, redditData) => {
       comments: { value: totalCommentsReddit.toLocaleString(), label: "댓글", icon: MessageSquare },
       upvoteRatio: { value: `${(avgRatio * 100).toFixed(1)}%`, label: "업보트 비율", icon: BarChart3 }
     },
-    chartData: Array.isArray(redditData?.daily)
-      ? redditData.daily.map(p => ({
-        day: p.date?.substring(5) || "",
-        upvotes: p.upvote_count || 0,
-        comments: p.comment_count || 0
-      }))
-      : [],
+    chartData: normalizeDaily(redditData?.daily, [
+      { from: 'upvote_count', to: 'upvotes' },
+      { from: 'comment_count', to: 'comments' },
+    ]),
     chartMetrics: {
       primary: { key: "upvotes", label: "업보트", color: "#ea580c" },
       secondary: { key: "comments", label: "댓글", color: "#16a34a" }
