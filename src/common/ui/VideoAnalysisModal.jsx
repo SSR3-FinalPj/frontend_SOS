@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle, DialogDescription } from '@/common/ui/dialog';
-import { X as XIcon, Loader2 } from 'lucide-react';
+import { X as XIcon, Loader } from 'lucide-react';
 import { 
   getCommentAnalysis, 
   getRedditCommentAnalysis, 
@@ -119,7 +119,7 @@ const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
               <div className="relative w-full aspect-video max-h-[400px] bg-black rounded-xl overflow-hidden flex items-center justify-center">
                 {loading ? (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                    <Loader className="w-8 h-8 animate-spin text-gray-400" />
                   </div>
                 ) : platform === 'youtube' ? (
                   youtubeEmbedUrl ? (
@@ -216,7 +216,7 @@ const VideoAnalysisModal = ({ contentId, title, platform, onClose }) => {
                 <div className="flex-1 min-h-0">
                   {loading ? (
                     <div className="flex justify-center items-center h-full py-10">
-                      <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                      <Loader className="w-8 h-8 animate-spin text-gray-400" />
                       </div>
                   ) : error ? (
                     <div className="text-center text-red-500">오류: {error}</div>
