@@ -146,41 +146,47 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
 
             {/* 본문 */}
             <div className="flex-1 min-w-0">
-              <h4 className="text-base font-bold text-gray-900 dark:text-white truncate">{content.title}</h4>
-              <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-gray-400">
+              {/* 제목 강조 */}
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                {content.title}
+              </h4>
+
+              {/* 조회수/좋아요/댓글 → 서브 정보 */}
+              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {selectedPlatform === 'youtube' ? (
                   <>
                     <div className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-3 h-3 text-gray-400" />
                       <span>{Number(content.statistics?.viewCount || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
+                      <Heart className="w-3 h-3 text-gray-400" />
                       <span>{Number(content.statistics?.likeCount || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <MessageSquare className="w-4 h-4" />
+                      <MessageSquare className="w-3 h-3 text-gray-400" />
                       <span>{Number(content.statistics?.commentCount || 0).toLocaleString()}</span>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4" />
+                      <TrendingUp className="w-3 h-3 text-gray-400" />
                       <span>{Number(content.upvote || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <MessageSquare className="w-4 h-4" />
+                      <MessageSquare className="w-3 h-3 text-gray-400" />
                       <span>{Number(content.comment_count || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4" />
+                      <Star className="w-3 h-3 text-gray-400" />
                       <span>{Number(content.score || 0).toLocaleString()}</span>
                     </div>
                   </>
                 )}
               </div>
             </div>
+
 
             {/* 날짜 */}
             <div className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 ml-auto">
@@ -220,31 +226,31 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
             {selectedPlatform === 'youtube' ? (
               <>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded bg-gray-400"></span>
+                  <Eye className="w-3 h-3 text-gray-400" />
                   <span className="text-gray-500 font-semibold">{'≤100'}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded bg-yellow-500"></span>
+                  <Eye className="w-3 h-3 text-yellow-500" />
                   <span className="text-yellow-600 font-semibold">{'≤1000'}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded bg-green-500"></span>
+                  <Eye className="w-3 h-3 text-green-500" />
                   <span className="text-green-600 font-semibold">{'<1000'}</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded bg-gray-400"></span>
+                  <TrendingUp className="w-3 h-3 text-gray-400" />
                   <span className="text-gray-500 font-semibold">{'≤10'}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded bg-yellow-500"></span>
+                  <TrendingUp className="w-3 h-3 text-yellow-500" />
                   <span className="text-yellow-600 font-semibold">{'≤50'}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded bg-green-500"></span>
-                  <span className="text-green-600 font-semibold">{'>50'}</span>
+                  <TrendingUp className="w-3 h-3 text-green-500" />
+                  <span className="text-green-600 font-semibold">{'<50'}</span>
                 </div>
               </>
             )}
@@ -267,13 +273,11 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
                   <button
                     key={option.value}
                     onClick={() => handleSortChange(option.value)}
-                    className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                      sortBy === option.value
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                        : 'text-gray-700 dark:text-gray-300'
-                    } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${
-                      option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''
-                    }`}
+                    className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${sortBy === option.value
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                      } ${option.value === sortOptions[0].value ? 'rounded-t-lg' : ''} ${option.value === sortOptions[sortOptions.length - 1].value ? 'rounded-b-lg' : ''
+                      }`}
                   >
                     {option.label}
                   </button>
