@@ -44,22 +44,30 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
     if (!topPerformer || !worstPerformer || topPerformer === worstPerformer) return [];
     const topValue = selectedPlatform === 'youtube' ? (topPerformer.statistics?.viewCount || 0) : (topPerformer.upvotes || topPerformer.score || 0);
     const worstValue = selectedPlatform === 'youtube' ? (worstPerformer.statistics?.viewCount || 0) : (worstPerformer.upvotes || worstPerformer.score || 0);
-    
+
     return [
-      { name: worstPerformer.title, value: worstValue, color: '#ef4444' },
       { name: topPerformer.title, value: topValue, color: '#22c55e' },
+      { name: worstPerformer.title, value: worstValue, color: '#ef4444' },
     ];
   }, [topPerformer, worstPerformer, selectedPlatform]);
 
-  // 썸네일 URL 추출 (로직 강화)
+  // 썸네일 URL 추출
   const thumbnailUrl = React.useMemo(() => {
     if (!topPerformer) return null;
+
     if (selectedPlatform === 'youtube') {
-      return topPerformer.snippet?.thumbnails?.medium?.url || topPerformer.snippet?.thumbnails?.default?.url;
-    }
-    if (topPerformer.thumbnail && topPerformer.thumbnail.startsWith('http')) {
       return topPerformer.thumbnail;
     }
+
+    if (selectedPlatform === 'reddit') {
+      if (topPerformer.url && topPerformer.url.includes('preview.redd.it')) {
+        return topPerformer.url;
+      }
+      if (topPerformer.rd_video_url) {
+        return topPerformer.rd_video_url; // 썸네일 대신 영상 미리보기
+      }
+    }
+
     return null;
   }, [topPerformer, selectedPlatform]);
 
@@ -85,11 +93,6 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
     return tick;
   };
 
-  // 썸네일 디버깅을 위한 콘솔 로그
-  if (topPerformer) {
-    console.log("Top Performer Data for Thumbnail: ", JSON.stringify(topPerformer, null, 2));
-  }
-
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
       <GlassCard className="p-6 min-h-[400px] flex flex-col" hover={false}>
@@ -111,21 +114,60 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
             <div className="relative p-3 rounded-xl bg-gradient-to-r from-yellow-100/50 to-orange-100/50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200/50 dark:border-yellow-800/50 flex gap-4 items-center">
               {thumbnailUrl ? (
                 <div className="w-16 h-16 rounded-lg bg-black overflow-hidden flex-shrink-0">
-                  <img src={thumbnailUrl} alt={topPerformer.title} className="w-full h-full object-cover" />
+                  {selectedPlatform === "reddit" ? (
+                    topPerformer.rd_video_url ? (
+                      <video
+                        src={topPerformer.rd_video_url}
+                        className="w-full h-full object-cover"
+                        playsInline
+                        preload="metadata"
+                        muted
+                        controls={false}
+                        crossOrigin="anonymous"
+                      />
+                    ) : topPerformer.url?.includes("i.redd.it") || topPerformer.url?.includes("preview.redd.it") ? (
+                      <img
+                        src={topPerformer.url}
+                        alt={topPerformer.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-300 text-xs text-gray-600">
+                        No Thumbnail
+                      </div>
+                    )
+                  ) : (
+                    <img
+                      src={topPerformer.thumbnail}
+                      alt={topPerformer.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
+
               ) : (
                 <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
               )}
+
               <div className="flex-1 min-w-0">
                 <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-400 uppercase tracking-wide">🏆 TOP CONTENT</span>
                 <h4 className="text-base font-bold text-gray-800 dark:text-white truncate mt-1">{topPerformer.title}</h4>
               </div>
+
               <div className="flex-shrink-0 text-right">
                 <div className={`flex items-center gap-1.5 text-lg font-bold ${selectedPlatform === 'youtube' ? 'text-red-500' : 'text-orange-500'}`}>
                   {selectedPlatform === 'youtube' ? <Eye className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
-                  <span>{format_number_korean(selectedPlatform === 'youtube' ? topPerformer.statistics?.viewCount || 0 : topPerformer.upvotes || topPerformer.score || 0)}</span>
+                  <span>
+                    {format_number_korean(
+                      selectedPlatform === 'youtube'
+                        ? topPerformer.statistics?.viewCount || 0
+                        : topPerformer.upvotes || topPerformer.score || 0
+                    )}
+                  </span>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{selectedPlatform === 'youtube' ? '조회수' : '업보트'}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {selectedPlatform === 'youtube' ? '조회수' : '업보트'}
+                </span>
               </div>
             </div>
           ) : (
@@ -155,7 +197,7 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
           {/* 성과 비교 차트 */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-               <GitCompareArrows className="w-4 h-4" />
+              <GitCompareArrows className="w-4 h-4" />
               최고 vs 최저 성과 비교
             </h4>
             <div className="w-full h-24">
@@ -183,4 +225,4 @@ const PerformanceHighlight = ({ contentData, summaryData, selectedPlatform }) =>
   );
 };
 
-export default React.memo(PerformanceHighlight);
+export default PerformanceHighlight;
