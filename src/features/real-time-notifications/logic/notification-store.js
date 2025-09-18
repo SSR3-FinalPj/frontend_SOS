@@ -178,7 +178,14 @@ export const useNotificationStore = create(
           
           use_content_launch.getState().transition_to_ready(temp_id);
         }
-        
+        // 항상 폴더 최신화 시도 (ID가 없거나 매칭 실패해도 즉시 동기화)
+        setTimeout(() => {
+          try {
+            use_content_launch.getState().fetch_folders();
+          } catch (e) {
+            // no-op
+          }
+        }, 10);
         
       }).catch(error => {
         console.error('use_content_launch 스토어 연동 실패:', error);
