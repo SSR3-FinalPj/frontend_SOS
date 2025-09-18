@@ -26,24 +26,24 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
       switch (sortType) {
         case 'views':
           return selectedPlatform === 'youtube'
-            ? (b.statistics?.viewCount || 0) - (a.statistics?.viewCount || 0)
-            : (b.upvote || b.score || 0) - (a.upvote || a.score || 0);
+            ? ((b.statistics?.viewCount ?? b.viewCount ?? 0) - (a.statistics?.viewCount ?? a.viewCount ?? 0))
+            : ((b.upvote || b.score || 0) - (a.upvote || a.score || 0));
         case 'likes':
           return selectedPlatform === 'youtube'
-            ? (b.statistics?.likeCount || 0) - (a.statistics?.likeCount || 0)
-            : (b.upvote || 0) - (a.upvote || 0);
+            ? ((b.statistics?.likeCount ?? b.likeCount ?? 0) - (a.statistics?.likeCount ?? a.likeCount ?? 0))
+            : ((b.upvote || 0) - (a.upvote || 0));
         case 'comments':
           return selectedPlatform === 'youtube'
-            ? (b.statistics?.commentCount || 0) - (a.statistics?.commentCount || 0)
-            : (b.comment_count || 0) - (a.comment_count || 0);
+            ? ((b.statistics?.commentCount ?? b.commentCount ?? 0) - (a.statistics?.commentCount ?? a.commentCount ?? 0))
+            : ((b.comment_count || 0) - (a.comment_count || 0));
         case 'oldest':
           return selectedPlatform === 'youtube'
-            ? new Date(a.publishedAt) - new Date(b.publishedAt)
+            ? new Date(a.publishedAt || a.published_at) - new Date(b.publishedAt || b.published_at)
             : new Date(a.upload_date + 'T00:00:00') - new Date(b.upload_date + 'T00:00:00');
         case 'latest':
         default:
           return selectedPlatform === 'youtube'
-            ? new Date(b.publishedAt) - new Date(a.publishedAt)
+            ? new Date(b.publishedAt || b.published_at) - new Date(a.publishedAt || a.published_at)
             : new Date(b.upload_date + 'T00:00:00') - new Date(a.upload_date + 'T00:00:00');
       }
     });
@@ -88,12 +88,12 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
       <div className="space-y-3 overflow-y-auto max-h-[280px] min-h-48 custom-scrollbar pr-2">
         {items.map((content, index) => (
           <div
-            key={content.videoId || content.post_id || index}
+            key={content.videoId || content.video_id || content.post_id || index}
             className="flex items-center gap-4 p-3 bg-gray-100/80 dark:bg-white/5 border border-gray-300/40 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-200/60 dark:hover:bg-white/10 transition-colors duration-200"
             onClick={() => {
               if (selectedPlatform === 'youtube') {
                 onVideoCardClick({
-                  contentId: content.videoId,
+                  contentId: content.videoId || content.video_id || content.id,
                   title: content.title,
                   platform: 'youtube',
                 });
@@ -131,7 +131,7 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
             {/* 썸네일 */}
             <div className="w-24 h-14 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
               {selectedPlatform === 'youtube' ? (
-                <img src={content.thumbnail} alt={content.title} className="w-full h-full object-cover" />
+                <img src={content.thumbnail || content.thumbnailUrl || content.thumbnail_url} alt={content.title} className="w-full h-full object-cover" />
               ) : content.url && content.url.includes('preview.redd.it') ? (
                 <img src={content.url} alt={content.title} className="w-full h-full object-cover" />
               ) : content.rd_video_url ? (
@@ -157,15 +157,15 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
                   <>
                     <div className="flex items-center gap-1">
                       <Eye className="w-3 h-3 text-gray-400" />
-                      <span>{Number(content.statistics?.viewCount || 0).toLocaleString()}</span>
+                      <span>{Number((content.statistics?.viewCount ?? content.viewCount ?? 0)).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Heart className="w-3 h-3 text-gray-400" />
-                      <span>{Number(content.statistics?.likeCount || 0).toLocaleString()}</span>
+                      <span>{Number((content.statistics?.likeCount ?? content.likeCount ?? 0)).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <MessageSquare className="w-3 h-3 text-gray-400" />
-                      <span>{Number(content.statistics?.commentCount || 0).toLocaleString()}</span>
+                      <span>{Number((content.statistics?.commentCount ?? content.commentCount ?? 0)).toLocaleString()}</span>
                     </div>
                   </>
                 ) : (
@@ -191,7 +191,7 @@ const UploadedContentList = ({ contentData = [], startDate, endDate, onVideoCard
             {/* 날짜 */}
             <div className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 ml-auto">
               {selectedPlatform === 'youtube'
-                ? new Date(content.publishedAt).toLocaleDateString('ko-KR')
+                ? new Date(content.publishedAt || content.published_at).toLocaleDateString('ko-KR')
                 : new Date(content.upload_date + 'T00:00:00').toLocaleDateString('ko-KR')}
             </div>
           </div>

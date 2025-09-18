@@ -17,7 +17,7 @@ import { usePageStore } from '@/common/stores/page-store';
 import { Calendar as CalendarComponent } from '@/common/ui/calendar';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { usePlatformStore } from '@/domain/platform/logic/store';
-import { get_kpi_data_from_api } from '@/domain/dashboard/logic/dashboard-utils';
+import { get_kpi_data_from_api, format_date_for_api } from '@/domain/dashboard/logic/dashboard-utils';
 import {
   getYouTubeChannelId,
   getYouTubeVideosByChannelId,
@@ -79,10 +79,15 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
               sortBy: "latest",
               limit: 50,
             });
+            const start = new Date(date_range.from);
+            const end = new Date(date_range.to);
+            const startStr = format_date_for_api(start);
+            const endStr = format_date_for_api(end);
             const filteredVideos =
               videoData.videos?.filter((video) => {
-                const publishedAt = new Date(video.publishedAt);
-                return publishedAt >= start && publishedAt <= end;
+                if (!video?.publishedAt) return false;
+                const pubLocalStr = format_date_for_api(new Date(video.publishedAt));
+                return pubLocalStr >= startStr && pubLocalStr <= endStr;
               }) || [];
             setContentData(filteredVideos);
           }
@@ -94,8 +99,8 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
           const channelInfo = await getRedditChannelInfo();
           if (channelInfo?.channelId) {
             const postData = await getRedditUploadsByRange(
-              date_range.from.toISOString().slice(0, 10),
-              date_range.to.toISOString().slice(0, 10),
+              format_date_for_api(date_range.from),
+              format_date_for_api(date_range.to),
               channelInfo.channelId
             );
             setContentData(postData.posts || []);
