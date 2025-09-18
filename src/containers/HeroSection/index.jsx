@@ -63,7 +63,7 @@ export default function HeroSection() {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            지역 홍보의 새로운 기준 Meaire
+            지역 홍보 영상, 클릭으로 완성.
           </motion.p>
           
           <motion.p 
@@ -76,7 +76,7 @@ export default function HeroSection() {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            Me-aire는 지자체 및 공공기관 홍보 담당자를 위한 AI 기반 콘텐츠 자동 생성 및 다채널 배포 플랫폼입니다.
+            Meaire는 지자체 및 공공기관 홍보 담당자를 위한 AI 기반 콘텐츠 자동 생성 및 다채널 배포 플랫폼입니다.
           </motion.p>
         </motion.div>
 
@@ -105,7 +105,7 @@ export default function HeroSection() {
               scale: 0.95,
               transition: { duration: 0.1 }
             }}
-            className="px-12 py-5 rounded-xl text-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center gap-3 text-gray-900 dark:text-white bg-gradient-to-r from-[#d7e3ff] to-[#eadfff] border border-[#c2d1ff] hover:from-[#ccdbff] hover:to-[#e2d5ff]"
+            className="px-12 py-5 rounded-xl text-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center gap-3 text-gray-900 dark:text-white bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 backdrop-blur"
           >
             지금 시작하기
             <motion.div
