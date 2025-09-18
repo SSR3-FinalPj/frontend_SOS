@@ -5,7 +5,6 @@ import InfoModal from '@/common/ui/InfoModal';
 
 // FSD Blocks 조합
 import HeroSection from '@/containers/HeroSection';
-import FeaturesSection from '@/containers/FeaturesSection';
 import TransformSection from '@/containers/TransformSection';
 import ReadySection from '@/containers/ReadySection';
 import Footer from '@/containers/Footer';
@@ -42,7 +41,6 @@ export default function LandingPage() {
       
       <div className="relative z-10">
         <HeroSection />
-        <FeaturesSection />
         <TransformSection />
         <ReadySection />
         <Footer on_open_modal={handle_open_modal} />

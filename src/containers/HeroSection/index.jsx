@@ -63,7 +63,7 @@ export default function HeroSection() {
               ease: [0.16, 1, 0.3, 1] 
             }}
           >
-            지역 홍보의 새로운 기준이 됩니다.
+            지역 홍보의 새로운 기준 Meaire
           </motion.p>
           
           <motion.p 
