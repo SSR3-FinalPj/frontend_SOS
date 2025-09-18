@@ -14,7 +14,7 @@ import ContentPublishModal from '@/features/content-modals/ui/ContentPublishModa
 import AIMediaRequestModal from '@/features/ai-media-request/ui/AiMediaRequestModal';
 import { use_content_launch } from '@/features/content-management/logic/use-content-launch';
 import { use_content_modals } from '@/features/content-modals/logic/use-content-modals';
-import { LOCATION_DATA } from '@/common/constants/location-data';
+import { LOCATION_DATA, get_location_by_poi_id } from '@/common/constants/location-data';
 import VersionNavigationSystem from '@/features/version-navigation/ui/VersionNavigationSystem';
 import { convertToTreeData } from '@/features/content-tree/logic/tree-utils';
 import SuccessModal from '@/common/ui/success-modal';
@@ -23,7 +23,16 @@ import VideoEditModal from '@/features/video-edit/ui/VideoEditModal';
 // Helper function to get project name from a synthetic project ID
 function getProjectName(poiId) {
   if (typeof poiId === 'string' && poiId.startsWith('project_')) {
-    const projectId = poiId.split('_')[1];
+    const parts = poiId.split('_');
+    const projectId = parts[1];
+    const regionCode = parts[2];
+    
+    if (regionCode) {
+      const location = get_location_by_poi_id(regionCode);
+      if (location) {
+        return `${location.name} # ${projectId}`;
+      }
+    }
     return `Project #${projectId}`;
   }
   return '기타 프로젝트';

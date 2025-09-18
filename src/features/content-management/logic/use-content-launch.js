@@ -175,7 +175,7 @@ export const use_content_launch = create(
               for (const node of nodes) {
                 all_videos_with_project_id.push({
                   ...node,
-                  poi_id: `project_${rootNode.resultId}`, // 가상의 위치 ID 주입
+                  poi_id: `project_${rootNode.resultId}_${rootNode.regionCode}`, // 가상의 위치 ID 주입
                   parent_id: parentId, // 부모 ID 설정
                 });
                 if (node.children && node.children.length > 0) {

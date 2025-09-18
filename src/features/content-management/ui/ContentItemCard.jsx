@@ -16,8 +16,9 @@ import {
   get_platform_color, 
   get_status_icon, 
   get_status_tooltip 
-} from '@/features/content-management/lib/content-launch-utils';
+} from '@/features/content-management/lib/content-launch-utils.jsx';
 import { formatCreationTime } from '@/common/utils/date-utils';
+import { get_location_by_poi_id } from '@/common/constants/location-data';
 
 const ContentItemCard = ({ 
   item, 
@@ -32,13 +33,17 @@ const ContentItemCard = ({
   const item_id = item.result_id || item.resultId || item.video_id || item.temp_id || item.id;
   const is_uploading = uploading_items.includes(item_id);
   const is_selected = selected_video_id === item_id;
-  const status = (item.status || '').toString();
-  const is_selectable = status === 'uploaded' || status === 'COMPLETED' || status === 'completed' || status === 'READY_TO_LAUNCH';
+  
+  let status = (item.status || '').toString();
+  if (status === 'COMPLETED' || status === 'completed') {
+    status = 'ready';
+  }
+
+  const is_selectable = status === 'uploaded' || status === 'ready' || status === 'READY_TO_LAUNCH';
   const is_clickable_for_preview = (
     status === 'ready' || status === 'READY' ||
     status === 'PROCESSING' || status === 'processing' ||
     status === 'uploaded' ||
-    status === 'COMPLETED' || status === 'completed' ||
     status === 'READY_TO_LAUNCH'
   );
 
@@ -48,6 +53,10 @@ const ContentItemCard = ({
       on_video_select(item);
     }
   };
+
+  const regionCode = item.poi_id ? item.poi_id.split('_')[2] : null;
+  const location = regionCode ? get_location_by_poi_id(regionCode) : null;
+  const locationName = location ? location.name : '';
 
   return (
     <Card className={`${
@@ -117,11 +126,11 @@ const ContentItemCard = ({
                 <Tooltip>
                   <TooltipTrigger>
                     <div className={`w-8 h-8 ${dark_mode ? 'bg-gray-700/80' : 'bg-white/80'} backdrop-blur-sm rounded-full flex items-center justify-center`}>
-                      {get_status_icon(item.status, item.id, uploading_items)}
+                      {get_status_icon(status, item.id, uploading_items)}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{is_uploading ? '업로드 중' : get_status_tooltip(item.status)}</p>
+                    <p>{is_uploading ? '업로드 중' : get_status_tooltip(status)}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -133,11 +142,16 @@ const ContentItemCard = ({
             <h4 className={`font-semibold ${dark_mode ? 'text-white' : 'text-gray-900'} line-clamp-2 text-sm`}>
               {item.title}
             </h4>
+            {locationName && (
+              <div className={`font-bold text-xs ${dark_mode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {locationName}
+              </div>
+            )}
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-1">
                 <Clock className={`h-3 w-3 ${dark_mode ? 'text-gray-400' : 'text-gray-500'}`} />
                 <span className={`${dark_mode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {item.creationTime ? formatCreationTime(item.creationTime) : item.created_at}
+                  {item.createdAt ? formatCreationTime(item.createdAt) : (item.creationTime ? formatCreationTime(item.creationTime) : item.created_at)}
                 </span>
               </div>
             </div>
@@ -146,7 +160,7 @@ const ContentItemCard = ({
 
         {/* 버튼 영역 */}
         <div className="mt-4 space-y-2">
-          {(item.status === 'ready' || item.status === 'READY_TO_LAUNCH') && (
+          {(status === 'ready' || status === 'READY_TO_LAUNCH') && (
             <Button
               onClick={(e) => { e.stopPropagation(); on_publish(item); }}
               disabled={is_uploading}
@@ -157,14 +171,14 @@ const ContentItemCard = ({
             </Button>
           )}
           
-          {item.status === 'uploaded' && (
+          {status === 'uploaded' && (
             <Button disabled className="w-full bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 rounded-xl cursor-not-allowed">
               <CheckCircle2 className="h-4 w-4 mr-2" />
               업로드 완료
             </Button>
           )}
           
-          {item.status === 'failed' && (
+          {status === 'failed' && (
             <Button
               onClick={(e) => { e.stopPropagation(); alert('재시도 기능은 현재 구현 중입니다.'); }}
               className="w-full bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 hover:from-red-500/30 hover:to-orange-500/30 text-red-600 dark:text-red-400 rounded-xl font-medium"
