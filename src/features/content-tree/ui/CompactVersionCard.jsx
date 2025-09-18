@@ -109,12 +109,12 @@ const CompactVersionCard = ({
         {/* 상태 및 하위 버전 정보 */}
         <div className="flex items-center justify-between">
           <div className={`text-xs ${
-            child.status === 'completed' ? 'text-green-500' : 
-            child.status === 'processing' ? 'text-yellow-500' : 
+            (child.status === 'completed' || child.status === 'COMPLETED') ? 'text-green-500' : 
+            (child.status === 'processing' || child.status === 'PROCESSING') ? 'text-yellow-500' : 
             'text-gray-500'
           }`}>
-            {child.status === 'completed' ? '완료' : 
-             child.status === 'processing' ? '처리중' : '대기'}
+            {(child.status === 'completed' || child.status === 'COMPLETED') ? '완료' : 
+             (child.status === 'processing' || child.status === 'PROCESSING') ? '처리중' : '대기'}
           </div>
           
           <div className="flex items-center gap-2">

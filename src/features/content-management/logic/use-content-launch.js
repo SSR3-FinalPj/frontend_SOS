@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateTempVideoId, generateCompletedVideoId, generateDummyId } from '@/common/utils/unique-id';
-import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId } from '@/common/api/api';
+import { apiFetch, get_latest_completed_video, get_videos_completed_after, getVideoResultId, getRootNodes, getJobTree } from '@/common/api/api';
 import { uploadToYoutube, uploadToReddit } from '@/common/api/video-api-wrapper';
 import { normalizeResultsTree } from '@/domain/tree/logic/normalize-results-tree';
 
@@ -147,68 +147,73 @@ export const use_content_launch = create(
       },
 
       /**
-       * API와 localStorage 데이터를 병합하여 폴더 목록을 가져오는 함수 (강화된 버전)
+       * API 데이터를 가져와 UI가 이해할 수 있는 형태로 가공하는 함수
        */
       fetch_folders: async () => {
+        console.log("LOG 1: `fetch_folders` 실행 시작");
         try {
-          // TODO: 실제 API 호출로 교체
-          // 현재는 빈 배열로 초기화 (목업 데이터 제거됨)
-          const api_folders = [];
-          
-          const pending_videos = get().pending_videos;
-          
-          // 디버그 로그 제거 (production safe)
-          
-          // pending_videos를 날짜별로 그룹화 (안전한 날짜 처리)
-          const grouped_by_date = {};
-          pending_videos.forEach(video => {
-            // creation_date가 없거나 유효하지 않은 경우 안전하게 처리
-            let date = video.creation_date;
-            
-            if (!date || date === 'undefined' || date === 'null') {
-              // createdAt이나 created_at에서 날짜 추출 시도
-              const fallbackDate = video.createdAt || video.created_at;
-              if (fallbackDate) {
-                date = extractSafeCreationDate(fallbackDate);
-              } else {
-                // 모든 날짜 정보가 없는 경우 오늘 날짜 사용
-                date = new Date().toISOString().split('T')[0];
+          const rootNodes = await getRootNodes();
+          console.log("LOG 2: `rootNodes` API 수신 완료", rootNodes);
+
+          if (!rootNodes || rootNodes.length === 0) {
+            console.log("LOG 2a: 프로젝트 없음. 빈 상태로 설정합니다.");
+            set({ folders: [], results_tree: [] });
+            return;
+          }
+
+          console.log("LOG 3: 각 프로젝트의 상세 트리 정보 병렬 요청 시작");
+          const all_videos_with_project_id = [];
+
+          const treePromises = rootNodes.map(async (rootNode) => {
+            console.log(`LOG 4: 프로젝트 ID ${rootNode.resultId}의 트리 데이터 요청`);
+            const tree = await getJobTree(rootNode.resultId);
+            console.log(`LOG 5: 프로젝트 ID ${rootNode.resultId}의 트리 데이터 수신`, tree);
+
+            // 트리를 평탄화하고, 각 비디오에 프로젝트 ID를 주입
+            function flattenWithProjectId(nodes, parentId = null) {
+              if (!nodes) return;
+              for (const node of nodes) {
+                all_videos_with_project_id.push({
+                  ...node,
+                  poi_id: `project_${rootNode.resultId}`, // 가상의 위치 ID 주입
+                  parent_id: parentId, // 부모 ID 설정
+                });
+                if (node.children && node.children.length > 0) {
+                  flattenWithProjectId(node.children, node.resultId);
+                }
               }
-              
-              // video 객체에 올바른 creation_date 설정
-              video.creation_date = date;
             }
-            
-            if (!grouped_by_date[date]) {
-              grouped_by_date[date] = [];
-            }
-            grouped_by_date[date].push(video);
+            flattenWithProjectId(tree);
           });
-          
-          // 날짜별 폴더 생성 (안전한 날짜 파싱 적용)
-          const pending_folders = Object.keys(grouped_by_date).map(date => ({
-            date: date,
-            display_date: parseSafeDate(date + 'T00:00:00').toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }),
-            item_count: grouped_by_date[date].length,
-            items: grouped_by_date[date],
-            is_pending: true
-          }));
-          
-          // 날짜순 정렬 (최신 날짜가 위로)
-          pending_folders.sort((a, b) => new Date(b.date) - new Date(a.date));
-          
-          // API 폴더와 pending 폴더 병합
-          const merged_folders = [...pending_folders, ...api_folders];
-          
-          // 디버그 로그 제거 (production safe)
-          
-          set({ folders: merged_folders });
+
+          await Promise.all(treePromises);
+          console.log("LOG 6: 모든 프로젝트의 영상 목록 (가상 위치 ID 포함) 취합 완료", all_videos_with_project_id);
+
+          // 최종적으로 UI가 사용하는 `folders` 형태로 변환 (날짜별 그룹화)
+          const groups = {};
+          all_videos_with_project_id.forEach(item => {
+            const dateStr = item.createdAt ? item.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
+            if (!groups[dateStr]) {
+              groups[dateStr] = {
+                date: dateStr,
+                display_date: new Date(dateStr).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }),
+                item_count: 0,
+                items: []
+              };
+            }
+            groups[dateStr].items.push(item);
+            groups[dateStr].item_count++;
+          });
+
+          const newFolders = Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
+          console.log("LOG 7: 최종 `folders` 상태 데이터 구조", newFolders);
+
+          console.log("LOG 8: Zustand 스토어 상태 업데이트");
+          set({ folders: newFolders, results_tree: [] });
+
         } catch (error) {
-          // console.error('폴더 목록 가져오기 실패:', error);
+          console.error('[fetch_folders] 프로젝트 데이터 조회 실패:', error);
+          set({ folders: [], results_tree: [] });
         }
       },
 
@@ -870,10 +875,13 @@ export const use_content_launch = create(
         });
       },
 
-      /**
+            /**
        * 🚀 페이지 로드 시 초기 체크 및 하이브리드 폴링 시스템 활성화
        */
       initialize_fallback_system: () => {
+        // 페이지 로드 시 즉시 전체 트리 데이터 가져오기
+        get().fetch_folders();
+
         // 즉시 한 번 체크하고 스마트 폴링 시작
         setTimeout(() => {
           const { pending_videos } = get();
