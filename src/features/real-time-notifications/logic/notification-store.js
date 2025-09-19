@@ -168,18 +168,25 @@ export const useNotificationStore = create(
         // video_id가 있으면 해당 영상을 ready 상태로 전환
         if (sse_data.video_id || sse_data.data?.video_id) {
           const video_id = sse_data.video_id || sse_data.data.video_id;
-          //console.log('SSE 이벤트로 영상 상태 전환:', video_id);
+          
           use_content_launch.getState().transition_to_ready(video_id);
         }
         
         // temp_id가 있는 경우에도 처리
         if (sse_data.temp_id || sse_data.data?.temp_id) {
           const temp_id = sse_data.temp_id || sse_data.data.temp_id;
-          //console.log('SSE 이벤트로 임시 영상 상태 전환:', temp_id);
+          
           use_content_launch.getState().transition_to_ready(temp_id);
         }
+        // 항상 폴더 최신화 시도 (ID가 없거나 매칭 실패해도 즉시 동기화)
+        setTimeout(() => {
+          try {
+            use_content_launch.getState().fetch_folders();
+          } catch (e) {
+            // no-op
+          }
+        }, 10);
         
-        //console.log('video-ready 이벤트 처리 완료:', sse_data);
       }).catch(error => {
         console.error('use_content_launch 스토어 연동 실패:', error);
       });
@@ -191,15 +198,12 @@ export const useNotificationStore = create(
   // YouTube 업로드 완료 이벤트 처리
   handle_youtube_completed_event: (sse_data) => {
     try {
-      console.log('YouTube 업로드 완료 이벤트 처리:', sse_data);
+      
       
       // YouTube 관련 추가 로직이 필요한 경우 여기에 구현
       // 예: 업로드된 영상 정보를 content-launch 스토어에 업데이트
       if (sse_data.videoId || sse_data.videoUrl) {
-        console.log('YouTube 업로드 정보:', {
-          videoId: sse_data.videoId,
-          videoUrl: sse_data.videoUrl
-        });
+        // 추가 처리 필요 시 여기에 구현
       }
     } catch (error) {
       console.error('YouTube 완료 이벤트 처리 중 오류:', error);
@@ -209,14 +213,12 @@ export const useNotificationStore = create(
   // Reddit 게시 완료 이벤트 처리
   handle_reddit_completed_event: (sse_data) => {
     try {
-      console.log('Reddit 게시 완료 이벤트 처리:', sse_data);
+      
       
       // Reddit 관련 추가 로직이 필요한 경우 여기에 구현
       // 예: 게시된 포스트 정보를 content-launch 스토어에 업데이트
       if (sse_data.postUrl) {
-        console.log('Reddit 게시 정보:', {
-          postUrl: sse_data.postUrl
-        });
+        // 추가 처리 필요 시 여기에 구현
       }
     } catch (error) {
       console.error('Reddit 완료 이벤트 처리 중 오류:', error);
@@ -284,7 +286,7 @@ export const useNotificationStore = create(
         if (state) {
           // 복원 후 오래된 알림 정리
           state.cleanup_old_notifications();
-          //console.log('알림 데이터 복원 완료:', state.notifications.length, '개');
+          
         }
       },
     }

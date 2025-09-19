@@ -1,24 +1,84 @@
-/**
- * ContentListView 블록
- * 콘텐츠 목록 페이지의 메인 콘텐츠를 담당하는 뷰 블록
- */
-
-import { usePageStore } from '@/common/stores/page-store';
-import { use_dashboard_data } from '@/domain/dashboard/logic/use-dashboard-data';
+import { useState, useEffect } from 'react';
 import { ContentListView as ContentListFeature } from '@/features/content-modals/ui/ContentListView';
+import { getYouTubeChannelId, getRedditChannelInfo, getYouTubeVideosByChannelId, getRedditChannelPosts } from '@/common/api/api';
+import { usePlatformStore } from '@/domain/platform/logic/store';
 
-/**
- * ContentListView 컴포넌트
- * 콘텐츠 목록 관련 뷰를 관리하는 블록
- */
 const ContentListView = () => {
-  const { isDarkMode } = usePageStore();
-  const {
-    selected_platform,
-    sort_order,
-    set_selected_platform,
-    set_sort_order
-  } = use_dashboard_data();
+  const [selected_platform, set_selected_platform] = useState('all');
+  const [sort_order, set_sort_order] = useState('latest');
+  const [contents, set_contents] = useState([]);
+  const [is_loading, set_is_loading] = useState(true);
+  const [error, set_error] = useState(null);
+  const { platforms } = usePlatformStore(); // 플랫폼 상태 가져오기
+
+  useEffect(() => {
+    const fetch_data = async () => {
+      set_is_loading(true);
+      set_error(null);
+      set_contents([]);
+
+      try {
+        let allData = [];
+
+        const fetchYoutubeData = async () => {
+          // YouTube 연동 상태 확인
+          if (!platforms.google.connected && !platforms.google.linked) {
+            return [];
+          }
+          const channel_info = await getYouTubeChannelId();
+          if (channel_info && channel_info.channelId) {
+            const video_data = await getYouTubeVideosByChannelId(channel_info.channelId, { sort_by: sort_order });
+            return video_data.videos.map(v => ({ ...v, platform: 'YouTube', uploadDate: v.publishedAt, id: v.videoId, title: v.title, views: v.statistics?.viewCount, likes: v.statistics?.likeCount, comments: v.statistics?.commentCount }));
+          }
+          return [];
+        };
+
+        const fetchRedditData = async () => {
+          // Reddit 연동 상태 확인
+          if (!platforms.reddit.connected && !platforms.reddit.linked) {
+            return [];
+          }
+          const channel_info = await getRedditChannelInfo();
+          if (channel_info && channel_info.channelTitle) {
+            const post_data = await getRedditChannelPosts(channel_info.channelTitle);
+            return post_data.posts.map(p => ({ id: p.post_id, title: p.title, thumbnail: p.thumbnail, platform: 'Reddit', uploadDate: p.upload_date, upvotes: p.score, comments: p.comment_count, url: p.url, sub_reddit: p.sub_reddit, rd_video_url: p.rd_video_url }));
+          }
+          return [];
+        };
+
+        if (selected_platform === 'youtube') {
+          allData = await fetchYoutubeData();
+        } else if (selected_platform === 'reddit') {
+          allData = await fetchRedditData();
+        } else if (selected_platform === 'all') {
+          const [youtubeData, redditData] = await Promise.all([
+            fetchYoutubeData(),
+            fetchRedditData()
+          ]);
+          allData = [...youtubeData, ...redditData];
+        }
+
+        if (sort_order === 'latest') {
+          allData.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+        } else if (sort_order === 'oldest') {
+          allData.sort((a, b) => new Date(a.uploadDate) - new Date(b.uploadDate));
+        } else if (sort_order === 'likes') {
+          allData.sort((a, b) => (b.likes || b.upvotes || 0) - (a.likes || a.upvotes || 0));
+        } else if (sort_order === 'comments') {
+          allData.sort((a, b) => (b.comments || 0) - (a.comments || 0));
+        }
+
+        set_contents(allData);
+
+      } catch (err) {
+        set_error(err.message);
+      } finally {
+        set_is_loading(false);
+      }
+    };
+
+    fetch_data();
+  }, [selected_platform, sort_order, platforms.google.connected, platforms.reddit.connected]); // 의존성 배열에 플랫폼 상태 추가
 
   return (
     <ContentListFeature 
@@ -26,6 +86,9 @@ const ContentListView = () => {
       setSelectedPlatform={set_selected_platform}
       sortOrder={sort_order} 
       setSortOrder={set_sort_order}
+      contents={contents}
+      isLoading={is_loading}
+      error={error}
     />
   );
 };

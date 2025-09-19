@@ -37,22 +37,17 @@ export const useSSEConnection = ({
   })();
 
   const handlePayload = useCallback((raw, eventType = 'video-ready') => {
-    console.log(`[SSE 디버그] handlePayload 호출됨:`, {
-      raw: raw,
-      eventType: eventType,
-      rawLength: raw?.length
-    });
 
     try {
       const data = JSON.parse(raw);
-      console.log(`[SSE 디버그] JSON 파싱 성공:`, data);
+      
       
       const ts = data.timestamp ?? data.tm;
       const messageType = data.type; // 백엔드에서 추가된 type 필드
-      console.log(`[SSE 디버그] 타임스탬프 및 타입 확인:`, { ts, messageType, hasMessage: !!data.message });
+      
       
       if (data.message && ts) {
-        console.log(`[SSE 디버그] 메시지와 타임스탬프 모두 존재 - 처리 시작`);
+        
         
         // 이벤트 타입별 메시지 및 알림 타입 설정
         let displayMessage;
@@ -85,23 +80,17 @@ export const useSSEConnection = ({
           data: data, // 전체 데이터도 함께 전달
         });
         
-        console.log(`[SSE 디버그] 알림 스토어에 데이터 전달 완료 - 타입: ${notificationType}`);
+        
 
         // VIDEO_READY 이벤트 시 실시간 UI 업데이트 처리
         if (data.message === 'VIDEO_READY' || eventType === 'video-ready') {
-          console.log('[SSE] 🎯 VIDEO_READY 이벤트 감지! - 실시간 UI 업데이트 시작:', {
-            message: data.message,
-            timestamp: data.timestamp,
-            type: messageType,
-            fullData: data
-          });
           
           // 백엔드에서 전송하는 실제 SSE 데이터 구조: SimpleMsg(message, type, timestamp)
-          console.log('[SSE] 🚀 완성된 영상 목록 조회하여 최신 영상 확인 시작');
+          
           
           try {
             const { handle_video_completion } = use_content_launch.getState();
-            console.log('[SSE] 🎬 handle_video_completion 함수 호출 시작');
+            
             
             handle_video_completion().catch(error => {
               console.error('[SSE] ❌ 영상 완성 처리 실패:', error);
@@ -114,19 +103,8 @@ export const useSSEConnection = ({
         set_last_event(eventType);
         set_last_data(raw);
       } else {
-        console.log(`[SSE 디버그] 메시지 또는 타임스탬프 누락:`, {
-          hasMessage: !!data.message,
-          message: data.message,
-          hasTimestamp: !!ts,
-          timestamp: ts,
-          type: messageType
-        });
       }
     } catch (parseError) {
-      console.log(`[SSE 디버그] JSON 파싱 실패 (정상 - init/ping):`, {
-        error: parseError.message,
-        raw: raw
-      });
       // init/ping 같은 non-JSON은 무시
     }
   }, [add_sse_notification]);
@@ -153,7 +131,7 @@ export const useSSEConnection = ({
     if (event_source_ref.current) return;
 
     try {
-      //console.log('[SSE TRY]', endpoint);              // ✅ 여기서 로그
+      
       const es = new EventSource(endpoint);            // ✅ 실제 생성
       event_source_ref.current = es;
 
@@ -162,12 +140,12 @@ export const useSSEConnection = ({
         set_connection_error(null);
         set_reconnect_attempts(0);
         set_connection_status(true);
-        //console.log('SSE connected:', endpoint);
+        
       };
 
       // ping 이벤트도 상태에 반영(콘솔/화면에서 확인)
       es.addEventListener('ping', (e) => {
-        console.log('PING:', e.data);
+        
         set_last_event('ping');
         set_last_data(String(e.data));
       });
@@ -225,7 +203,7 @@ export const useSSEConnection = ({
     if (last_token_ref.current !== token) {
       last_token_ref.current = token;
       if (event_source_ref.current) {
-        console.log('[SSE] token changed → reconnect');
+        
         reconnect();
       }
     }

@@ -13,6 +13,10 @@ export default defineConfig(({ mode }) => {
       },
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
     },
+    // Drop console/debugger in production without adding terser dependency
+    esbuild: {
+      drop: ['console', 'debugger']
+    },
     server: {
       proxy: {
         '/api': {

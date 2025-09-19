@@ -2,10 +2,10 @@ import { motion } from 'framer-motion';
 import Sidebar from '@/containers/Sidebar';
 import DashboardHeader from '@/containers/DashboardHeader';
 import { usePlatformStore } from '@/domain/platform/logic/store';
-import { usePlatformInitializer } from '@/domain/platform/logic/use-platform-initializer';
+
 
 const DashboardLayout = ({ children, currentView, title }) => {
-  usePlatformInitializer(); // Initializes platform status
+  
   const { platforms, isLoading } = usePlatformStore(state => ({
     platforms: state.platforms,
     isLoading: state.platforms.google.loading || state.platforms.reddit.loading

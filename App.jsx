@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-
 import { tryRefreshOnBoot } from '@/common/lib/auth-bootstrap';
-import { usePageStore } from '@/common/stores/page-store';
+import { use_dark_mode } from '@/common/hooks/use-dark-mode';
 import { usePlatformStore } from '@/domain/platform/logic/store';
 import { usePlatformInitializer } from '@/domain/platform/logic/use-platform-initializer';
-import Router from '@/Router'; 
+import Router from '@/Router';
 import CookieConsentBanner from '@/common/ui/CookieConsentBanner';
 import SSEProvider from '@/common/ui/SSEProvider';
 
 export default function App() {
-  const { isDarkMode, setIsDarkMode } = usePageStore();
   const { platforms } = usePlatformStore();
 
-  const [bootDone, setBootDone] = useState(false);
-  usePlatformInitializer(bootDone);
+  // 다크모드 DOM 적용을 위한 훅 호출
+  use_dark_mode();
+
+  const [authStatus, setAuthStatus] = useState({ bootDone: false, isAuthenticated: false });
+  usePlatformInitializer(authStatus);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,33 +36,16 @@ export default function App() {
           navigate('/');
         }
       }
-      setBootDone(true);
+      setAuthStatus({ bootDone: true, isAuthenticated: ok });
     })();
   }, [navigate, location.pathname]);
 
-  // 다크 모드/언어 초기화
-  useEffect(() => {
-    const savedDarkMode = localStorage.getItem('contentboost-dark-mode');
-
-    if (savedDarkMode !== null) {
-      setIsDarkMode(JSON.parse(savedDarkMode));
-    }
-  }, [setIsDarkMode]);
-
-  // 다크 모드 적용
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    localStorage.setItem('contentboost-dark-mode', JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
 
 
 
-  if (!bootDone || platforms.google.loading || platforms.reddit.loading) {
+  const isContentLaunchPage = location.pathname.startsWith('/contentlaunch');
+
+  if (!authStatus.bootDone || ((platforms.google.loading || platforms.reddit.loading) && !isContentLaunchPage)) {
     return <div />; // 로딩 화면
   }
 

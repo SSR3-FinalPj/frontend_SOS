@@ -31,7 +31,8 @@ const Notification = () => {
     unread_count,
     mark_as_read, 
     mark_all_as_read, 
-    remove_notification 
+    remove_notification,
+    clear_all_notifications
   } = useNotificationStore();
 
   // 드롭다운 위치 계산 함수
@@ -39,8 +40,8 @@ const Notification = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 12, // 더 넓은 간격
-        left: rect.right + window.scrollX - 320, // 더 넓은 드롭다운
+        top: rect.bottom + 8,
+        left: rect.right - 280, // 320 → 280으로 조정하여 더 오른쪽으로
       });
     }
   }, []);
@@ -53,10 +54,6 @@ const Notification = () => {
     setIsOpen(prev => !prev);
   }, [isOpen, calculateDropdownPosition]);
 
-  // 드롭다운 닫기 함수
-  const closeDropdown = useCallback(() => {
-    setIsOpen(false);
-  }, []);
 
   // 알림 클릭 핸들러 (네비게이션 기능 추가)
   const handleNotificationClick = useCallback((notification) => {
@@ -70,12 +67,20 @@ const Notification = () => {
       navigate(notification.path);
       setIsOpen(false); // 드롭다운 닫기
     }
-  }, [mark_as_read, navigate]);
+  }, [mark_as_read, navigate, setIsOpen]);
 
   // 모든 알림 읽음 처리
   const handleMarkAllRead = useCallback(() => {
     mark_all_as_read();
   }, [mark_all_as_read]);
+
+  // 모든 알림 삭제 처리
+  const handleClearAllNotifications = useCallback(() => {
+    if (confirm('모든 알림을 삭제하시겠습니까?')) {
+      clear_all_notifications();
+      setIsOpen(false); // 드롭다운 닫기
+    }
+  }, [clear_all_notifications]);
 
   // 알림 삭제 핸들러
   const handleRemoveNotification = useCallback((e, notificationId) => {
@@ -83,8 +88,8 @@ const Notification = () => {
     remove_notification(notificationId);
   }, [remove_notification]);
 
-  // 외부 클릭 감지
-  useOnClickOutside(dropdownRef, closeDropdown);
+  // 외부 클릭 감지 - 벨 버튼과 드롭다운 둘 다 예외 처리
+  useOnClickOutside([dropdownRef, buttonRef], () => setIsOpen(false));
 
   // formatToKST는 이제 date-utils에서 import하여 사용
 
@@ -126,22 +131,24 @@ const Notification = () => {
       </motion.button>
 
       {/* Enhanced 드롭다운 메뉴 - Portal로 렌더링 */}
-      {isOpen && createPortal(
+      {createPortal(
         <AnimatePresence>
-          <motion.div
-            ref={dropdownRef}
-            initial={{ opacity: 0, scale: 0.9, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -20 }}
-            transition={{ type: "spring", duration: 0.3, bounce: 0.2 }}
-            style={{
-              position: 'absolute',
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              zIndex: 9999,
-            }}
-            className="w-80 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl shadow-2xl border border-white/50 dark:border-white/10 overflow-hidden"
-          >
+          {isOpen && (
+            <motion.div
+              key="notification-modal"
+              ref={dropdownRef}
+              initial={{ opacity: 0, scale: 0.9, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              transition={{ type: "spring", duration: 0.2, bounce: 0.1 }}
+              style={{
+                position: 'absolute',
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                zIndex: 9999,
+              }}
+              className="w-80 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl shadow-2xl border border-white/50 dark:border-white/10 overflow-hidden"
+            >
             {/* Enhanced 헤더 */}
             <div className="px-6 py-4 bg-gradient-to-r from-white/60 to-white/30 dark:from-gray-800/60 dark:to-gray-800/30 border-b border-white/30 dark:border-white/10">
               <div className="flex items-center justify-between">
@@ -151,17 +158,30 @@ const Notification = () => {
                     알림
                   </h3>
                 </div>
-                {unread_count > 0 && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleMarkAllRead}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-blue-50/80 dark:bg-blue-900/30 rounded-lg transition-all duration-200 hover:bg-blue-100/80 dark:hover:bg-blue-900/50"
-                  >
-                    <Check className="w-3 h-3" />
-                    모두 읽음
-                  </motion.button>
-                )}
+                <div className="flex items-center gap-2">
+                  {unread_count > 0 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleMarkAllRead}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-blue-50/80 dark:bg-blue-900/30 rounded-lg transition-all duration-200 hover:bg-blue-100/80 dark:hover:bg-blue-900/50"
+                    >
+                      <Check className="w-3 h-3" />
+                      모두 읽음
+                    </motion.button>
+                  )}
+                  {notifications.length > 0 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleClearAllNotifications}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 bg-red-50/80 dark:bg-red-900/30 rounded-lg transition-all duration-200 hover:bg-red-100/80 dark:hover:bg-red-900/50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      모두 삭제
+                    </motion.button>
+                  )}
+                </div>
               </div>
               {unread_count > 0 && (
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-medium">
@@ -238,7 +258,8 @@ const Notification = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}

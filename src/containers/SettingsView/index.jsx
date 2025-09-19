@@ -6,6 +6,7 @@
 import React from 'react';
 import ConnectionManagementCard from '@/containers/ConnectionManagementCard';
 import { DataExportCard } from '@/containers/DataExportCard';
+import ReadabilityPreferencesCard from '@/containers/ReadabilityPreferencesCard';
 import { get_platform_data } from '@/domain/dashboard/logic/dashboard-utils';
 
 /**
@@ -21,6 +22,7 @@ const SettingsView = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ConnectionManagementCard platformData={platform_data} />
         <DataExportCard />
+        <ReadabilityPreferencesCard />
       </div>
     </div>
   );

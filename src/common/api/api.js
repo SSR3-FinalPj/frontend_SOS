@@ -10,14 +10,14 @@ let currentRefreshPromise = null; // 현재 진행 중인 토큰 갱신 Promise
 export async function refreshAccessToken() {
   // 이미 진행 중인 갱신 요청이 있다면 해당 Promise를 반환
   if (currentRefreshPromise) {
-    //console.log(' Token refresh already in progress, returning existing promise.');
+    
     return currentRefreshPromise;
   }
 
   // 새로운 갱신 Promise 생성 및 저장
   currentRefreshPromise = (async () => {
     try {
-      //console.log(' Attempting to refresh token...');
+      
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
         credentials: "include",
@@ -32,7 +32,7 @@ export async function refreshAccessToken() {
 
       const { accessToken } = await res.json();
       setAccessToken(accessToken);
-      //console.log(' Token refreshed successfully.');
+      
       return accessToken;
     } catch (e) {
       //console.error(' Token refresh failed:', e.message);
@@ -62,14 +62,14 @@ export async function apiFetch(input, init = {}) {
 
   // 401 또는 403 발생 → 통합 토큰 갱신 함수 호출
   if (response.status === 401 || response.status === 403) {
-    //console.log('401 detected, attempting token refresh...');
+    
     try {
       const newAccessToken = await refreshAccessToken(); // 갱신된 토큰으로 재시도
       const retryHeaders = new Headers(init.headers || {});
       if (newAccessToken) {
         retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
       }
-      //console.log('Retrying API request with new token...');
+      
       // 재시도 시에는 원래 요청의 input과 init을 그대로 사용
       response = await fetch(input, { ...init, headers: retryHeaders, credentials: 'include' });
       return response;
@@ -515,7 +515,7 @@ export async function get_latest_completed_video() {
     const videoResults = await getVideoResultId(); // List<JobResultDto> 반환
     
     if (!videoResults || !Array.isArray(videoResults) || videoResults.length === 0) {
-      console.log('[API] 완성된 영상 결과가 없음');
+    
       return null;
     }
 
@@ -526,7 +526,7 @@ export async function get_latest_completed_video() {
       return currentTime > latestTime ? current : latest;
     });
 
-    console.log('[API] 가장 최신 완성 영상:', latestVideo);
+    
     return latestVideo;
     
   } catch (error) {
@@ -554,7 +554,7 @@ export async function get_videos_completed_after(afterTimestamp) {
       return videoTime > afterTime;
     });
 
-    console.log(`[API] ${afterTimestamp} 이후 완성된 영상 ${newCompletedVideos.length}개 발견`);
+    
     return newCompletedVideos;
     
   } catch (error) {
@@ -732,26 +732,29 @@ export async function uploadFileToS3(presignedUrl, file, contentType) {
 }
 
 /**
- * 백엔드에 업로드 완료 알림
+ * 백엔드에 업로드 완료 알림 및 영상 생성 작업을 요청합니다.
  * @param {string} s3Key - S3 객체 키
  * @param {string} locationCode - 위치 코드
  * @param {string} promptText - 프롬프트 텍스트
- * @param {string} platform - 플랫폼 정보 ('YOUTUBE' 또는 'REDDIT')
+ * @param {string} platform - 플랫폼 정보 ('youtube' 또는 'reddit')
+ * @param {boolean} useMascot - 마스코트 사용 여부
+ * @param {boolean} useCityData - 지역 데이터 사용 여부
  * @returns {Promise} 확인 응답 데이터
  */
-export async function confirmImageUpload(s3Key, locationCode, promptText = "", platform = "YOUTUBE") {
-  if (!s3Key || !locationCode) {
-    throw new Error('S3 키와 위치 코드가 필요합니다.');
+export async function confirmImageUpload(s3Key, locationCode, promptText, platform, useMascot, useCityData) {
+  if (!s3Key || !locationCode || !platform) {
+    throw new Error('S3 키, 위치 코드, 플랫폼 정보는 필수입니다.');
   }
 
   const res = await apiFetch('/api/images/confirm', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       key: s3Key,
       locationCode: locationCode,
       prompt_text: promptText,
-      platform: platform // ✅ PostgreSQL NOT NULL 제약조건 해결을 위한 platform 필드 추가
+      platform: platform,
+      mascot: useMascot,
+      city: useCityData
     })
   });
 
@@ -768,10 +771,12 @@ export async function confirmImageUpload(s3Key, locationCode, promptText = "", p
  * @param {File} file - 업로드할 파일
  * @param {string} locationCode - 위치 코드
  * @param {string} promptText - 프롬프트 텍스트
- * @param {string} platform - 플랫폼 정보 ('YOUTUBE' 또는 'REDDIT')
+ * @param {string} platform - 플랫폼 정보 ('youtube' 또는 'reddit')
+ * @param {boolean} useMascot - 마스코트 사용 여부
+ * @param {boolean} useCityData - 지역 데이터 사용 여부
  * @returns {Promise} 전체 업로드 프로세스 결과
  */
-export async function uploadImageToS3Complete(file, locationCode, promptText = "", platform = "YOUTUBE") {
+export async function uploadImageToS3Complete(file, locationCode, promptText = "", platform = "YOUTUBE", useMascot = false, useCityData = true) {
   try {
     // 1단계: Presigned URL 요청
     const presignData = await getS3PresignedUrl(file.type);
@@ -780,8 +785,8 @@ export async function uploadImageToS3Complete(file, locationCode, promptText = "
     // 2단계: S3에 파일 업로드
     await uploadFileToS3(url, file, contentType);
 
-    // 3단계: 백엔드에 업로드 완료 알림 (PostgreSQL NOT NULL 제약조건 해결을 위한 platform 전달)
-    const confirmResult = await confirmImageUpload(key, locationCode, promptText, platform);
+    // 3단계: 백엔드에 업로드 완료 알림
+    const confirmResult = await confirmImageUpload(key, locationCode, promptText, platform, useMascot, useCityData);
 
     return {
       success: true,
@@ -832,10 +837,7 @@ export async function uploadToYouTube(resultId, videoDetails) {
       madeForKids: Boolean(videoDetails.madeForKids)
     };
 
-    console.log('YouTube upload request:', {
-      resultId,
-      requestBody
-    });
+    
 
     // YouTube 업로드 API 호출
     const response = await apiFetch(`/api/youtube/upload/${resultId}`, {
@@ -853,7 +855,7 @@ export async function uploadToYouTube(resultId, videoDetails) {
     }
 
     const result = await response.json();
-    console.log('YouTube upload success:', result);
+    
     
     return result;
   } catch (error) {
@@ -905,7 +907,7 @@ export async function uploadToReddit(resultId, redditData) {
       
       if (targetResult && targetResult.resultKey) {
         kind = determineMediaTypeFromResultKey(targetResult.resultKey);
-        console.log('Determined media type:', kind, 'from resultKey:', targetResult.resultKey);
+        
       } else {
         console.warn('Could not find JobResult for resultId:', resultId, 'using default kind:', kind);
       }
@@ -920,7 +922,7 @@ export async function uploadToReddit(resultId, redditData) {
       kind: kind
     };
 
-    console.log('Reddit upload request:', {
+    
       resultId,
       requestBody,
       determinedKind: kind
@@ -933,10 +935,7 @@ export async function uploadToReddit(resultId, redditData) {
       title: redditData.title || ''
     };
 
-    console.log('Reddit upload request:', {
-      resultId,
-      requestBody
-    });
+    
 
     // Reddit 업로드 API 호출
     const response = await apiFetch(`/api/reddit/upload/${resultId}`, {
@@ -954,7 +953,7 @@ export async function uploadToReddit(resultId, redditData) {
     }
 
     const result = await response.json();
-    console.log('Reddit upload success:', result);
+    
     
     return result;
   } catch (error) {
@@ -963,52 +962,91 @@ export async function uploadToReddit(resultId, redditData) {
   }
 }
 
-/* ------------------ 영상 재생성 API ------------------ */
+/* ------------------ 영상 수정 API ------------------ */
 /**
- * 기존 영상을 새로운 프롬프트로 재생성 요청하는 함수
- * @param {string|number} videoId - 재생성할 영상의 ID
- * @param {string} prompt - 새로운 프롬프트 텍스트
- * @returns {Promise<Object>} 재생성 요청 결과
+ * 기존 작업을 새로운 프롬프트로 수정하여 재실행합니다.
+ * @param {number | string} resultId - 수정의 기반이 될 이전 JobResult의 ID
+ * @param {string} promptText - 새로 적용할 프롬프트
+ * @returns {Promise<object>} 새로 생성된 작업 정보
  */
-export async function regenerateVideo(videoId, prompt) {
-  try {
-    if (!videoId) {
-      throw new Error('영상 ID가 필요합니다.');
-    }
-    
-    if (!prompt || !prompt.trim()) {
-      throw new Error('재생성할 프롬프트가 필요합니다.');
-    }
-
-    console.log('Video regeneration request:', {
-      videoId,
-      prompt: prompt.trim()
-    });
-
-    // 영상 재생성 API 호출 (resultId 우선 사용)
-    const response = await apiFetch('/api/videos/regenerate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        resultId: videoId,  // resultId로 변경하여 백엔드와 일치
-        prompt: prompt.trim()
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Video regeneration failed:', response.status, errorText);
-      throw new Error(`영상 재생성 실패: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('Video regeneration success:', result);
-    
-    return result;
-  } catch (error) {
-    console.error('Video regeneration error:', error);
-    throw error;
+export async function reviseVideo(resultId, promptText) {
+  const res = await apiFetch('/api/images/revise', {
+    method: 'POST',
+    body: JSON.stringify({ resultId, promptText }),
+  });
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '알 수 없는 오류');
+    throw new Error(`영상 수정 요청 실패: ${res.status} - ${errorText}`);
   }
+  return await res.json();
+}
+
+/* ------------------ 신규 트리 구조 API ------------------ */
+
+/**
+ * 모든 루트 노드 ID 목록을 가져옵니다.
+ * @returns {Promise<Array<{resultId: number}>>}
+ */
+export async function getRootNodes() {
+  const res = await apiFetch('/api/dashboard/rootnode');
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류' }));
+    throw new Error(`루트 노드 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+  return await res.json();
+}
+
+/**
+ * 특정 resultId를 기반으로 전체 트리 구조를 가져옵니다.
+ * @param {number|string} resultId - 트리의 루트가 되는 resultId
+ * @returns {Promise<Array<Object>>} 해당 resultId의 전체 트리 구조
+ */
+export async function getJobTree(resultId) {
+  if (!resultId) {
+    throw new Error('Job Tree 조회를 위한 resultId가 필요합니다.');
+  }
+  const res = await apiFetch(`/api/images/jobs/${resultId}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류' }));
+    throw new Error(`Job Tree 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+  return await res.json();
+}
+
+
+/* ------------------ 통합 분석 데이터 조회 ------------------ */
+/**
+ * 비교 분석할 전체 콘텐츠 목록을 가져옵니다.
+ * @returns {Promise<Array<{resultId: number, title: string, uploadedAt: string, youtube: string, reddit: string}>>}
+ */
+export async function getCommonContentList() {
+  const res = await apiFetch('/api/dashboard/result_id/both');
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`공통 콘텐츠 목록 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
+}''
+
+/**
+ * 특정 resultId에 대한 상세 비교 데이터를 가져옵니다.
+ * @param {number|string} resultId - 비교할 콘텐츠의 resultId
+ * @returns {Promise<Object>}
+ */
+export async function getComparisonDetails(resultId) {
+  if (!resultId) {
+    throw new Error('resultId가 필요합니다.');
+  }
+
+  // 경로 변수가 아닌 쿼리 파라미터로 resultId를 전송하도록 수정
+  const res = await apiFetch(`/api/dashboard/both/{result_id}?resultId=${resultId}`);
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+    throw new Error(`상세 비교 데이터 조회 실패: ${res.status} - ${errorData.message}`);
+  }
+
+  return await res.json();
 }

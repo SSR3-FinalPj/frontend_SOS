@@ -19,7 +19,14 @@ import RedditIcon from '@/assets/images/button/Reddit_Icon.svg';
 import { useAnalyticsStore } from '@/domain/analytics/logic/store';
 import { MeaireLogo } from '@/common/ui/meaire-logo';
 import { usePageStore } from '@/common/stores/page-store';
-import { period_options } from '@/domain/dashboard/logic/dashboard-constants';
+
+const period_options = [
+  { id: 'last7Days', label: 'last7Days' },
+  { id: 'last30Days', label: 'last30Days' },
+  //{ id: 'last3Months', label: 'last3Months' },
+  //{ id: 'thisYear', label: 'thisYear' },
+  { id: 'custom', label: 'custom' }
+];
 
 /**
  * Analytics Filter Sidebar 컴포넌트
@@ -85,11 +92,11 @@ const AnalyticsFilterSidebar = ({
                   whileTap={{ scale: 0.98 }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isSelected 
-                      ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white shadow-lg' 
+                      ? 'bg-gradient-to-r from-brand-secondary-500/20 to-brand-primary-500/20 border border-brand-secondary-500/30 text-gray-800 dark:text-white shadow-lg' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-gray-800 dark:text-white' : 'text-purple-500/80'}`} />
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-gray-800 dark:text-white' : 'text-brand-primary-500/80'}`} />
                   <div className="text-left">
                     <div className="font-medium">{viewOption.label}</div>
                     <div className={`text-xs ${isSelected ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
@@ -124,7 +131,7 @@ const AnalyticsFilterSidebar = ({
                 'rounded-xl',
                 'transition-all',
                 'duration-200',
-                isSelected ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white shadow-lg' : 'text-gray-700 dark:text-gray-300',
+                isSelected ? 'bg-gradient-to-r from-brand-secondary-500/20 to-brand-primary-500/20 border border-brand-secondary-500/30 text-gray-800 dark:text-white shadow-lg' : 'text-gray-700 dark:text-gray-300',
                 !isConnected ? 'opacity-50 cursor-not-allowed' : (isSelected ? '' : 'hover:bg-white/30 dark:hover:bg-white/20')
               ].join(' ');
 
@@ -190,9 +197,9 @@ const AnalyticsFilterSidebar = ({
                           onClick={() => handle_period_select(option.id)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`w-full text-left px-3 py-3 rounded-lg transition-all duration-200 flex items-center justify-between ${
+                      className={`w-full text-left px-3 py-3 rounded-lg transition-all duration-200 flex items-center justify-between ${
                             selected_period === option.id
-                              ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white shadow-lg'
+                              ? 'bg-gradient-to-r from-brand-secondary-500/20 to-brand-primary-500/20 border border-brand-secondary-500/30 text-gray-800 dark:text-white shadow-lg'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/20'
                           }`}
                         >

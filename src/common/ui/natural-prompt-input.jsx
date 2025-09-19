@@ -21,28 +21,28 @@ const NaturalPromptInput = ({
   // 프롬프트 변경 핸들러
   const handle_prompt_change = useCallback((e) => {
     const value = e.target.value;
-    // 100자 제한
-    if (value.length <= 100) {
+    // 500자 제한
+    if (value.length <= 500) {
       on_prompt_change(value);
     }
   }, [on_prompt_change]);
 
-  // 글자 수에 따른 색상 클래스 결정 (100자 기준으로 조정)
+  // 글자 수에 따른 색상 클래스 결정 (500자 기준으로 조정)
   const get_counter_color = useCallback((length) => {
-    if (length <= 25) return 'text-green-600 dark:text-green-400';
-    if (length <= 50) return 'text-yellow-600 dark:text-yellow-400';
-    if (length <= 75) return 'text-orange-600 dark:text-orange-400';
-    if (length <= 100) return 'text-red-600 dark:text-red-400';
+    if (length <= 125) return 'text-green-600 dark:text-green-400';
+    if (length <= 250) return 'text-yellow-600 dark:text-yellow-400';
+    if (length <= 375) return 'text-orange-600 dark:text-orange-400';
+    if (length <= 500) return 'text-red-600 dark:text-red-400';
     return 'text-red-600 dark:text-red-400';
   }, []);
 
   // 예시 문장들
   const example_prompts = [
-    "더 밝고 생동감 있는 느낌으로",
-    "카메라 움직임을 더 부드럽게", 
-    "색감을 따뜻하고 포근하게",
-    "좀 더 역동적이고 활기차게",
-    "안개 낀 몽환적인 분위기로"
+    "해질녘 서울숲 풍경",
+    "영화적인 4K 고화질, 비오는 날의 강남역 거리",
+    "항공뷰로 본 남산타워",
+    "따뜻한 색감의 북촌 한옥마을",
+    "광화문 광장을 걷는 사람들, 타임랩스"
   ];
 
   return (
@@ -51,12 +51,11 @@ const NaturalPromptInput = ({
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-            영상 재생성 방향 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(선택사항)</span>
+            영상 생성 프롬프트 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(선택사항)</span>
           </h3>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          현재 영상을 어떻게 개선하고 싶으신가요? 원하는 방향을 자유롭게 입력해주세요.
-          입력하지 않으면 기존 방식으로 재생성됩니다.
+          원하는 영상이 최대한 구체적으로 그려질 수 있도록 자유롭게 작성해주세요. 입력하지 않으면 선택한 장소와 이미지를 기반으로 자동 생성됩니다.
         </p>
       </div>
 
@@ -66,14 +65,15 @@ const NaturalPromptInput = ({
           <textarea
             value={prompt_text}
             onChange={handle_prompt_change}
-            placeholder="영상을 어떻게 개선하고 싶으신가요? (예: 더 밝고 화사한 느낌으로)"
+            placeholder="원하는 영상의 구체적인 모습을 서술해주세요 (예: 해질녘 서울숲 풍경)"
+            maxLength={500}
             className="w-full min-h-[120px] p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             rows={4}
           />
           
           {/* 글자 수 카운터 */}
           <div className={`absolute bottom-3 right-3 text-xs font-medium ${get_counter_color(prompt_text.length)}`}>
-            {prompt_text.length}/100자
+            {prompt_text.length}/500자
           </div>
         </div>
 
@@ -83,10 +83,9 @@ const NaturalPromptInput = ({
             <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
               💡 입력 가이드
             </h4>
-            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• <strong>25자 내외</strong>가 8초 영상에 가장 최적화됩니다</li>
-              <li>• 구체적인 방향성을 제시할수록 더 정확한 결과를 얻을 수 있습니다</li>
-              <li>• 한국어로 자연스럽게 입력해주세요</li>
+            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-disc pl-5">
+              <li><strong>이렇게 작성하면 좋아요:</strong> 영상의 <strong>주제(피사체), 배경, 행동</strong>을 구체적으로 서술하면 AI가 더 정확하게 이해합니다.</li>
+              <li><strong>완성도 높이기:</strong> 영상의 <strong>스타일(예: 영화처럼), 분위기(예: 따뜻한 색감), 카메라 구도(예: 항공뷰)</strong>를 추가하면 더 멋진 결과물을 얻을 수 있습니다.</li>
             </ul>
           </div>
         </div>

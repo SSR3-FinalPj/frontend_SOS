@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { regenerateVideo } from '@/common/api/api';
+import { reviseVideo } from '@/common/api/api';
 import { useNotificationStore } from '@/features/real-time-notifications/logic/notification-store';
 
 /**
@@ -68,17 +68,12 @@ export const useVideoEdit = (selected_video, on_close) => {
         throw new Error('영상 ID를 찾을 수 없습니다.');
       }
 
-      console.log('영상 수정 요청 시작:', {
-        videoId,
-        resultId: selected_video.resultId,
-        prompt: prompt_text.trim(),
-        selected_video_title: selected_video.title
-      });
+      
 
-      // API 호출: resultId (또는 videoId) + prompt 전송
-      const result = await regenerateVideo(videoId, prompt_text.trim());
+      // API 호출: resultId (또는 videoId) + promptText 전송
+      const result = await reviseVideo(videoId, prompt_text.trim());
 
-      console.log('영상 수정 요청 성공:', result);
+      
 
       // 성공 알림
       useNotificationStore.getState().add_notification({

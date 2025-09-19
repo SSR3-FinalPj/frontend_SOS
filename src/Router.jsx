@@ -36,6 +36,8 @@ const Router = () => {
       <Route path="/analytics" element={<AnalyticsPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       
+      {/* 테스트 페이지 제거 */}
+      
       
       {/* 404 페이지 */}
       <Route path="*" element={<NotFoundPage />} />

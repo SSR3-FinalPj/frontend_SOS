@@ -151,44 +151,46 @@ export const useAnalyticsStore = create(
           const endDate = format_date_for_api(date_range.to);
 
           try {
-            let channelId = null;
-            let response = null;
-            let errorMessage = '';
+            const { platforms } = usePlatformStore.getState();
 
+            let channelInfo;
             if (selected_platform === 'youtube') {
-              const channelInfo = await getYouTubeChannelId();
-              if (!channelInfo || !channelInfo.channelId) {
-                errorMessage = 'YouTube 채널 정보를 찾을 수 없습니다.';
-              } else {
-                channelId = channelInfo.channelId;
-                response = await getYouTubeUploadsByRange(startDate, endDate, channelId);
+              if (!platforms.google.connected && !platforms.google.linked) {
+                throw new Error('YouTube 계정이 연동되어 있지 않습니다.');
               }
+              channelInfo = await getYouTubeChannelId();
             } else if (selected_platform === 'reddit') {
-              const channelInfo = await getRedditChannelInfo();
-              if (!channelInfo || !channelInfo.channelId) { // Assuming Reddit API also returns channelId
-                errorMessage = 'Reddit 채널 정보를 찾을 수 없습니다.';
-              } else {
-                channelId = channelInfo.channelId; // Use channelId for Reddit API too
-                response = await getRedditUploadsByRange(startDate, endDate, channelId);
+              if (!platforms.reddit.connected && !platforms.reddit.linked) {
+                throw new Error('Reddit 계정이 연동되어 있지 않습니다.');
               }
+              channelInfo = await getRedditChannelInfo();
             } else {
-              errorMessage = '지원하지 않는 플랫폼입니다.';
+              throw new Error('지원하지 않는 플랫폼입니다.');
             }
 
-            if (errorMessage) {
-              throw new Error(errorMessage);
+            if (!channelInfo || !channelInfo.channelId) {
+              throw new Error(`${selected_platform === 'youtube' ? 'YouTube' : 'Reddit'} 채널 정보를 찾을 수 없습니다.`);
             }
+
+            const { channelId } = channelInfo;
+            let response;
+            if (selected_platform === 'youtube') {
+              response = await getYouTubeUploadsByRange(startDate, endDate, channelId);
+            } else if (selected_platform === 'reddit') {
+              response = await getRedditUploadsByRange(startDate, endDate, channelId);
+            }
+
             if (!response) {
                 throw new Error('데이터를 불러오는데 실패했습니다.');
             }
 
-            set({ 
+            set({
               summaryData: response, // Pass the whole response object
               isLoading: false,
               error: null
             });
           } catch (error) {
-            set({ 
+            set({
               summaryData: null,
               isLoading: false,
               error: error.message || '데이터를 불러오는데 실패했습니다.'
