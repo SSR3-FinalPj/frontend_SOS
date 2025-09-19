@@ -66,15 +66,27 @@ export const get_platform_icon = (platform) => {
  * @returns {JSX.Element} 아이콘 컴포넌트
  */
 export const get_status_icon = (status, item_id, uploading_items = []) => {
+  const normalized_status = typeof status === 'string' ? status.toUpperCase() : '';
+
   if (uploading_items.includes(item_id)) {
     return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
   }
-  
-  switch (status) {
-    case 'uploaded': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-    case 'ready': return <Upload className="h-4 w-4 text-blue-500" />;
-    case 'failed': return <AlertTriangle className="h-4 w-4 text-red-500" />;
-    default: return <Clock className="h-4 w-4 text-yellow-500" />;
+
+  switch (normalized_status) {
+    case 'UPLOADED':
+    case 'COMPLETED':
+      return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    case 'READY':
+    case 'READY_TO_LAUNCH':
+      return <Upload className="h-4 w-4 text-blue-500" />;
+    case 'FAILED':
+      return <AlertTriangle className="h-4 w-4 text-red-500" />;
+    case 'PROCESSING':
+      return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+    case 'PENDING':
+      return <Clock className="h-4 w-4 text-yellow-500" />;
+    default:
+      return <Clock className="h-4 w-4 text-yellow-500" />;
   }
 };
 
@@ -84,12 +96,25 @@ export const get_status_icon = (status, item_id, uploading_items = []) => {
  * @returns {string} 툴팁 텍스트
  */
 export const get_status_tooltip = (status) => {
-  switch (status) {
-    case 'ready': return '론칭 준비됨';
-    case 'uploading': return '업로드 중';
-    case 'uploaded': return '업로드 완료';
-    case 'failed': return '생성 실패';
-    default: return '상태 불명';
+  const normalized_status = typeof status === 'string' ? status.toUpperCase() : '';
+
+  switch (normalized_status) {
+    case 'PENDING':
+      return '대기 중';
+    case 'PROCESSING':
+      return '처리 중';
+    case 'READY':
+    case 'READY_TO_LAUNCH':
+    case 'COMPLETED':
+      return '론칭 준비됨';
+    case 'UPLOADING':
+      return '업로드 중';
+    case 'UPLOADED':
+      return '업로드 완료';
+    case 'FAILED':
+      return '생성 실패';
+    default:
+      return '상태 불명';
   }
 };
 

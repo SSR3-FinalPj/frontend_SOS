@@ -1,117 +1,86 @@
 import { motion } from 'framer-motion';
-import { BarChart3, Rocket, Target } from 'lucide-react';
-import { IMAGE_PATHS } from '@/common/constants/image-paths';
 import Section from '@/common/ui/Section';
+import aiGenerateGif from '@/assets/images/LandingImg/AI_gen.gif';
+import uploadGif from '@/assets/images/LandingImg/upload.gif';
+import analysisGif from '@/assets/images/LandingImg/analysis.gif';
 
 /**
- * 변화 소개 섹션 컴포넌트
+ * 지역 홍보 문제/해결/핵심 기능 소개 섹션
  */
 export default function TransformSection() {
-  const benefits = [
+  const coreFeatures = [
     {
-      title: "깊이 있는 인사이트",
-      description: "모든 채널의 데이터를 통합 분석해 숨겨진 가치를 발견합니다.",
-      image: IMAGE_PATHS.insight,
-      icon: BarChart3
+      title: 'AI 영상 자동 생성',
+      description: '대표 이미지와 간단한 키워드만 입력하면, AI가 지역 특색을 살린 숏폼 영상을 여러 개 제안합니다.',
+      media: aiGenerateGif,
+      mediaAlt: 'AI가 제안한 숏폼 영상 샘플 애니메이션'
     },
     {
-      title: "완전한 자동화",
-      description: "AI가 콘텐츠 생성부터 발행까지 모든 과정을 자동화합니다.",
-      image: IMAGE_PATHS.automation,
-      icon: Rocket
+      title: '원클릭 SNS 동시 배포',
+      description: '완성된 영상을 YouTube, Reddit 등 원하는 채널에 한 번에 업로드하고 관리할 수 있습니다.',
+      media: uploadGif,
+      mediaAlt: '여러 SNS 채널에 동시에 업로드하는 과정 애니메이션'
     },
     {
-      title: "실시간 최적화",
-      description: "데이터 기반 인사이트로 실시간으로 전략을 조정합니다.",
-      image: IMAGE_PATHS.optimization,
-      icon: Target
+      title: '성과 분석 대시보드',
+      description: '어떤 영상이 인기였는지, 주 시청자는 누구인지 직관적인 데이터로 확인하세요.',
+      media: analysisGif,
+      mediaAlt: '성과 분석 대시보드 미리보기 애니메이션'
     }
   ];
 
   return (
     <Section id="transform" className="relative z-10">
-      {/* Section Header */}
-      <div className="text-center mb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: "-100px" }}
-          transition={{ 
-            duration: 1, 
-            ease: [0.16, 1, 0.3, 1],
-            type: "spring",
-            stiffness: 100,
-            damping: 15
-          }}
-        >
-          <h2 className="text-6xl lg:text-7xl font-light tracking-tight text-gray-800 dark:text-white mb-6">
-            <span>모든 것을</span>
-            <br />
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              바꿉니다
-            </span>
-          </h2>
-          <p className="text-2xl text-gray-600 dark:text-gray-300 font-light max-w-3xl mx-auto">
-            소셜 미디어 관리의 새로운 표준
-          </p>
-        </motion.div>
-      </div>
+      {/* Core Features Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, margin: '-100px' }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="text-center mb-12"
+      >
+        <h3 className="text-5xl font-semibold mb-4 text-[#17171B] dark:text-gray-100">
+          Meaire의 핵심 기능
+        </h3>
+        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          공공 홍보 담당자를 위한 맞춤 기능으로 영상 제작부터 성과 분석까지 한 번에 해결합니다.
+        </p>
+      </motion.div>
 
-      {/* Benefits Grid */}
-      <div className="grid lg:grid-cols-3 gap-12">
-        {benefits.map((benefit, index) => {
-          const { icon: Icon } = benefit;
+      <div className="space-y-16">
+        {coreFeatures.map((feature, index) => {
+          const isEven = index % 2 === 0;
+
           return (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 80 }}
+              key={feature.title}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, margin: "-100px" }}
-              transition={{ 
-                duration: 0.8, 
-                delay: index * 0.15, 
-                ease: [0.16, 1, 0.3, 1],
-                type: "spring",
-                stiffness: 100,
-                damping: 15
-              }}
-              whileHover={{ 
-                y: -15,
-                transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-              }}
-              className="group"
+              viewport={{ once: false, margin: '-120px' }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="grid gap-6 md:grid-cols-2 md:items-center"
             >
-              {/* Image */}
-              <div className="relative h-64 mb-8 overflow-hidden rounded-3xl">
-                <motion.img 
-                  src={benefit.image} 
-                  alt={benefit.title}
-                  className="w-full h-full object-cover"
-                  whileHover={{ 
-                    scale: 1.1,
-                    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-                  }}
+              <div
+                className={`rounded-3xl border border-blue-100/60 dark:border-blue-200/10 bg-white dark:bg-gray-900 overflow-hidden shadow-lg ${
+                  isEven ? 'order-1' : 'order-1 md:order-2'
+                }`}
+              >
+                <img
+                  src={feature.media}
+                  alt={feature.mediaAlt}
+                  className="block w-full h-auto"
+                  loading="lazy"
                 />
-                <motion.div 
-                  className="absolute top-6 left-6 w-12 h-12 backdrop-blur-xl bg-white/30 border border-white/40 rounded-2xl flex items-center justify-center"
-                  whileHover={{ 
-                    scale: 1.1, 
-                    rotate: 5,
-                    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
-                  }}
-                >
-                  <Icon className="w-6 h-6 text-white" />
-                </motion.div>
               </div>
-
-              {/* Content */}
-              <div className="space-y-4">
-                <h3 className="text-3xl font-light text-gray-800 dark:text-white">
-                  {benefit.title}
-                </h3>
-                <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-light">
-                  {benefit.description}
-                </p>
+              <div
+                className={`space-y-3 text-left ${
+                  isEven ? 'order-2' : 'order-2 md:order-1'
+                }`}
+              >
+                <h4 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {feature.title}
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{feature.description}</p>
               </div>
             </motion.div>
           );

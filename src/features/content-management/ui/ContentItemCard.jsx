@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/common/ui/card';
 import { Button } from '@/common/ui/button';
 import { Badge } from '@/common/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/common/ui/tooltip';
-import { Clock, Upload, CheckCircle2, Loader2, Check, AlertTriangle, GitBranch } from 'lucide-react';
+import { Clock, Upload, CheckCircle2, Loader2, Check, AlertTriangle, GitMerge } from 'lucide-react';
 import Timer from '@/common/ui/timer';
 import jumpCatGif from '@/assets/images/Jumpcat/jump_cat.gif';
 import { 
@@ -26,9 +26,9 @@ const ContentItemCard = ({
   uploading_items, 
   on_preview, 
   on_publish,
-  on_navigate_to_child, // 버전 보기 함수 prop
   selected_video_id,
-  on_video_select
+  on_video_select,
+  isVersionBaseline = false
 }) => {
   const item_id = item.result_id || item.resultId || item.video_id || item.temp_id || item.id;
   const is_uploading = uploading_items.includes(item_id);
@@ -111,6 +111,21 @@ const ContentItemCard = ({
             
             {/* 상태 아이콘 */}
             <div className="absolute top-2 right-2 flex gap-1">
+              {isVersionBaseline && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={`w-8 h-8 ${dark_mode ? 'bg-blue-900/40 border-blue-500/40' : 'bg-blue-50 border-blue-200'} border rounded-full flex items-center justify-center shadow-sm`}
+                      >
+                        <GitMerge className={`w-4 h-4 ${dark_mode ? 'text-blue-200' : 'text-blue-600'}`} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>이 영상 기반으로 다음 버전이 생성되었습니다.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {/* 버전 배지 (루트/카드에서도 표시) */}
               {item.version && (
                 <Badge className={`${dark_mode ? 'bg-gray-700/80 text-gray-300' : 'bg-gray-100/80 text-gray-600'} rounded-full px-2 py-1 text-xs border`}>
@@ -164,7 +179,8 @@ const ContentItemCard = ({
             <Button
               onClick={(e) => { e.stopPropagation(); on_publish(item); }}
               disabled={is_uploading}
-              className="w-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 hover:from-blue-500/30 hover:to-purple-500/30 text-gray-800 dark:text-white rounded-xl font-medium"
+              variant="brand"
+              className="w-full rounded-xl font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {is_uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
               {is_uploading ? '업로드 중...' : '지금 론칭'}
@@ -188,25 +204,6 @@ const ContentItemCard = ({
             </Button>
           )}
 
-          {/* 버전 보기 버튼: 오른쪽 하단 */}
-          {item.hasChildren && (
-            <div className="flex justify-end pt-2">
-              <Button 
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (on_navigate_to_child) {
-                    on_navigate_to_child(item.id);
-                  }
-                }}
-                className="bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-300 dark:hover:bg-green-900/50 border-green-500/20"
-              >
-                <GitBranch className="w-4 h-4 mr-2" />
-                버전 보기 ({item.childrenCount})
-              </Button>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

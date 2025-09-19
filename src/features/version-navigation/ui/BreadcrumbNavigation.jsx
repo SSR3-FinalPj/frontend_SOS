@@ -23,6 +23,7 @@ import { ChevronRight, Home, ArrowLeft, MoreHorizontal } from 'lucide-react';
 const BreadcrumbNavigation = ({
   versionPath = [],
   currentPath = [],
+  nextVersions = [],
   onNavigateToIndex,
   onGoBack,
   onGoToRoot,
@@ -145,7 +146,20 @@ const BreadcrumbNavigation = ({
           const isLast = originalIndex === versionPath.length - 1;
           const isExpansionButton = version === '...';
           const isClickable = onNavigateToIndex && !isExpansionButton;
-          
+
+          const basePillClasses = `px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors duration-200 min-w-[72px] text-center ${
+            darkMode ? 'backdrop-blur-sm' : ''
+          }`;
+          const activeClasses = darkMode
+            ? 'bg-blue-500/20 border-blue-400/30 text-blue-200 shadow-sm'
+            : 'bg-blue-50 border-blue-300 text-blue-600 shadow-sm';
+          const inactiveClickableClasses = darkMode
+            ? 'border-gray-600 text-gray-300 hover:bg-gray-700/60 hover:text-white'
+            : 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900';
+          const disabledClasses = darkMode
+            ? 'border-gray-700 text-gray-500 bg-transparent cursor-default'
+            : 'border-gray-200 text-gray-400 bg-transparent cursor-default';
+
           return (
             <React.Fragment key={isExpansionButton ? 'expansion' : displayIndex}>
               {/* 버전 세그먼트 또는 확장 버튼 */}
@@ -164,27 +178,23 @@ const BreadcrumbNavigation = ({
                   <MoreHorizontal className="w-4 h-4" />
                 </motion.button>
               ) : (
-                <motion.div
-                  whileHover={isClickable ? { scale: 1.02 } : {}}
-                  whileTap={isClickable ? { scale: 0.98 } : {}}
-                  className={`px-2 py-1 rounded-md text-sm font-mono transition-colors ${
-                    isLast
-                      ? darkMode
-                        ? 'bg-blue-500/20 text-blue-300 font-medium border border-blue-400/30'
-                        : 'bg-blue-500/10 text-blue-600 font-medium border border-blue-300/30'
-                      : isClickable
-                        ? darkMode
-                          ? 'hover:bg-gray-700 text-gray-300 cursor-pointer border border-transparent hover:border-gray-600'
-                          : 'hover:bg-gray-200 text-gray-600 cursor-pointer border border-transparent hover:border-gray-300'
-                        : darkMode
-                          ? 'text-gray-400 border border-transparent'
-                          : 'text-gray-500 border border-transparent'
-                  }`}
+                <motion.button
+                  whileHover={isClickable ? { scale: 1.03 } : {}}
+                  whileTap={isClickable ? { scale: 0.97 } : {}}
+                  type="button"
+                  disabled={!isClickable}
                   onClick={() => isClickable && handleSegmentClick(displayIndex, originalIndex)}
                   title={isClickable ? `${version}로 이동` : version}
+                  className={`${basePillClasses} ${
+                    isLast
+                      ? activeClasses
+                      : isClickable
+                        ? inactiveClickableClasses
+                        : disabledClasses
+                  }`}
                 >
-                  {version}
-                </motion.div>
+                  <span className="font-mono">{version}</span>
+                </motion.button>
               )}
 
               {/* 구분자 화살표 */}
@@ -196,6 +206,24 @@ const BreadcrumbNavigation = ({
             </React.Fragment>
           );
         })}
+        {nextVersions.length > 0 && nextVersions.map((next) => (
+          <React.Fragment key={`next-${next.label}`}>
+            <ChevronRight className={`w-3 h-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              type="button"
+              onClick={() => onNavigateToIndex && onNavigateToIndex(next.targetIndex)}
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors duration-200 min-w-[72px] text-center ${
+                darkMode
+                  ? 'border-gray-600 text-gray-300 hover:border-blue-400/40 hover:bg-blue-500/15 hover:text-blue-200'
+                  : 'border-gray-300 text-gray-600 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600'
+              }`}
+            >
+              <span className="font-mono">{next.label}</span>
+            </motion.button>
+          </React.Fragment>
+        ))}
       </div>
 
       {/* 경로가 비어있을 때 */}

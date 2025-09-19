@@ -149,7 +149,7 @@ const ContentPublishModal = ({
                   onClick={() => on_toggle_platform(platform)}
                   className={`rounded-2xl px-4 py-3 flex items-center gap-2 transition-opacity ${
                     publish_form.platforms.includes(platform)
-                      ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-gray-800 dark:text-white'
+                      ? 'bg-gradient-to-r from-[#d7e3ff] to-[#eadfff] border border-[#c2d1ff] text-[#17171B] dark:text-white'
                       : dark_mode 
                         ? 'border-gray-600/60 hover:bg-gray-700/60' 
                         : 'border-gray-300/60 hover:bg-gray-100'
@@ -599,9 +599,8 @@ const ContentPublishModal = ({
           <Button
             onClick={on_publish}
             disabled={!getFormValidation() || is_publishing}
-            className={`flex-1 ${
-              dark_mode ? 'bg-blue-600 hover:bg-blue-700 border-blue-600' : 'bg-blue-600 hover:bg-blue-700 border-blue-600'
-            } text-white rounded-xl disabled:opacity-50`}
+            variant="brand"
+            className="flex-1 rounded-xl font-semibold disabled:opacity-60"
           >
             {is_publishing ? (
               <>
