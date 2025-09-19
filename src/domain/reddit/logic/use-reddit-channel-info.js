@@ -21,7 +21,6 @@ export const useRedditChannelInfo = () => {
           setChannelInfo({ channelId: null, channelTitle: null });
         }
       } catch (error) {
-        console.error("Error fetching Reddit channel info:", error);
         setChannelInfo({ channelId: null, channelTitle: null });
       } finally {
         setLoading(false);

@@ -26,7 +26,6 @@ function parseSafeDate(dateString) {
   
   // Invalid Date 체크
   if (isNaN(parsedDate.getTime())) {
-    console.warn(`[날짜 파싱 경고] 잘못된 날짜 형식: "${dateString}", 현재 시간으로 대체`);
     return new Date();
   }
   
@@ -151,24 +150,18 @@ export const use_content_launch = create(
        * API 데이터를 가져와 UI가 이해할 수 있는 형태로 가공하는 함수
        */
       fetch_folders: async () => {
-        console.log("LOG 1: `fetch_folders` 실행 시작");
         try {
           const rootNodes = await getRootNodes();
-          console.log("LOG 2: `rootNodes` API 수신 완료", rootNodes);
 
           if (!rootNodes || rootNodes.length === 0) {
-            console.log("LOG 2a: 프로젝트 없음. 빈 상태로 설정합니다.");
             set({ folders: [], results_tree: [] });
             return;
           }
 
-          console.log("LOG 3: 각 프로젝트의 상세 트리 정보 병렬 요청 시작");
           const all_videos_with_project_id = [];
 
           const treePromises = rootNodes.map(async (rootNode) => {
-            console.log(`LOG 4: 프로젝트 ID ${rootNode.resultId}의 트리 데이터 요청`);
             const tree = await getJobTree(rootNode.resultId);
-            console.log(`LOG 5: 프로젝트 ID ${rootNode.resultId}의 트리 데이터 수신`, tree);
 
             if (Array.isArray(tree) && tree.length > 0) {
               assignVersionByDepth(tree, 0);
@@ -202,7 +195,6 @@ export const use_content_launch = create(
           });
 
           await Promise.all(treePromises);
-          console.log("LOG 6: 모든 프로젝트의 영상 목록 (가상 위치 ID 포함) 취합 완료", all_videos_with_project_id);
 
           // ✅ 로컬 pending_videos 상태를 오버레이하여 UI 상태 일관성 유지
           // (예: 업로드 성공 후 API에는 아직 반영되지 않아도, 클라이언트에서 'uploaded' 표시)
@@ -268,13 +260,9 @@ export const use_content_launch = create(
           });
 
           const newFolders = Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
-          console.log("LOG 7: 최종 `folders` 상태 데이터 구조", newFolders);
-
-          console.log("LOG 8: Zustand 스토어 상태 업데이트");
           set({ folders: newFolders, results_tree: [] });
 
         } catch (error) {
-          console.error('[fetch_folders] 프로젝트 데이터 조회 실패:', error);
           set({ folders: [], results_tree: [] });
         }
       },
@@ -288,8 +276,7 @@ export const use_content_launch = create(
         try {
           const normalized = normalizeResultsTree(apiTree, { labelMap });
           set({ results_tree: normalized });
-        } catch (e) {
-          console.error('[트리 동기화 실패]', e);
+        } catch (_error) {
         }
       },
 
@@ -328,7 +315,6 @@ export const use_content_launch = create(
         if (inserted) {
           set({ results_tree: tree });
         } else {
-          console.warn(`[트리 업데이트] 부모 ${parentId}를 트리에서 찾지 못했습니다.`);
         }
       },
 
@@ -471,8 +457,7 @@ export const use_content_launch = create(
         // 2. 백엔드에 완료 알림 및 다음 영상 요청
         try {
           await get().notify_completion_and_request_next(temp_id);
-        } catch (error) {
-          // console.error('백엔드 완료 알림 실패:', error);
+        } catch (_error) {
         }
         
         // 3. 상태 업데이트 후 폴더 목록 갱신
@@ -594,8 +579,6 @@ export const use_content_launch = create(
           await get().auto_generate_next_video(last_request);
           
         } catch (error) {
-          // console.error('완료 알림 및 자동 생성 실패:', error);
-          
           // 백엔드 연동 실패 시 모의 로직으로 대체
           await get().mock_auto_generate_next_video();
         }
@@ -626,7 +609,6 @@ export const use_content_launch = create(
           const result = await create_response.json();
           
         } catch (error) {
-          // console.error('자동 영상 생성 실패:', error);
           throw error;
         }
       },
@@ -658,8 +640,7 @@ export const use_content_launch = create(
             get().add_pending_video(video_data, creation_date);
           }, 1000);
           
-        } catch (error) {
-          // console.error('모의 자동 영상 생성 실패:', error);
+        } catch (_error) {
         }
       },
       
@@ -819,7 +800,6 @@ export const use_content_launch = create(
           }
           
         } catch (error) {
-          // console.error(`[🎬 SSE 처리] ❌ 완성된 영상 처리 실패:`, error);
           set({ sse_update_error: error.message });
         } finally {
           set({ sse_update_in_progress: false });
@@ -882,7 +862,6 @@ export const use_content_launch = create(
             get().increase_polling_interval();
           }
         } catch (error) {
-          // console.error('[🔄 Enhanced Polling] ❌ 완성 영상 확인 실패:', error);
           get().increase_polling_interval(); // 에러 시에도 주기 증가
         }
       },
@@ -983,15 +962,7 @@ export const use_content_launch = create(
       /**
        * 🧪 개발자 도구: Enhanced Diagnostic Functions
        */
-      test_api_call: async () => {
-        try {
-          const result = await get_latest_completed_video();
-          return result;
-        } catch (error) {
-          console.error(`[🧪 API 테스트] ❌ 실패:`, error);
-          throw error;
-        }
-      },
+      test_api_call: async () => get_latest_completed_video(),
 
       /**
        * 🔍 스마트 폴링 상태 디버깅
@@ -1015,23 +986,19 @@ export const use_content_launch = create(
         const processingVideos = state.pending_videos.filter(v => v.status === 'PROCESSING');
         
         // 2. API에서 완성된 영상들 확인
+        let unmatchedCompleted = [];
         try {
           const completedVideos = await getVideoResultId();
-          
-          // 3. 매칭되지 않은 완성 영상들 찾기
           const knownResultIds = new Set(state.pending_videos.map(v => v.resultId).filter(Boolean));
-          const unmatchedCompleted = completedVideos.filter(cv => !knownResultIds.has(cv.resultId));
-          
-          if (unmatchedCompleted.length > 0) {
-            console.warn(`⚠️ 매칭되지 않은 완성 영상들:`, unmatchedCompleted);
-          }
-        } catch (error) {
-          console.error(`❌ 백엔드 완성 영상 조회 실패:`, error);
+          unmatchedCompleted = completedVideos.filter(cv => !knownResultIds.has(cv.resultId));
+        } catch (_error) {
+          unmatchedCompleted = [];
         }
-        
+
         return {
           ready_videos: readyVideos,
           processing_videos: processingVideos,
+          unmatched_completed: unmatchedCompleted,
           total_pending: state.pending_videos.length
         };
       },
@@ -1102,8 +1069,7 @@ export const use_content_launch = create(
       simulate_video_ready_event: () => {
         try {
           get().handle_video_completion();
-        } catch (error) {
-          console.error(`[🧪 Simulation] ❌ 시뮬레이션 실패:`, error);
+        } catch (_error) {
         }
       },
 
@@ -1126,8 +1092,6 @@ export const use_content_launch = create(
           };
           
         } catch (error) {
-          // console.error(`[🔄 Manual Refresh] ❌ 수동 새로고침 실패:`, error);
-          
           return {
             success: false,
             message: "새로고침 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
@@ -1167,8 +1131,6 @@ export const use_content_launch = create(
           };
           
         } catch (error) {
-          // console.error(`[⚡ Emergency] ❌ 응급 복구 실패:`, error);
-          
           return {
             success: false,
             message: "응급 복구 중 오류가 발생했습니다.",
@@ -1422,8 +1384,6 @@ export const use_content_launch = create(
           };
           
         } catch (error) {
-          console.error('멀티 플랫폼 게시 실패:', error);
-          
           // 전체 실패 알림
           import('@/features/real-time-notifications/logic/notification-store').then(({ useNotificationStore }) => {
             useNotificationStore.getState().add_notification({

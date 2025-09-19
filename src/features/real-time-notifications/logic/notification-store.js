@@ -187,11 +187,8 @@ export const useNotificationStore = create(
           }
         }, 10);
         
-      }).catch(error => {
-        console.error('use_content_launch 스토어 연동 실패:', error);
-      });
-    } catch (error) {
-      console.error('video-ready 이벤트 처리 중 오류:', error);
+      }).catch(() => {});
+    } catch (_error) {
     }
   },
   
@@ -205,8 +202,7 @@ export const useNotificationStore = create(
       if (sse_data.videoId || sse_data.videoUrl) {
         // 추가 처리 필요 시 여기에 구현
       }
-    } catch (error) {
-      console.error('YouTube 완료 이벤트 처리 중 오류:', error);
+    } catch (_error) {
     }
   },
 
@@ -220,8 +216,7 @@ export const useNotificationStore = create(
       if (sse_data.postUrl) {
         // 추가 처리 필요 시 여기에 구현
       }
-    } catch (error) {
-      console.error('Reddit 완료 이벤트 처리 중 오류:', error);
+    } catch (_error) {
     }
   },
 

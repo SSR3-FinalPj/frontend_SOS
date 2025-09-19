@@ -93,7 +93,6 @@ export const useVideoEdit = (selected_video, on_close) => {
       on_close();
 
     } catch (error) {
-      console.error('영상 수정 요청 실패:', error);
       
       // 에러 알림
       useNotificationStore.getState().add_notification({

@@ -18,8 +18,7 @@ function AudienceDemoContainer({ startDate, endDate }) {
         const res = await getYouTubeDailyDemographics(start, end);
         const transformed = transformDemographics(res);
         setChartData(transformed);
-      } catch (e) {
-        console.error("AudienceDemoContainer fetch error:", e);
+      } catch (_error) {
       }
     }
     fetchData();

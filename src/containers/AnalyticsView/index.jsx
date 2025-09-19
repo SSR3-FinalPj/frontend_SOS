@@ -106,8 +106,7 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
             setContentData(postData.posts || []);
           }
         }
-      } catch (err) {
-        console.error("Content data fetch error:", err);
+      } catch (_error) {
         setContentData([]);
       }
     };

@@ -28,12 +28,9 @@ import * as realApi from './api';
 
 // if (VIDEO_TEST_MODE === 'hybrid') {
 //   USE_HYBRID_MODE = true;
-//   console.log('🎬 영상 API 모드: 하이브리드 (실제 S3+DB, 영상 생성 시뮬레이션)');
 // } else if (VIDEO_TEST_MODE === 'true' || VIDEO_TEST_MODE === 'mock') {
 //   USE_FULL_TEST_MODE = true;
-//   console.log('🎬 영상 API 모드: 완전 테스트 (모든 API 시뮬레이션)');
 // } else {
-//   console.log('🎬 영상 API 모드: 실제 백엔드');
 // }
 
 // 실제 API만 사용
@@ -66,7 +63,6 @@ export const getVideoApiMode = () => ({
 //  * 실제 jobId로 백엔드 DB에 저장은 되지만, polling 결과는 즉시 완료로 처리
 //  */
 // const simulateJobCompletion = async (jobId) => {
-//   console.log('🔄 [HYBRID] jobId polling 시뮬레이션 시작:', jobId);
 
 //   // 2초 후 완료로 시뮬레이션
 //   await new Promise(resolve => setTimeout(resolve, 2000));
@@ -84,7 +80,6 @@ export const getVideoApiMode = () => ({
 //     createdAt: new Date().toISOString()
 //   };
 
-//   console.log('✅ [HYBRID] 영상 생성 완료 시뮬레이션:', mockResult);
 //   return mockResult;
 // };
 
@@ -105,12 +100,10 @@ export const uploadImageToS3Complete = realApi.uploadImageToS3Complete;
 //   } else if (USE_HYBRID_MODE) {
 //     // 하이브리드: 실제 업로드하지만 결과 처리는 빠르게
 //     return async (file, locationCode, promptText = "", platform = "YOUTUBE") => {
-//       console.log('🔄 [HYBRID] 실제 S3 업로드 시작');
 
 //       // 실제 S3 업로드 실행
 //       const realResult = await realApi.uploadImageToS3Complete(file, locationCode, promptText, platform);
 
-//       console.log('✅ [HYBRID] 실제 S3 업로드 완료, jobId:', realResult.jobId);
 
 //       // jobId로 완료 시뮬레이션 (실제로는 polling 필요)
 //       if (realResult.jobId) {
@@ -119,7 +112,6 @@ export const uploadImageToS3Complete = realApi.uploadImageToS3Complete;
 //             await simulateJobCompletion(realResult.jobId);
 //             // TODO: 여기서 SSE 이벤트도 시뮬레이션으로 발송할 수 있음
 //           } catch (error) {
-//             console.error('[HYBRID] 완료 시뮬레이션 실패:', error);
 //           }
 //         }, 100);
 //       }
@@ -156,7 +148,6 @@ export const reviseVideo = realApi.reviseVideo;
 //   } else if (USE_HYBRID_MODE) {
 //     // 하이브리드: 실제 API 호출하지만 빠른 완료 처리
 //     return async (resultId, promptText) => {
-//       console.log('🔄 [HYBRID] 영상 수정 - 실제 API 호출');
 
 //       try {
 //         const result = await realApi.reviseVideo(resultId, promptText);
@@ -168,7 +159,6 @@ export const reviseVideo = realApi.reviseVideo;
 
 //         return result;
 //       } catch (error) {
-//         console.warn('[HYBRID] 실제 수정 실패, 시뮬레이션으로 처리:', error);
 //         return testApi.regenerateVideo(resultId, promptText); // 테스트 API는 기존 함수명 유지
 //       }
 //     };
@@ -214,7 +204,6 @@ export const getJobResults = realApi.getJobResults || (async () => {
 // export const getJobResults = (() => {
 //   if (USE_FULL_TEST_MODE) {
 //     return async (jobId) => {
-//       console.log('🧪 [TEST] 작업 상태 시뮬레이션:', jobId);
 //       await new Promise(resolve => setTimeout(resolve, 500));
 //       return simulateJobCompletion(jobId);
 //     };
@@ -223,7 +212,6 @@ export const getJobResults = realApi.getJobResults || (async () => {
 //   } else {
 //     // 실제 API가 있다면 사용, 없으면 기본 구현
 //     return realApi.getJobResults || (async (jobId) => {
-//       console.warn('실제 getJobResults API가 없습니다. jobId:', jobId);
 //       throw new Error('getJobResults API not implemented');
 //     });
 //   }

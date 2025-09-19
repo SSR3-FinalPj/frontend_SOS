@@ -33,9 +33,8 @@ const IntegratedAnalyticsView = () => {
         setError(null);
         const contentList = await getCommonContentList();
         setAllContent(contentList);
-      } catch (e) {
+      } catch (_error) {
         setError("콘텐츠 목록을 불러오는 데 실패했습니다.");
-        console.error(e);
       } finally {
         setIsLoadingList(false);
       }
@@ -68,9 +67,8 @@ const IntegratedAnalyticsView = () => {
         comments: { youtube: details.youtube_comments, reddit: details.reddit_comments }
       };
       setSelectedContentDetails(mappedData);
-    } catch (e) {
+    } catch (_error) {
       setError("상세 정보를 불러오는 데 실패했습니다.");
-      console.error(e);
     } finally {
       setIsLoadingDetails(false);
     }

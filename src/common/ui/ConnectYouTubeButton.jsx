@@ -48,7 +48,7 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
           }
         } catch (err) {
           // Cross-Origin-Opener-Policy 때문에 접근 차단될 때 발생
-          //console.debug("Cross-origin popup check blocked by COOP:", err);
+          void err;
         }
       }, 600);
 
@@ -66,7 +66,6 @@ export default function ConnectYouTubeButton({ onDone, oauthOrigin }) {
         setLoading(false);
       }, 3 * 60 * 1000);
     } catch (e) {
-      console.error(e);
       setError(e.message);
       setLoading(false);
     }

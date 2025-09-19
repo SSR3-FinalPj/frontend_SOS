@@ -54,7 +54,6 @@ const MainDashboardView = () => {
 
       } catch (err) {
         setError(err);
-        console.error("Failed to fetch platform status or data:", err);
       } finally {
         setLoading(false);
       }

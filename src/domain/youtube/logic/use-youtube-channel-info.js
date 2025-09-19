@@ -21,7 +21,6 @@ export const useYouTubeChannelInfo = () => {
           setChannelInfo({ channelId: null, channelTitle: null });
         }
       } catch (error) {
-        console.error("Error fetching YouTube channel info:", error);
         setChannelInfo({ channelId: null, channelTitle: null });
       } finally {
         setLoading(false);

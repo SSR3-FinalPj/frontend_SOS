@@ -181,8 +181,7 @@ function DataExportCard() {
         const blob = zip.build();
         downloadBlob(blob, `export_${start}_${end}.zip`);
       }
-    } catch (e) {
-      console.error('Export failed', e);
+    } catch (_error) {
       alert('내보내기에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);

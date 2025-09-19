@@ -19,7 +19,6 @@ export async function tryRefreshOnBoot() {
     
     return true;
   } catch (e) {
-    //console.error('Failed to refresh token on boot:', e.message);
     clearAccessToken(); // 갱신 실패 시 액세스 토큰 제거
     return false;
   }
@@ -30,7 +29,6 @@ export async function logoutApi() {
     // 서버에 로그아웃 요청을 보내 HttpOnly 쿠키를 삭제하도록 합니다.
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include'});
   } catch (error) {
-    //console.error('Logout failed:', error);
     // 실패하더라도 클라이언트 측 토큰은 삭제합니다.
   }
   clearAccessToken();

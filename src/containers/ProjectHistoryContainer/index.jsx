@@ -115,8 +115,7 @@ function ProjectHistoryContainer({ dark_mode = false }) {
     set_is_publishing(true);
     try {
       await handle_multi_platform_publish(modal_publish_form, publish_modal.item);
-    } catch (error) {
-      console.error('게시 실패:', error);
+    } catch (_error) {
     } finally {
       set_is_publishing(false);
       close_publish_modal();

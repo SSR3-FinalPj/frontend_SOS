@@ -92,11 +92,8 @@ export const useSSEConnection = ({
             const { handle_video_completion } = use_content_launch.getState();
             
             
-            handle_video_completion().catch(error => {
-              console.error('[SSE] ❌ 영상 완성 처리 실패:', error);
-            });
-          } catch (storeError) {
-            console.error('[SSE] ❌ 스토어 접근 실패:', storeError);
+            handle_video_completion().catch(() => {});
+          } catch (_error) {
           }
         }
 
@@ -163,8 +160,7 @@ export const useSSEConnection = ({
 
       es.onmessage = (event) => handlePayload(event.data, 'message');
 
-      es.onerror = (error) => {
-        console.warn('SSE error:', error);
+      es.onerror = (_error) => {
         set_is_connected(false);
         set_connection_status(false);
         set_connection_error('연결이 끊어졌습니다.');
@@ -179,8 +175,7 @@ export const useSSEConnection = ({
           set_connection_error('연결에 실패했습니다. 다시 로그인하거나 새로고침해 주세요.');
         }
       };
-    } catch (e) {
-      console.error('SSE create failed:', e);
+    } catch (_error) {
       set_connection_error('연결 생성에 실패했습니다.');
     }
   }, [enabled, token, endpoint, handlePayload, reconnect_attempts, disconnect, set_connection_status]);

@@ -94,10 +94,7 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
             });
             set_uploaded_file(file);
           })
-          .catch(error => {
-            console.warn('이미지 자동 로드 실패:', error);
-            // 이미지 자동 로드 실패
-          });
+          .catch(() => {});
       }
       
       // 프롬프트 자동 설정
@@ -325,7 +322,6 @@ export const useMediaRequestForm = (on_close, isPriority = false, selectedVideoD
       on_close();
       
     } catch (error) {
-      console.error('영상 재생성 실패:', error);
       alert(`영상 재생성에 실패했습니다: ${error.message}`);
     } finally {
       set_is_submitting(false);
