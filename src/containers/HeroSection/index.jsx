@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { IMAGE_PATHS } from '@/common/constants/image-paths';
 import Section from '@/common/ui/Section';
 
 /**
