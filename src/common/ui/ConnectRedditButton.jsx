@@ -16,7 +16,6 @@ export default function ConnectRedditButton({ onDone, oauthOrigin }) {
       const status = await getRedditStatus();
       onDone && onDone(status);
     } catch (e) {
-      console.error(e);
       setError(e.message);
       onDone && onDone({ connected: false });
     }
@@ -51,7 +50,6 @@ export default function ConnectRedditButton({ onDone, oauthOrigin }) {
         setLoading(false);
       }, 3 * 60 * 1000);
     } catch (e) {
-      console.error(e);
       setError(e.message);
       setLoading(false);
     }

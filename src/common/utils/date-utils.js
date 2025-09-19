@@ -26,7 +26,6 @@ export function formatDateTime(dateString) {
     
     return `${year}-${month}-${day} ${hours}:${minutes}`;
   } catch (error) {
-    console.error('날짜 포맷팅 실패:', error);
     return formatDateTime(new Date()); // 현재 시간으로 대체
   }
 }
@@ -52,7 +51,6 @@ export function formatToKST(utcTimestamp) {
       minute: '2-digit'
     });
   } catch (error) {
-    console.error('KST 시간 포맷팅 실패:', error);
     return formatToKST(new Date()); // 현재 시간으로 대체
   }
 }
@@ -80,7 +78,6 @@ export function formatCreationTime(creationTime) {
       hour12: false
     });
   } catch (error) {
-    console.error('생성 시간 포맷팅 실패:', error);
     return formatCreationTime(new Date()); // 현재 시간으로 대체
   }
 }
@@ -124,7 +121,6 @@ export function getMinutesDifference(startDate, endDate = new Date()) {
     
     return Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
   } catch (error) {
-    console.error('시간 차이 계산 실패:', error);
     return 0;
   }
 }
@@ -160,7 +156,6 @@ export function getRelativeTime(dateInput) {
     return `${diffInMonths}개월 전`;
     
   } catch (error) {
-    console.error('상대 시간 계산 실패:', error);
     return '알 수 없음';
   }
 }

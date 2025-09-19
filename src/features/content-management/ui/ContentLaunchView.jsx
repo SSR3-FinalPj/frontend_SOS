@@ -145,9 +145,8 @@ const ContentLaunchView = forwardRef(({ dark_mode }, ref) => {
     try {
       // Logic 레이어의 멀티 플랫폼 게시 액션 호출 (모든 비즈니스 로직은 스토어에서 처리)
       await handle_multi_platform_publish(publish_form, publish_modal.item);
-    } catch (error) {
+    } catch (_error) {
       // 에러는 이미 스토어에서 알림으로 처리됨
-      console.error('게시 실패:', error);
     } finally {
       // UI는 오직 모달 닫기만 담당
       close_publish_modal();

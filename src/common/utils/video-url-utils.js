@@ -11,7 +11,6 @@
  */
 export const getEmbeddableVideoUrl = (originalUrl) => {
   if (!originalUrl || typeof originalUrl !== 'string') {
-    console.warn('Invalid video URL provided:', originalUrl);
     return null;
   }
 
@@ -97,7 +96,6 @@ export const getVideoFileSize = async (url) => {
     const contentLength = response.headers.get('Content-Length');
     return contentLength ? parseInt(contentLength, 10) : null;
   } catch (error) {
-    console.warn('Failed to get video file size:', error);
     return null;
   }
 };

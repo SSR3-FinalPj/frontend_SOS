@@ -43,8 +43,7 @@ const ContentPreviewModal = ({
           setRedditContent(redditData);
           if (commentData) setCommentAnalysisData(commentData);
         }
-      } catch (error) {
-        console.error("Failed to fetch modal data:", error);
+      } catch (_error) {
       } finally {
         setLoading(false);
       }

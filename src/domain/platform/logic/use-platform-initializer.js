@@ -24,8 +24,6 @@ export const usePlatformInitializer = (authStatus) => {
       setPlatformStatus('google', googleStatus);
       setPlatformStatus('reddit', redditStatus);
     } catch (error) {
-      console.error("Error initializing platforms:", error);
-      
       // Also clear on error to be safe.
       localStorage.removeItem('channelId');
       setChannelInfo({ channelId: null, channelTitle: null });

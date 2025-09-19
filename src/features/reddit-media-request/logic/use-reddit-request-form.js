@@ -67,9 +67,7 @@ export const useRedditRequestForm = (onRequestSuccess = null, isPriority = false
             });
             setUploadedFile(file);
           })
-          .catch(error => {
-            console.warn('이미지 자동 로드 실패:', error);
-          });
+          .catch(() => {});
       }
       
       // 프롬프트 자동 설정 (Reddit용으로 수정)

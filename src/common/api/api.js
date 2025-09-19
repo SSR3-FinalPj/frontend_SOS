@@ -25,7 +25,6 @@ export async function refreshAccessToken() {
 
       if (!res.ok) {
         const errorText = await res.text();
-        //console.error(` Refresh failed: ${res.status} - ${errorText}`);
         clearAccessToken(); // 갱신 실패 시 액세스 토큰 제거
         throw new Error(`Refresh failed: ${res.status} - ${errorText}`);
       }
@@ -35,7 +34,6 @@ export async function refreshAccessToken() {
       
       return accessToken;
     } catch (e) {
-      //console.error(' Token refresh failed:', e.message);
       clearAccessToken(); // 갱신 실패 시 액세스 토큰 제거
       throw e; // 에러를 다시 throw하여 호출자에게 전달
     } finally {
@@ -74,7 +72,6 @@ export async function apiFetch(input, init = {}) {
       response = await fetch(input, { ...init, headers: retryHeaders, credentials: 'include' });
       return response;
     } catch (refreshError) {
-      //console.error('Token refresh failed in apiFetch:', refreshError.message);
       // 갱신 실패 시 원래 401 응답 반환 (로그인 페이지로 리다이렉트됨)
       return response;
     }
@@ -181,13 +178,11 @@ export async function getGoogleStatus() {
   try {
     const res = await apiFetch("/api/google/status", { method: "GET" });
     if (!res.ok) {
-      console.error("Failed to fetch Google status:", res.status);
       return { connected: false, linked: false };
     }
     const data = await res.json();
     return { ...data, connected: data.connected ?? data.linked ?? false };
   } catch (error) {
-    console.error("Error fetching Google status:", error);
     return { connected: false, linked: false };
   }
 }
@@ -196,13 +191,11 @@ export async function getRedditStatus() {
   try {
     const res = await apiFetch("/api/reddit/status", { method: "GET" });
     if (!res.ok) {
-      console.error("Failed to fetch Reddit status:", res.status);
       return { connected: false };
     }
     const data = await res.json();
     return { connected: data.connected ?? data.linked ?? false };
   } catch (error) {
-    console.error("Error fetching Reddit status:", error);
     return { connected: false };
   }
 }
@@ -211,12 +204,10 @@ export async function getYouTubeChannelId() {
   try {
     const res = await apiFetch("/api/youtube/channelId", { method: "GET" });
     if (!res.ok) {
-      console.error("Failed to fetch YouTube channel info:", res.status);
       return null;
     }
     return await res.json();
   } catch (error) {
-    console.error("Error fetching YouTube channel info:", error);
     return null;
   }
 }
@@ -235,7 +226,6 @@ export async function logout() {
 
     return { success: true };
   } catch (error) {
-    console.error('Logout failed:', error);
     throw error;
   }
 }
@@ -457,7 +447,6 @@ export async function getYouTubeDailyDemographics(startDate, endDate) {
     const data = await res.json();
     return data; // { data: [...], message, status }
   } catch (error) {
-    console.error("❌ getYouTubeDailyDemographics error:", error);
     throw error;
   }
 }
@@ -530,7 +519,6 @@ export async function get_latest_completed_video() {
     return latestVideo;
     
   } catch (error) {
-    console.error('[API] 최신 완성 영상 조회 실패:', error);
     throw error;
   }
 }
@@ -558,7 +546,6 @@ export async function get_videos_completed_after(afterTimestamp) {
     return newCompletedVideos;
     
   } catch (error) {
-    console.error('[API] 시간 기준 영상 조회 실패:', error);
     throw error;
   }
 }
@@ -850,7 +837,6 @@ export async function uploadToYouTube(resultId, videoDetails) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('YouTube upload failed:', response.status, errorText);
       throw new Error(`YouTube upload failed: ${response.status} - ${errorText}`);
     }
 
@@ -859,7 +845,6 @@ export async function uploadToYouTube(resultId, videoDetails) {
     
     return result;
   } catch (error) {
-    console.error('YouTube upload error:', error);
     throw error;
   }
 }
@@ -909,10 +894,10 @@ export async function uploadToReddit(resultId, redditData) {
         kind = determineMediaTypeFromResultKey(targetResult.resultKey);
         
       } else {
-        console.warn('Could not find JobResult for resultId:', resultId, 'using default kind:', kind);
+        void resultId;
       }
     } catch (error) {
-      console.warn('Failed to fetch JobResult for media type determination:', error, 'using default kind:', kind);
+      void error;
     }
 
     // 2. API 요청 바디 구성 (kind 포함)
@@ -948,7 +933,6 @@ export async function uploadToReddit(resultId, redditData) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Reddit upload failed:', response.status, errorText);
       throw new Error(`Reddit upload failed: ${response.status} - ${errorText}`);
     }
 
@@ -957,7 +941,6 @@ export async function uploadToReddit(resultId, redditData) {
     
     return result;
   } catch (error) {
-    console.error('Reddit upload error:', error);
     throw error;
   }
 }

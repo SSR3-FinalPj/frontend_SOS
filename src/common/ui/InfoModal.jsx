@@ -109,7 +109,6 @@ const InfoModal = ({ isOpen, onClose, title, children }) => {
   const handleCopy = async (text, itemKey) => {
     try {
       if (!text || text.trim() === '') {
-        console.error('복사할 텍스트가 비어있습니다');
         return;
       }
       
@@ -138,8 +137,7 @@ const InfoModal = ({ isOpen, onClose, title, children }) => {
           return newSet;
         });
       }, 5000);
-    } catch (err) {
-      console.error('복사 실패:', err);
+    } catch (_err) {
       // 사용자에게 직접적인 피드백 제공
       alert('복사에 실패했습니다. 브라우저 설정을 확인해주세요.');
     }

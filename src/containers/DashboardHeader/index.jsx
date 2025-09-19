@@ -62,8 +62,7 @@ const DashboardHeader = ({ current_view }) => {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      console.error('Logout failed', error);
+    } catch (_error) {
     } finally {
       clearAccessToken();
       navigate('/login');
