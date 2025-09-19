@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Section from '@/common/ui/Section';
+import heroSectionImage from '@/assets/images/LandingImg/herosection.png';
 
 /**
  * 히어로 섹션 컴포넌트
@@ -145,7 +146,7 @@ export default function HeroSection() {
             style={{ aspectRatio: '16/9' }}
           >
             <img 
-              src={IMAGE_PATHS.hero_section} 
+              src={heroSectionImage} 
               alt="AI Dashboard Preview" 
               className="w-full h-full object-cover"
             />
