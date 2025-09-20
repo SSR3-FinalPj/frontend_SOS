@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Section from '@/common/ui/Section';
-import heroSectionImage from '@/assets/images/LandingImg/herosection.png';
 
 /**
  * 히어로 섹션 컴포넌트
@@ -122,36 +121,6 @@ export default function HeroSection() {
           </Link>
         </motion.div>
 
-        {/* Preview Image */}
-        <motion.div
-          initial={{ opacity: 0, y: 80, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ 
-            duration: 1.2, 
-            delay: 1.5,
-            ease: [0.16, 1, 0.3, 1],
-            type: "spring",
-            stiffness: 100,
-            damping: 15
-          }}
-          className="relative max-w-4xl mx-auto"
-        >
-          <motion.div
-            whileHover={{ 
-              scale: 1.02, 
-              y: -8,
-              transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-            }}
-            className="relative overflow-hidden rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300"
-            style={{ aspectRatio: '16/9' }}
-          >
-            <img 
-              src={heroSectionImage} 
-              alt="AI Dashboard Preview" 
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
-        </motion.div>
       </div>
     </Section>
   );
