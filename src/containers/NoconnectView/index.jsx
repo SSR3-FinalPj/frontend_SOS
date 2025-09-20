@@ -14,7 +14,8 @@ const NoconnectView = () => {
         <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
         <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">계정이 연결되지 않았습니다</h2>
         <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
-            대시보드 데이터를 보려면 계정을 연결해야 합니다. 설정 페이지에서 계정을 연동하여 모든 분석 기능을 사용해보세요.
+            대시보드 데이터를 보려면 계정을 연결해야 합니다.<br />
+            설정 페이지에서 계정을 연동하여 모든 분석 기능을 사용해보세요.
         </p>
         <div className="flex gap-4">
             <button

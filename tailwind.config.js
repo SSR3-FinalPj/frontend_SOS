@@ -1,3 +1,5 @@
+import defaultTheme from 'tailwindcss/defaultTheme';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -115,7 +117,10 @@ export default {
             900: '#7f1d1d',  // 가장 진한 빨강
             950: '#450a0a'   // 다크모드용 가장 진한 빨강
         }
-      }
+      },
+      fontFamily: {
+        sans: ['Pretendard', ...defaultTheme.fontFamily.sans],
+      },
     },
   },
   plugins: [],
