@@ -7,10 +7,9 @@ import Section from '@/common/ui/Section';
  * 히어로 섹션 컴포넌트
  */
 export default function HeroSection() {
-
   return (
-    <Section>
-      <div className="text-center relative z-10">
+    <Section className="justify-center py-16 lg:py-20 min-h-[calc(100vh-112px)]">
+      <div className="text-center relative z-10 flex flex-col items-center max-w-5xl mx-auto">
         {/* Hero Text */}
         <motion.div
           initial={{ opacity: 0, y: 60 }}
