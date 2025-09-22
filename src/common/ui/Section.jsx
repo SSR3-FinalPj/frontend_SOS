@@ -5,13 +5,15 @@
  * @param {string} props.className - 추가 CSS 클래스
  * @param {string} props.id - 섹션 ID
  */
+import { cn } from '@/common/utils/ui-utils';
+
 export default function Section({ 
   children, 
   className = "",
   id
 }) {
   return (
-    <section id={id} className={`relative flex items-center justify-start py-20 ${className}`}>
+    <section id={id} className={cn('relative flex items-center justify-start py-20', className)}>
       <div className="w-full px-6 lg:px-8">
         {children}
       </div>
