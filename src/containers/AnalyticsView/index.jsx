@@ -205,8 +205,8 @@ const DetailedAnalyticsView = ({ onVideoCardClick }) => {
               <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
               <h2 className="text-xl font-semibold mb-2">플랫폼이 연결되지 않았습니다</h2>
               <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
-                선택하신 플랫폼은 현재 연결되어 있지 않습니다. 설정 페이지에서 계정을 연동하여
-                모든 분석 기능을 활성화하세요.
+                선택하신 플랫폼은 현재 연결되어 있지 않습니다.<br />
+                설정 페이지에서 계정을 연동하여 모든 분석 기능을 활성화하세요.
               </p>
               <button
                 onClick={() => navigate("/settings")}
